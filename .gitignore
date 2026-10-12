@@ -1,0 +1,14 @@
+# 子工程目录（各子工程为独立 Git 仓库，由根仓库解耦忽略）
+/ateng-solid-server/
+/ateng-solid-admin-web/
+/ateng-solid-app/
+/ateng-solid-desktop/
+/ateng-solid-mp/
+/ateng-solid-portal-web/
+
+# 系统与 IDE 配置
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
