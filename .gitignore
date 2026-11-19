@@ -6,9 +6,28 @@
 /ateng-solid-mp/
 /ateng-solid-portal-web/
 
-# 系统与 IDE 配置
+# 操作系统与临时文件
 .DS_Store
 Thumbs.db
+[Dd]esktop.ini
+tmp/
+temp/
+.tmp/
+.temp/
+*.tmp
+*.temp
+scratch/
+.scratch/
+scratchpad/
+.scratchpad/
+sandbox/
+.sandbox/
+
+# IDE 与本地配置
 .idea/
 .vscode/
+.env
+.env.*
+!.env.example
 *.log
+logs/

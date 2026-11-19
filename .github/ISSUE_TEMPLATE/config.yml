@@ -1,0 +1,13 @@
+# ==============================================================================
+# GitHub Issues 治理配置
+# ==============================================================================
+
+blank_issues_enabled: false
+
+contact_links:
+  - name: 💬 技术讨论与跨端设计交流 (GitHub Discussions)
+    url: https://github.com/atengk/ateng-solid/discussions
+    about: 请在此讨论跨端契约设计、架构演进与协同方式。
+  - name: 📖 工作区全景文档 (Documentation)
+    url: https://github.com/atengk/ateng-solid#readme
+    about: 查阅多仓库矩阵、环境基线与工作区协同脚本使用方式。
