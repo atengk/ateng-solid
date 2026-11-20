@@ -97,6 +97,8 @@ jobs:
         run: |
           test -s .agents/rules/contracts.md
           test -s .agents/rules/foundation-first-gate.md
+          test -s .agents/rules/coding-and-architecture.md
+          test -s docs/agents/documentation-specification.md
           bash scripts/workspace.sh check-rules --allow-missing
 
   lint-workflows:

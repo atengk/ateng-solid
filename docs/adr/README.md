@@ -11,6 +11,7 @@
 | **0003** | **多租户默认关闭可开关策略、权限隔离边界与安全初始化协议** | 🟢 Accepted | 确立多租户默认关闭可开关（零重构保留 `tenant_id`）、4 张关联表携带 `tenant_id`、平台/租户分层、超管启动引导器动态初始化及 Excel 原子批注回写协议 | 跨端契约、后端、前端 | [查看](./0003-tenant-toggle-auth-boundary-and-seed-strategy.md) |
 | **0004** | **“独立通用底座 + 零补丁上层框架”双生演进模型与三层能力边界** | 🟢 Accepted | 确立底座通用独立性、上层“验证底座 + 可二开企业级框架”双定位、硬停工零降级原则及四项双轴验收门禁 | 全工作区 | [查看](./0004-foundation-driven-framework-coevolution.md) |
 | **0005** | **“最小稳定内核 + 装配期可插拔扩展”框架扩展模型** | 🟢 Accepted | 确立前后端装配期插拔机制（Spring AutoConfiguration + 4 项轻量 SPI + 独立 Flyway；前端 `src/modules/*` 自发现）、内核/扩展边界与 1:1 子表防侵入原则 | 全工作区、后端、前端 | [查看](./0005-kernel-plus-pluggable-extensions.md) |
+| **0006** | **首期最小技术栈裁剪与后端对象映射策略** | 🟢 Accepted | 首期裁剪 `observability`/`@atengk/monitor` 等辅助包保持极简内核；对比 `BeanUtil`、`MapStruct` 与 `MapStruct-Plus`，确立首期 `BeanUtil` + 显式映射及二期演进阈值 | 全工作区、后端、前端 | [查看](./0006-stage1-minimal-stack-and-object-mapping.md) |
 
 ---
 

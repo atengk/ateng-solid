@@ -24,6 +24,8 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SHARED_RULES=(
   ".agents/rules/contracts.md"
   ".agents/rules/foundation-first-gate.md"
+  ".agents/rules/coding-and-architecture.md"
+  "docs/agents/documentation-specification.md"
 )
 
 REPOS=(
@@ -60,7 +62,7 @@ show_help() {
   status                            查看工作区全仓状态（分支、变更、Hooks、公共规约一致性）
   init                              幂等初始化全仓 Git Hooks、dev 开发分支并巡检本地工具链
   sync [--pull]                     克隆缺失子仓；带 --pull 时对干净子仓拉取更新并同步公共规约
-  sync-rules                        将根仓公共规约 (contracts.md / foundation-first-gate.md) 单向同步至各子仓
+  sync-rules                        将根仓公共规约 (contracts / foundation-first-gate / coding-and-architecture / documentation-specification) 单向同步至各子仓
   check-rules [--allow-missing]     校验全仓公共规约一致性（CI 可传 --allow-missing）
   sync-contracts                    [兼容别名] 等同于 sync-rules
   check-contracts [--allow-missing] [兼容别名] 等同于 check-rules

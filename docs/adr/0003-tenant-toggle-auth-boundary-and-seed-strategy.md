@@ -27,7 +27,7 @@
 2. **平台治理与租户业务严格分层 + 套餐变更联动裁剪**：
    - `sys_tenant`、`sys_tenant_package`、`sys_menu`、`sys_dict` 4 类管理菜单与写接口严格归属平台租户（`tenantId == 0L`），禁止勾选进租户套餐；动态字典只读消费接口 `GET /admin/system/dict/data/type/{dictType}` 对全量登录用户开放；
    - 缩减套餐菜单时在事务内联动裁剪关联租户角色的越界 `sys_role_menu` 并刷新权限缓存；`account_count` 配额仅在新增/启用用户时增量拦截，不强停既有存量账号；
-   - 在线会话管理按当前生效租户视角隔离并防越权强退，静态枚举端点 `/admin/system/enums` 保持登录后访问。
+   - 在线会话管理按当前生效租户视角隔离并防越权强退；静态枚举端点依托 `ateng-boot#1094` 配置 `ateng.boot.web.enum.endpoint-enabled=false` 禁用内置控制器，由 `ateng-solid-system` 自建 `SysEnumController` 注入 `EnumDictionaryRegistry` 接管 `/admin/system/enums` 并实施 `@SaCheckLogin` 及后续权限/租户精细管控。
 3. **超管账号与初始口令采用“SQL 脱敏 + 启动引导器动态初始化”**：
    - `V1.0.1__system_init_seed.sql` 仅初始化默认租户、角色、菜单、字典等非敏感元数据，严禁在迁移 SQL 中硬编码生产/默认密码哈希；
    - 由 `ateng-solid-bootstrap` 的 `ApplicationRunner` 在检测到租户 `0` 无超管用户时，读取 `ateng.solid.init.super-admin-password`（生产未配则自动生成 16 位强随机口令并仅在首次启动日志输出一次；`application-test.yml` 配置固定测试桩口令）通过 `PasswordUtil.hash` 动态入库。

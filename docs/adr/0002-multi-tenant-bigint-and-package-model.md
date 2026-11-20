@@ -11,8 +11,8 @@
 
 在梳理 `ateng-boot:1.2.0` 底层 `ateng-boot-mybatis-plus` 源码时发现：
 1. `DefaultTenantLineHandler.getTenantId()` 对上下文中的租户字符串做自适应解析：**若字符串全为 ASCII 数字（如 `"000000"`），会转换为 `LongValue(0)`** 生成 SQL 条件 `WHERE tenant_id = 0`；
-2. 若数据库业务表继续沿用传统字符串列 `tenant_id VARCHAR(32) DEFAULT '000000'`，在 MySQL 下执行 `tenant_id = 0` 会触发**列级隐式类型转换**，导致索引彻底失效并引发跨字符串数值误匹配隐患；
-3. 此外，`DefaultMetaObjectHandler.fillTenantIdIfNull()` 原生支持向实体的 `Long tenantId` 属性自动填充解析后的长整型租户 ID。
+2. 若数据库业务表继续沿用传统字符串列 `tenant_id VARCHAR(32) DEFAULT '000000'`，在 MySQL 下执行 `tenant_id = 0` 会触发**列级隐式类型转换**，导致 B+Tree 索引彻底失效并引发跨字符串数值误匹配隐患（例如 `"000000"` 与 `"0"` 语义混淆）；而选用 `BIGINT` 亦使多租户复合索引（`(tenant_id, ...)`）体积显著小于 `VARCHAR(32)` 并与 64 位雪花主键保持对称；
+3. `DefaultMetaObjectHandler.fillTenantIdIfNull()` 原生支持向实体的 `Long tenantId` 属性自动填充解析后的长整型租户 ID；但原 `TenantEntity` 接口写死 `String getTenantId()` 导致 `Long` 实体无法接入 `BatchUtil.autoHeal`，已通过 [`atengk/ateng-boot#1134`](https://github.com/atengk/ateng-boot/issues/1134) 将其重构为泛型能力接口 `TenantAware<T extends Serializable>` 彻底打通 `Long` 实体自愈。
 
 ---
 

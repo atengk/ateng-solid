@@ -27,7 +27,8 @@
    - 未收到明确提交/推送指令前，改动默认保留在工作区；暂存必须显式指定文件路径，严禁 `git add .` 或 `-A`。
 2. **跨端契约与公共规约单一真源及同步防漂移**：
    - [`.agents/rules/contracts.md`](./.agents/rules/contracts.md) 是全端响应信封、6 位分段错误码、雪花 `string` 主键、`tenant_id BIGINT`（默认 `0`）、`/admin/<域>/<资源>` 路由、三段式权限码与 Blob/Fesod 协议的**唯一真源**；
-   - [`.agents/rules/foundation-first-gate.md`](./.agents/rules/foundation-first-gate.md) 是跨 `ateng-boot`、`ateng-cloud`、`ateng-ui` 三大底座的**底层缺口即停工硬门禁**真源。
+   - [`.agents/rules/foundation-first-gate.md`](./.agents/rules/foundation-first-gate.md) 是跨 `ateng-boot`、`ateng-cloud`、`ateng-ui` 三大底座的**底层缺口即停工硬门禁**真源；
+   - [`.agents/rules/coding-and-architecture.md`](./.agents/rules/coding-and-architecture.md) 是全仓共通的**分层依赖、命名与对象映射、事务防 N+1、空安全并发、异常脱敏、双模测试与交付规范**唯一真源（各语言技术栈专属细则维持在对应子仓 `AGENTS.md`）。
    - 任何公共规约变更须先在根仓修改，并立即执行 `bash scripts/workspace.sh sync-rules` 同步至各子仓 `.agents/rules/`（兼容保留 `sync-contracts`）。
 3. **底层缺口即停工、零降级与零绑定红线（硬门禁）**：
    - 优先复用 `ateng-boot`、`ateng-cloud`、`ateng-ui` 原生能力；严禁引入 `hutool-all`、`guava`、`lodash`、`moment` 等冗余依赖。
@@ -63,9 +64,12 @@ bash scripts/workspace.sh checkout dev
 
 | 场景 | 必读文档 | 说明 |
 | :--- | :--- | :--- |
+| **全仓代码与架构编程总规范** | [`.agents/rules/coding-and-architecture.md`](./.agents/rules/coding-and-architecture.md) | 跨仓通用的分层、对象映射、事务防 N+1、空安全与测试交付总纲 |
 | **底层缺口判断与停工提单（硬门禁）** | [`.agents/rules/foundation-first-gate.md`](./.agents/rules/foundation-first-gate.md) | 覆盖 `ateng-boot`/`ateng-cloud`/`ateng-ui` 的停工提 Issue 与版本锁纪律 |
 | **跨端接口与数据协议变更** | [`.agents/rules/contracts.md`](./.agents/rules/contracts.md) | 响应信封、错误码段、多租户、权限码与路由隔离规范 |
-| **重型跨模块任务与文档交付** | [`.agents/rules/workflow.md`](./.agents/rules/workflow.md) | Blueprint ➔ Spec ➔ Ticket 门禁与 Tested-Docs 准则 |
+| **重型跨模块任务与文档交付** | [`.agents/rules/workflow.md`](./.agents/rules/workflow.md) | Blueprint ➔ Spec ➔ Ticket 门禁与 1:1 文档保真准则 |
+| **文档 1:1 保真与模块规范** | [`docs/agents/documentation-specification.md`](./docs/agents/documentation-specification.md) | Code & Test-First 逆向沉淀、应用五维 README 与 10 项自检清单 |
+| **AI 全局导航索引** | [`llms.txt`](./llms.txt) | 跨端全局规范、Specs、ADR 与已启用子仓直达索引 |
 | **探索全端上下文拓扑** | [`CONTEXT-MAP.md`](./CONTEXT-MAP.md) | 根仓与子仓职责边界与依赖关系 |
 | **查阅首期架构蓝图与底盘缺口** | [`docs/specs/README.md`](./docs/specs/README.md) | 含首期 MVP 蓝图与《底层基础设施待增强清单》 |
 | **查阅工作区架构决策** | [`docs/adr/README.md`](./docs/adr/README.md) | Polyrepo 契约同步、多租户 `BIGINT` 等关键决策 |

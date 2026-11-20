@@ -4,8 +4,9 @@
 
 | 文档 | 核心内容 | 适用角色 |
 | :--- | :--- | :--- |
-| [首期 MVP 架构与领域蓝图](./mvp-architecture-and-domain-blueprint.md) | 首期功能范围、二期延后边界、后端 5 模块与数据表域归属、前后端联调拓扑 | 架构师、全端开发、AI Agent |
-| [底层基础设施待增强清单](./foundation-enhancements-checklist.md) | 实锤核查出的 `ateng-boot`（B1–B6）、`ateng-cloud`（C1–C6）与 `ateng-ui`（U1–U3）底层不足点、源码锚点、GitHub Issue 追踪与验收标准 | 底座维护者、开发启动前自检 |
+| [首期 MVP 架构与领域蓝图](./mvp-architecture-and-domain-blueprint.md) | 首期精简技术栈与底座模块范围、二期延后边界、后端 5 模块与数据表域归属、前后端联调拓扑 | 架构师、全端开发、AI Agent |
+| [底层基础设施待增强清单](./foundation-enhancements-checklist.md) | `ateng-boot`（B1–B8）、`ateng-cloud`（#198–#205 / C1–C6）与 `ateng-ui`（U0–U3）实测状态、`dev` 闭环核查与发版解锁门禁 | 底座维护者、开发启动前自检 |
+| [全仓代码与架构编程规范](../../.agents/rules/coding-and-architecture.md) | 跨仓统一的分层依赖、对象映射、事务防 N+1、空安全并发、安全脱敏与交付验证总规范 | 全端开发、代码评审、AI Agent |
 
 ## 子仓库专职设计规范入口
 

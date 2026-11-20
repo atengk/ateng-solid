@@ -23,10 +23,12 @@
 
 ## 2. 架构设计原则与规范导航
 
-1. **总控与独立自洽并存**：根仓通过 [`AGENTS.md`](./AGENTS.md)、[`.agents/rules/contracts.md`](./.agents/rules/contracts.md) 与 [`.agents/rules/workflow.md`](./.agents/rules/workflow.md) 统管跨端契约与协同工作流；每个子仓均内置完整自洽的 `AGENTS.md`、专职规则与同步契约副本。
+1. **总控与独立自洽并存**：根仓通过 [`AGENTS.md`](./AGENTS.md)、[`.agents/rules/contracts.md`](./.agents/rules/contracts.md)、[`.agents/rules/foundation-first-gate.md`](./.agents/rules/foundation-first-gate.md)、[`.agents/rules/coding-and-architecture.md`](./.agents/rules/coding-and-architecture.md) 与 [`.agents/rules/workflow.md`](./.agents/rules/workflow.md) 统管跨端契约、编程架构规范与协同工作流；每个子仓均内置完整自洽的 `AGENTS.md`、专职规则与同步规约副本。
 2. **面向 `ateng-cloud` 平滑演进**：后端采用 `common` ➔ `system-api` ➔ `{system, auth}` ➔ `bootstrap` 5 模块拓扑，严禁跨模块 SQL JOIN 与物理外键，支持未来按域拆服或无缝迁移至 `ateng-cloud`。
 3. **行级多租户与套餐边界**：全库业务表 `tenant_id` 统一为 `BIGINT`（平台默认租户 `0`，业务编码 `000000`），配合 `sys_tenant_package` 收敛租户能力边界。
-4. **文档与底座增强清单**：
+4. **文档、AI 索引与底座增强清单**：
+   - AI 全局索引：[`llms.txt`](./llms.txt)
+   - 文档 1:1 保真规范：[`docs/agents/documentation-specification.md`](./docs/agents/documentation-specification.md)
    - 全端拓扑地图：[`CONTEXT-MAP.md`](./CONTEXT-MAP.md)
    - 首期 MVP 架构蓝图：[`docs/specs/mvp-architecture-and-domain-blueprint.md`](./docs/specs/mvp-architecture-and-domain-blueprint.md)
    - 底层基础设施待增强清单：[`docs/specs/foundation-enhancements-checklist.md`](./docs/specs/foundation-enhancements-checklist.md)
