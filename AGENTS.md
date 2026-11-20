@@ -1,8 +1,8 @@
 # ateng-solid 聚合工作区总控规范 (AGENTS.md)
 
-本仓库为 **ateng-solid** 全端多端数字化系统的聚合工作区（Polyrepo Workspace），以 `ateng-boot`（1.2.0+）、`ateng-ui`（1.0.0+）为基础设施底座，并面向 `ateng-cloud` 微服务体系设计平滑演进边界。
+本仓库为 **ateng-solid** 全端开源上层应用框架的聚合工作区（Polyrepo Workspace），以完全独立通用的 `ateng-boot`、`ateng-ui` 为基础设施底座，并面向 `ateng-cloud` 微服务体系设计同源并存演进边界。
 
-> **独立子仓原则**：本文件作为根工作区总控入口；每个已启用子仓库均配置了**独立完整自洽的 `AGENTS.md`** 及配套治理文件，支持单独打开任一子仓独立研发。
+> **独立子仓与三层生态定位**：本文件作为根工作区总控入口；每个已启用子仓库均配置了**独立完整自洽的 `AGENTS.md`** 及配套治理文件。全体系严格遵守“**第一层：通用独立底座 ➔ 第二层：`ateng-solid` 零补丁上层框架内核 ➔ 第三层：二开行业业务扩展**”边界（详见 [`.agents/rules/foundation-first-gate.md`](./.agents/rules/foundation-first-gate.md) 与 [ADR-0004](./docs/adr/0004-foundation-driven-framework-coevolution.md)）。
 
 ---
 
@@ -29,10 +29,11 @@
    - [`.agents/rules/contracts.md`](./.agents/rules/contracts.md) 是全端响应信封、6 位分段错误码、雪花 `string` 主键、`tenant_id BIGINT`（默认 `0`）、`/admin/<域>/<资源>` 路由、三段式权限码与 Blob/Fesod 协议的**唯一真源**；
    - [`.agents/rules/foundation-first-gate.md`](./.agents/rules/foundation-first-gate.md) 是跨 `ateng-boot`、`ateng-cloud`、`ateng-ui` 三大底座的**底层缺口即停工硬门禁**真源。
    - 任何公共规约变更须先在根仓修改，并立即执行 `bash scripts/workspace.sh sync-rules` 同步至各子仓 `.agents/rules/`（兼容保留 `sync-contracts`）。
-3. **底层缺口即停工与零绕过红线（硬门禁）**：
+3. **底层缺口即停工、零降级与零绑定红线（硬门禁）**：
    - 优先复用 `ateng-boot`、`ateng-cloud`、`ateng-ui` 原生能力；严禁引入 `hutool-all`、`guava`、`lodash`、`moment` 等冗余依赖。
-   - **硬门禁**：在项目及其子项目开发过程中，一旦发现大型或跨端可复用基础设施能力缺失、缺陷或契约冲突，**必须立即停止该特性上层编码**，记录并更新 [底层基础设施待增强清单](./docs/specs/foundation-enhancements-checklist.md)，立即向对应上游底座仓库提交 GitHub Issue，待底座满足并升级版本后再开工（详见 [`.agents/rules/foundation-first-gate.md`](./.agents/rules/foundation-first-gate.md)）。
-   - 依赖消费遵循“本地研发允许验证未发版构建，合入交付前严禁依赖 `SNAPSHOT`、严格锁定底座正式发布版”。
+   - **硬门禁（Zero Workaround）**：在项目及其子项目规划或开发过程中，一旦发现大型或基础设施级能力缺失、缺陷或扩展点不足，**必须立即停止该特性上层编码，严禁在上层编写临时降级或拦截器补丁将就**；应立即更新 [底层基础设施待增强清单](./docs/specs/foundation-enhancements-checklist.md) 并向对应底座仓提交 GitHub Issue，待底座完成通用改造、通过独立性四项双轴验收并发布递进正式版后，再升级恢复上层开发（详见 [`.agents/rules/foundation-first-gate.md`](./.agents/rules/foundation-first-gate.md)）。
+   - **底层独立性红线**：严禁为了迎合 `ateng-solid` 将业务表名、角色名、错误码或默认租户写死进底座，底座必须可脱离 `ateng-solid` 在任意其他项目单独使用。
+   - 依赖消费遵循“上层正式业务代码必须在底座发布递进正式版并锁版后再合入，严禁在 `dev`/`main` 残留 `SNAPSHOT` 或本地链接”。
 4. **安全与机密脱敏红线**：
    - 云端 MySQL / Redis 等真实连接信息仅限本地被 `.gitignore` 忽略文件（`application-local.yml` / `.env.local`）持有；入库文档、脚本与样例统一使用大写占位符或环境变量。
 

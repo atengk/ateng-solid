@@ -1,6 +1,8 @@
 # ateng-solid
 
-**ateng-solid** 是一套面向企业级场景的全端多端数字化系统聚合工作区（Polyrepo Workspace），以 [`ateng-boot`](https://github.com/atengk/ateng-boot) 与 [`ateng-ui`](https://github.com/atengk/ateng-ui) 为基础设施底座，并预留向 [`ateng-cloud`](https://github.com/atengk/ateng-cloud) 微服务拆服演进的模块化边界。
+**ateng-solid** 是面向企业级场景的**开源全栈上层应用框架**与多端数字化系统聚合工作区（Polyrepo Workspace），以独立通用的 [`ateng-boot`](https://github.com/atengk/ateng-boot) 与 [`ateng-ui`](https://github.com/atengk/ateng-ui) 为基础设施底座，并预留向 [`ateng-cloud`](https://github.com/atengk/ateng-cloud) 微服务并存演进的模块化边界。
+
+> **双生生态定位**：`ateng-solid` 既用真实业务场景实战验证并反哺锤炼底层底座（遇底座缺口即停工完善并正式发布底座，绝不打上层补丁将就），又将其自身沉淀为可直接面向行业二次开发的纯净、零补丁企业级上层框架。
 
 ---
 
@@ -47,10 +49,10 @@
 bash scripts/workspace.sh sync
 bash scripts/workspace.sh init
 
-# 2. 日常状态巡检与契约同步
+# 2. 日常状态巡检与公共规约同步
 bash scripts/workspace.sh status
-bash scripts/workspace.sh sync-contracts
-bash scripts/workspace.sh check-contracts
+bash scripts/workspace.sh sync-rules
+bash scripts/workspace.sh check-rules
 
 # 3. 增量拉取与统一切换分支
 bash scripts/workspace.sh sync --pull

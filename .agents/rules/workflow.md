@@ -1,3 +1,8 @@
+---
+trigger: always_on
+description: "重型跨模块任务的 Blueprint-Spec-Ticket 分级推进流与 Tested-Docs 文档保真准则"
+---
+
 # 研发推进工作流与文档保真规范 (workflow.md)
 
 > **作用域**：`ateng-solid` 根工作区及子仓库跨模块重型任务规划、规格设计及文档交付。

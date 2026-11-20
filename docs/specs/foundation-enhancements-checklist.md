@@ -1,167 +1,157 @@
 # 底层基础设施待增强清单 (Foundation Enhancements Checklist)
 
-本文档基于对同级目录 `ateng-boot:1.2.0`、`ateng-cloud:1.0.0` 与 `ateng-ui:1.0.0` 源码及字节码的实测核查整理，受 [底层缺口即停工规范](../../.agents/rules/foundation-first-gate.md) 硬门禁约束，**精确追踪所有向上游底座仓提报的 GitHub Issues、源码锚点、改造方案与验收闭环状态**。
+本文档基于对同级目录 `ateng-boot`、`ateng-cloud` 与 `ateng-ui` 源码及已发布制品的实测核查整理，受 [底层缺口即停工规范](../../.agents/rules/foundation-first-gate.md) 硬门禁约束：**凡标为“硬停工等待项”的缺口，上层严禁编写临时降级/绕过补丁，必须待底座完成通用改造、通过独立性验收并发布递进正式版后，再升级恢复上层开发**。
 
-> 注：同时需关注上游已有开放基础对齐单 [`atengk/ateng-cloud#198`](https://github.com/atengk/ateng-cloud/issues/198)（升级对齐 `ateng-boot-bom`）与 [`atengk/ateng-cloud#199`](https://github.com/atengk/ateng-cloud/issues/199)（Gateway 多账号体系与 `LoginUser` 协议断层修复）。
+> 注：同时需持续关注上游基础对齐单 [`atengk/ateng-cloud#198`](https://github.com/atengk/ateng-cloud/issues/198)（升级对齐 `ateng-boot-bom`）与 [`atengk/ateng-cloud#199`](https://github.com/atengk/ateng-cloud/issues/199)（修复 `SaTokenGatewayFilter` 多账号与 `LoginUser` 协议断层）。
 
 ---
 
-## 1. `ateng-boot` (`1.2.0`) 待增强项
+## 0. 阻塞与就绪矩阵总览 (Spec 0 ~ Spec 5)
 
-### [B1] 高优先级：Sa-Token 注解鉴权与多账号路由 (`loginType`) 自动联动
+| 上层阶段 | 依赖底座项 | 阻塞性质 | 规划期可推进工作 | 编码开工解锁条件 |
+| :--- | :--- | :---: | :--- | :--- |
+| **Spec 1**（公共原语/事件/骨架） | `ateng-boot-core`（已就绪） | 🟢 无新增缺口 | 公共常量、错误码、`DomainEventPublisher` 详设 | 规划确认后即可落实公共原语 |
+| **Spec 2**（认证会话/动态路由/基础壳） | **B1** (`#1076`)、**B2** (`#1077`)、**B4** (`#1079`)、**B5** (`ateng-boot-flyway` 发版)、**U0** (`#362~#364` 发版)、**U1** (`#365`) | 🔴 **硬停工阻塞** | 完整 DDL、接口/时序详设文档 | `ateng-boot:1.2.1+` 与 `ateng-ui:1.0.1+` 正式发布并锁版 |
+| **Spec 3**（RBAC/数据权限/可开关多租户） | **B2** (`#1077`)、**B3** (`#1078`)、**B7** (`#1093`，开启多租户时)、**U0** (`#362~#364`) | 🔴 **硬停工阻塞** | 业务边界与测试用例设计 | 同上（开启多租户前须含 `#1093`） |
+| **Spec 4**（字典/参数/Excel批注/审计） | **B5**（`EnumDictionaryController`/`OperateLogModel` 已就绪）、**U0** (`#362`) | 🔴 随 **U0** 阻塞 | 协议详设与字典规划 | `ateng-ui:1.0.1+` 正式发版 |
+| **Spec 5**（`ateng-cloud` 双态并存挂壳） | **B6** (`#1080`)、**C1~C6** (`#198~#205`) | 🔴 仅阻塞 Cloud 阶段 | 不影响单体阶段文档 | `ateng-cloud` 修复对齐并正式发布 |
+
+---
+
+## 1. `ateng-boot` (`1.2.0` ➔ 目标 `1.2.1+` / `1.3.0+`)
+
+### [B1] 高优先级（硬停工等待）：Sa-Token 注解鉴权与多账号路由 (`loginType`) 自动联动
 
 - **现状与源码锚点**：
-  - `LoginHelper.getStpLogic(loginType)`（`ateng-boot-satoken/.../util/LoginHelper.java`）已动态覆盖 `splicingKeyTokenName()` 拼接 `-" + loginType`（生成 `satoken-admin` 请求头）；
-  - `AtengSaTokenInterceptor`（`ateng-boot-satoken/.../interceptor/AtengSaTokenInterceptor.java`）能根据 `ateng.boot.satoken.interceptor.login-type-routes` 对 `/admin/**` 执行 `LoginHelper.checkLogin("admin")`；
-  - **缺口**：`AtengSaTokenAutoConfiguration` 未接管 Sa-Token 原生注解校验策略（如 `SaStrategy.instance` / 注解切面）。Controller 上若直接书写标准 `@SaCheckPermission("system:user:create")` 或 `@SaCheckRole(...)` 而不传 `type = "admin"`，Sa-Token 默认走 `StpUtil.stpLogic`（`loginType = "login"`，读取请求头 `satoken`），导致后台请求携带 `satoken-admin` 时直接报 401。
-- **目标改造**：
-  - 在 `ateng-boot-satoken` 增加开关或动态 `StpLogic` 路由解析（当注解未显式指定 `type` 时，按当前请求命中的 `login-type-routes` 或 `primary-login-type` 自动路由到对应 `StpLogic`，而非固定死绑 `"login"`）；
-  - 当业务工程未来存在多端（`/admin/**` ➔ `admin`、`/app/**` ➔ `app`）时，同一微服务或网关均无需在每个方法重复手写 `type = "..."`。
-- **上层临时降级（若暂不改底层）**：后台所有 `@SaCheckPermission` / `@SaCheckRole` 均须显式写 `type = "admin"`，或全部改由 `DynamicPathPermissionProvider` 配置驱动。
-- **状态**：- [ ] 已提 Issue 待底层改造与验证（[atengk/ateng-boot#1076](https://github.com/atengk/ateng-boot/issues/1076)）
+  - `LoginHelper.getStpLogic(loginType)`（`ateng-boot-satoken/.../util/LoginHelper.java`）已动态拼接生成 `satoken-admin` 请求头；`AtengSaTokenInterceptor` 已支持按 `login-type-routes` 对 `/admin/**` 执行登录检查。
+  - **缺口**：`AtengSaTokenAutoConfiguration` 未接管 Sa-Token 原生注解校验策略。Controller 若直接标注 `@SaCheckPermission(...)` / `@SaCheckRole(...)` 而不传 `type = "admin"`，默认走 `StpUtil.stpLogic`（读取 `satoken` 头）导致后台接口 401。
+- **目标通用改造**：
+  - 在 `ateng-boot-satoken` 增加开关/动态 `StpLogic` 路由解析（注解未显式指定 `type` 时，按命中路由 `login-type-routes` 或 `primary-login-type` 自动路由到对应 `StpLogic`）。
+- **准入纪律**：**严禁在上层 Controller 重复手写 `type = "admin"` 绕过**，等待底座完成并发版后直接采用标准 `@SaCheckPermission` / `@SaCheckRole`。
+- **状态**：- [ ] 已提 Issue 待底座改造与双轴验收（[atengk/ateng-boot#1076](https://github.com/atengk/ateng-boot/issues/1076)）
 
 ---
 
-### [B2] 高优先级：超管角色可配置化收敛与 `@DataScope` 上下文自动桥接
+### [B2] 高优先级（硬停工等待）：超管角色可配置化收敛与 `@DataScope` 上下文自动桥接
 
 - **现状与源码锚点**：
-  - **硬编码超管名隐患**：`LoginHelper.isSuperAdmin()` / `isSuperAdmin(loginType)`（`LoginHelper.java`）目前写死判断角色集合包含 `"admin"` 或 `"super_admin"`，或权限包含 `"*"` / `"*:*:*"`。在多租户业务系统中，普通租户管理员极易配置名为 `"admin"` 的角色编码，会导致其意外获得平台超级管理员特权，直接绕过 `AtengSaTokenInterceptor` 与 `SaCheckDataOwnerAspect` 防线；
-  - **上下文脱节隐患**：`AtengDataPermissionInnerInterceptor.shouldIgnore()`（`ateng-boot-mybatis-plus/.../permission/AtengDataPermissionInnerInterceptor.java`）依赖 `DataPermissionContextHolder.isSuperAdmin()` 执行短路放行，但 `AtengSaTokenInterceptor` 在 `preHandle` 未同步写入 `DataPermissionContextHolder.setSuperAdmin(...)`，在 `afterCompletion` 也未调用 `DataPermissionContextHolder.clear()`。
-- **目标改造**：
-  1. 在 `SaTokenProperties` 增加可配置的超管角色列表（如 `superAdminRoles`，建议默认仅含 `["super_admin"]` 或保持兼容同时允许上层显式配置覆盖去除 `"admin"`）及超管权限通配符开关；
-  2. 在 `AtengSaTokenInterceptor` 中通过 `@ConditionalOnClass(DataPermissionContextHolder.class)` 弱依赖自适应桥接：鉴权上下文同步时同步设置 `DataPermissionContextHolder.setSuperAdmin(...)`，并在 `afterCompletion` 的 `finally` 块强制执行 `DataPermissionContextHolder.clear()`。
-- **上层临时降级（若暂不改底层）**：① 后端与前端严格禁止创建角色编码 `"admin"`（强制命名为 `tenant_admin`），仅平台超管使用 `super_admin`；② 在 `ateng-solid-server` 自写后置 `HandlerInterceptor` 同步与清理 `DataPermissionContextHolder`。
-- **状态**：- [ ] 已提 Issue 待底层改造与验证（[atengk/ateng-boot#1077](https://github.com/atengk/ateng-boot/issues/1077)）
+  - `LoginHelper.isSuperAdmin()`（`LoginHelper.java`）硬编码放行 `"admin"` 与 `"super_admin"`，存在多租户普通角色误命名越权风险；
+  - `AtengSaTokenInterceptor` 在 `preHandle` / `afterCompletion` 未与 `DataPermissionContextHolder` 自动同步和清理超管标记。
+- **目标通用改造**：
+  1. 在 `SaTokenProperties` 增加可配置超管角色集合 `superAdminRoles`（默认保持向后兼容，允许上层配置覆盖为 `["super_admin"]`）及通配符开关；
+  2. 在 `AtengSaTokenInterceptor` 通过 `@ConditionalOnClass(DataPermissionContextHolder.class)` 弱依赖自动桥接与 `finally` 清理。
+- **准入纪律**：**严禁在上层自写后置拦截器补丁同步 `DataPermissionContextHolder`**，必须待底座解决并发版后恢复 Spec 2/3 开发。
+- **状态**：- [ ] 已提 Issue 待底座改造与双轴验收（[atengk/ateng-boot#1077](https://github.com/atengk/ateng-boot/issues/1077)）
 
 ---
 
-### [B3] 中优先级：未登录租户请求头解析与平台超管受控切租户钩子
+### [B3] 中优先级（硬停工等待）：未登录租户请求头解析与超管受控切租户 SPI 钩子
 
 - **现状与源码锚点**：
-  - `AtengSaTokenInterceptor.applyContextForLoginType` 与 `SaTokenCurrentTenantProvider`（`ateng-boot-satoken/.../provider/SaTokenCurrentTenantProvider.java`）仅在用户已登录时从 `LoginUser.getTenantId()` 注入 `TenantContextHolder`；
-  - 对于免登录接口（如 `@Anonymous` 登录接口），客户端传入的 `X-Tenant-Id` 不会进入 `TenantContextHolder`；
-  - 当平台超管（会话 `tenantId = "0"`）携带 `X-Tenant-Id` 请求头切换到指定租户视角时，会被 `AtengSaTokenInterceptor` 使用会话中的 `"0"` 覆盖。
-- **目标改造**：
-  - 可选在 `ateng-boot-satoken` / `ateng-boot-web` 提供可配置的多租户解析策略或 `TenantHeaderResolver` SPI（如登录前从指定头解析候选租户，登录后允许校验通过的超管身份采信目标 `X-Tenant-Id`，普通用户强制锁定会话租户并清理）。
-- **上层可承接方案**：在 `ateng-solid-server` 注册排在 `AtengSaTokenInterceptor` 之后的低优先级 `TenantResolveInterceptor`，同样可安全实现该逻辑（`afterCompletion` 注意一并兜底清理）。
-- **状态**：- [ ] 已提 Issue 待评估分诊（[atengk/ateng-boot#1078](https://github.com/atengk/ateng-boot/issues/1078)）
+  - `AtengSaTokenInterceptor.applyContextForLoginType` 与 `SaTokenCurrentTenantProvider` 仅在已登录时从 `LoginUser.getTenantId()` 写入 `TenantContextHolder`，导致免登录入口无法通过拦截器识别候选租户头，且平台超管合法切换 `X-Tenant-Id` 时会被会话租户覆盖。
+- **目标通用改造**：
+  - 在 `ateng-boot-satoken` / `ateng-boot-web` 提供默认关闭的可配置策略与 `TenantHeaderResolver` SPI 钩子（保留既有普通租户强锁定默认行为，允许上层注入超管切换校验策略）。
+- **准入纪律**：**严禁在上层注册低优先级拦截器绕过覆盖**，待底座提供标准 SPI 后通过薄适配器接入。
+- **状态**：- [ ] 已提 Issue 待底座改造与双轴验收（[atengk/ateng-boot#1078](https://github.com/atengk/ateng-boot/issues/1078)）
 
 ---
 
-### [B4] 中优先级：`LoginFailureLockService` 多租户与多账号隔离键
+### [B4] 中优先级（硬停工等待）：`LoginFailureLockService` 多租户与多账号作用域隔离键
 
 - **现状与源码锚点**：
-  - `LoginFailureLockService`（`ateng-boot-satoken/.../defense/LoginFailureLockService.java`）的 `checkLocked(account, clientIp)`、`recordFailure(account, clientIp)`、`clearFailure(account)` 仅接收单个 `account` 字符串拼接 `ateng:satoken:login-fail:<account>`。
-  - 不同租户下若存在同名账号（例如租户 A 与租户 B 均有 `zhangsan`），直接传用户名会产生跨租户误锁定。
-- **目标改造**：
-  - 在 `LoginFailureLockService` 增加带 `(tenantId, loginType, account, clientIp)` 的重载方法（或自动读取当前 `TenantContextHolder` 拼装作用域前缀），保留原签名向后兼容。
-- **上层临时降级**：调用 `LoginFailureLockService` 时统一传入组合键 `tenantId + ":" + loginType + ":" + username`。
-- **状态**：- [ ] 已提 Issue 待评估分诊（[atengk/ateng-boot#1079](https://github.com/atengk/ateng-boot/issues/1079)）
+  - `LoginFailureLockService` 仅接收单一 `account` 字符串拼接 `ateng:satoken:login-fail:<account>`，跨租户同名账号会产生误锁定。
+- **目标通用改造**：
+  - 增加带 `(tenantId, loginType, account, clientIp)` 的重载方法（或自动按作用域隔离），原方法保留向后兼容。
+- **准入纪律**：**严禁在上层手动拼串降级调用**，待底座新增标准重载后直接调用。
+- **状态**：- [ ] 已提 Issue 待底座改造与双轴验收（[atengk/ateng-boot#1079](https://github.com/atengk/ateng-boot/issues/1079)）
 
 ---
 
-### [B5] 已验证就绪、仅需上层显式适配的底座细节（无需改底层）
+### [B5] 已就绪 / 待随新版发布（纯配置接入，无需改底座功能）
 
-- **`EnumDictionaryController`（`ateng-boot-web`）**：默认 `enabled = false`、默认路径 `/api/system/enums`；在 `ateng-solid-server` 显式配置 `ateng.boot.web.enum.enabled=true`、`path-prefix=/admin/system/enums`、`scan-packages=io.github.atengk.solid` 即可；另需注意若登录前需要读取枚举字典则配置白名单，否则自动受 `/admin/**` 登录守卫保护。
-- **`OperateLogModel`（`ateng-boot-core`）**：包含 18 项通用审计字段与扩展字段 `Map<String, Object> extra`；无独立 `browser` / `os` 属性，可在上层 `OperateLogStorageProvider` 实现中解析 User-Agent 并存入 `extra` 或入库映射列。
-- **`PasswordUtil`（`ateng-boot-core`）**：原生内置 `PBKDF2WithHmacSHA256`（310,000 次迭代 + 16 字节随机盐），可直接调用 `PasswordUtil.hash(...)` / `PasswordUtil.matches(...)`。
-- **`ateng-boot-flyway`（`dev` 待随新版发布）**：原生内置生产 Profile `clean` 物理熔断、与 MyBatis-Plus 的启动初始化顺序屏障及 H2（`MODE=MySQL`）兼容支持；实测尚未随 `1.2.0` 发布至 Maven Central，`ateng-solid-bootstrap/pom.xml` 已预留占位，待 `ateng-boot` 下一正式版发版后直接启用。
+- **`EnumDictionaryController`（`ateng-boot-web`）**：已就绪，在 `application.yml` 显式配置 `ateng.boot.web.enum.enabled=true`、`path-prefix=/admin/system/enums`、`scan-packages=io.github.atengk.solid` 即可（受 `/admin/**` 登录态保护）。
+- **`OperateLogModel`（`ateng-boot-core`）**：已就绪，上层实现 `OperateLogStorageProvider` SPI 解析 UA 写入 `extra` 并异步落库 `sys_oper_log`。
+- **`PasswordUtil`（`ateng-boot-core`）**：已就绪，直接复用 `PasswordUtil.hash(...)` / `PasswordUtil.matches(...)`。
+- **`ateng-boot-flyway`（待随 `ateng-boot` 下一递进正式版发布）**：已在 `ateng-boot` `dev` 实现（含生产 `clean` 物理熔断、与 MyBatis-Plus 初始化顺序屏障及 H2 兼容），待 `ateng-boot:1.2.1+` 发布至 Maven Central 后取消 `ateng-solid-bootstrap/pom.xml` 中注释并启用迁移。
 
 ---
 
-### [B6] 中优先级：`BusinessException` 支持可选 `traceId` 字段（联动 Cloud 异常追踪）
+### [B6] 中优先级（阻塞 Spec 5）：`BusinessException` 支持可选 `traceId` 字段
+
+- **现状与源码锚点**：`BusinessException` 当前无 `traceId` 字段，跨进程 RPC 恢复异常时无法携带下游 `Result.traceId`。
+- **目标通用改造**：增量增加可选 `traceId` 与兼容方法 `withTraceId`，并在 `GlobalExceptionHandler` 中兜底回填。
+- **状态**：- [ ] 已提 Issue 待底座改造与双轴验收（[atengk/ateng-boot#1080](https://github.com/atengk/ateng-boot/issues/1080)）
+
+---
+
+### [B7] 高优先级（阻塞多租户模式运行）：`CachedStpInterface` 与 `PermissionCacheService` 可选租户维度角色缓存键隔离
 
 - **现状与源码锚点**：
-  - `BusinessException`（`ateng-boot-core/.../exception/BusinessException.java`）目前仅携带 `code`、`msg`、`resultCode`、`writableStackTrace`，未定义可选 `traceId` 字段，导致 Feign / Dubbo 消费端在恢复跨进程业务异常时无法将下游真实 `Result.traceId` 绑定至异常对象。
-- **目标改造**：
-  - 增量增加可选 `traceId` 字段及兼容读写方法（如 `withTraceId`），保持既有全量构造重载 100% 向后兼容，并在 `ateng-boot-web` `GlobalExceptionHandler` 中兜底回填。
-- **状态**：- [ ] 已提 Issue 待底层改造与验证（[atengk/ateng-boot#1080](https://github.com/atengk/ateng-boot/issues/1080)）
+  - `CachedStpInterface#getPermissionsByRole(roleCode, loginType)` 固定使用 `PermissionCacheService.buildRolePermsKey(roleCode, loginType)`，未包含租户维度；开启多租户时不同租户同名角色会触发跨租户权限缓存串味越权。
+- **目标通用改造**：
+  - 在 `SaTokenProperties.PermissionCacheProperties` 新增默认关闭的 `tenantScoped` 开关（`ateng.boot.satoken.permission-cache.tenant-scoped`，默认 `false` 保持向后兼容），开启后在缓存键、定向失效与集群广播中按租户隔离。
+- **发版纪律提醒**：`ateng-boot` 下一正式发版须采用递进版本号（如 `1.2.1` 或 `1.3.0`，包含 `ateng-boot-flyway` 与 `#1076~#1080`、`#1093` 修复），避免继续复用已本地安装过的 `1.2.0` 造成缓存覆盖冲突。
+- **状态**：- [ ] 已提 Issue 待底座改造与双轴验收（[atengk/ateng-boot#1093](https://github.com/atengk/ateng-boot/issues/1093)）
 
 ---
 
-## 2. `ateng-cloud` (`1.0.0`) 待增强与并存契合项
+## 2. `ateng-cloud` (`1.0.0` · 阻塞 Spec 5 微服务并存挂壳)
 
-> 除本清单新增提交的 C1–C6 外，需同步跟进上游既有关联单：[`atengk/ateng-cloud#198`](https://github.com/atengk/ateng-cloud/issues/198)（升级对齐 `ateng-boot-bom`）与 [`atengk/ateng-cloud#199`](https://github.com/atengk/ateng-cloud/issues/199)（修复 `SaTokenGatewayFilter` 多账号与 `LoginUser` 协议断层）。
+> 除 C1–C6 外，同步追踪既有基础对齐单 [`atengk/ateng-cloud#198`](https://github.com/atengk/ateng-cloud/issues/198) 与 [`atengk/ateng-cloud#199`](https://github.com/atengk/ateng-cloud/issues/199)。
 
-### [C1] 高优先级（P0 阻塞）：`ateng-cloud-feign` 与 `ateng-cloud-sentinel` 共存构建崩溃
-
-- **现状与源码锚点**：
-  - `AtengSentinelEnvironmentPostProcessor`（L40-42）检测到 `FeignClient` 即默认注入 `feign.sentinel.enabled=true`，创建 `SentinelFeign$Builder`（其 `invocationHandlerFactory` 方法直接抛 `UnsupportedOperationException`）；
-  - 但 `AtengFeignAutoConfiguration#atengFeignBuilderCustomizer`（L204）无条件调用 `builder.invocationHandlerFactory(...)`，导致一旦同时引入 `ateng-cloud-all`（或 `feign + sentinel`）并声明任何 `@FeignClient` 即启动崩溃。
-- **目标改造**：在 `AtengFeignAutoConfiguration` 中安全识别 `SentinelFeign.Builder` 避免非法调用 `invocationHandlerFactory(...)`，并确保熔断与自适应解包/异常转译兼容；在 `sample-cloud-smoke-test` 增加真实 `@FeignClient` 冒烟测试。
+### [C1] 高优先级（P0）：`ateng-cloud-feign` 与 `ateng-cloud-sentinel` 共存构建崩溃
+- **源码锚点**：`AtengSentinelEnvironmentPostProcessor` 注入 `feign.sentinel.enabled=true` 创建 `SentinelFeign$Builder`，而 `AtengFeignAutoConfiguration#atengFeignBuilderCustomizer` 无条件调用 `invocationHandlerFactory(...)` 触发崩溃。
 - **状态**：- [ ] 已提 Issue 待底层修复与验证（[atengk/ateng-cloud#200](https://github.com/atengk/ateng-cloud/issues/200)）
 
----
-
-### [C2] 高优先级（P0 契约）：`ateng-cloud-gateway` 支持平台超管受控切换目标 `X-Tenant-Id`
-
-- **现状与源码锚点**：
-  - `GatewayHeaderSanitizeFilter`、`SaTokenGatewayFilter` 与 `GatewayTenantFilter` 三段链路当前在开启安全默认配置（`allow-header=false`）时会物理剥离入站 `X-Tenant-Id`，且登录后无条件用会话 `tenantId` 覆盖出站头，尚未支持平台租户（`"0"`）+ 角色 `super_admin` 切换目标租户。
-- **目标改造**：新增默认关闭的受控配置（`allowSuperAdminSwitch=false`、`platformTenantIds`、`superAdminRoles`）与校验钩子，同时维持普通租户强锁定与匿名流量隔离，并明确下游微服务 MVC 拦截器防覆盖协同方式。
+### [C2] 高优先级（P0）：`ateng-cloud-gateway` 支持平台超管受控切换目标 `X-Tenant-Id`
+- **源码锚点**：网关安全链当前物理剥离或无条件覆写 `X-Tenant-Id`，需增加默认关闭的可配超管切换策略与下游防覆盖协同。
 - **状态**：- [ ] 已提 Issue 待底层改造与验证（[atengk/ateng-cloud#201](https://github.com/atengk/ateng-cloud/issues/201)）
 
----
-
-### [C3] 高优先级（P1 协议）：`SaTokenGatewayFilter` 与 `FeignContextPropagationInterceptor` 补全注入 `SA-SAME-TOKEN`
-
-- **现状与源码锚点**：
-  - `SaSameUtil.SAME_TOKEN` 与 `ateng-boot-satoken` 原生 `@CheckSameToken` 默认读取 `"SA-SAME-TOKEN"`，`DubboSameTokenFilter` 已双头兼容；但 `SaTokenGatewayFilter.injectSameTokenHeaders` 与 `FeignContextPropagationInterceptor.apply` 出站均遗漏写入 `"SA-SAME-TOKEN"`（仅写了 `"Same-Token"`）。
-- **目标改造**：在网关与 Feign 出站注入逻辑中同步补充 `"SA-SAME-TOKEN"` 头（保留原 `"Same-Token"` 向后兼容）。
+### [C3] 高优先级（P1）：`SaTokenGatewayFilter` 与 `FeignContextPropagationInterceptor` 补全注入 `SA-SAME-TOKEN`
+- **源码锚点**：网关与 Feign 出站目前仅写 `"Same-Token"` 遗漏 `"SA-SAME-TOKEN"`，与 `@CheckSameToken` 默认头名不一致。
 - **状态**：- [ ] 已提 Issue 待底层修复与验证（[atengk/ateng-cloud#202](https://github.com/atengk/ateng-cloud/issues/202)）
 
----
-
-### [C4] 中优先级（P1 链路）：Feign / Dubbo 远端异常 `traceId` 回传与 HTTP `409`/`504` 映射补齐
-
-- **现状与源码锚点**：
-  - `FeignErrorSupport.mapHttpStatusToResultCode` 遗漏 `409 -> CONFLICT` 等映射；且 `AtengFeignDecoder`、`AtengFeignErrorDecoder`、`AtengDubboExceptionFilter` 尚未将下游 `Result.traceId` 绑定回异常对象。
-- **目标改造**：补齐 `409` / `504` 状态码映射，并在联动 `ateng-boot#1080` 后支持将远端 `traceId` 回填至 `BusinessException`。
+### [C4] 中优先级（P1）：Feign / Dubbo 远端异常 `traceId` 回传与 HTTP `409`/`504` 映射补齐
+- **源码锚点**：`FeignErrorSupport.mapHttpStatusToResultCode` 遗漏 `409/504`，且跨端消费未回填 `Result.traceId`（联动 `ateng-boot#1080`）。
 - **状态**：- [ ] 已提 Issue 待底层改造与验证（[atengk/ateng-cloud#203](https://github.com/atengk/ateng-cloud/issues/203)）
 
----
-
-### [C5] 中优先级（P2 安全）：`AtengDubboExceptionFilter` 转译未知异常剥离非白名单 `cause` 开关
-
-- **现状与源码锚点**：`AtengDubboExceptionFilter`（L74/87/130）直接保留未知原始异常作 `cause`，跨进程序列化若遇消费端缺失第三方类或超出 `SerializeSecurityManager` 白名单会触发反序列化异常。
-- **目标改造**：提供可配置剥离开关（保留本地完整日志堆栈，出站安全收敛摘要与 `BusinessException`）。
+### [C5] 中优先级（P2）：`AtengDubboExceptionFilter` 转译未知异常剥离非白名单 `cause` 开关
+- **源码锚点**：`AtengDubboExceptionFilter`（L74/87/130）保留未知原始异常作 `cause`，跨进程序列化易触发类缺失与白名单拦截。
 - **状态**：- [ ] 已提 Issue 待评估（[atengk/ateng-cloud#204](https://github.com/atengk/ateng-cloud/issues/204)）
 
----
-
-### [C6] 中优先级（P2 治理）：`AtengSentinelEnvironmentPostProcessor` 尊重总开关及限流口径对齐
-
-- **现状与源码锚点**：`AtengSentinelEnvironmentPostProcessor` 未检测 `ateng.cloud.sentinel.enabled=false` 即注入 `feign.sentinel.enabled=true`；另 Gateway 限流降级返回 `429/503 + Retry-After: 1`，而 MVC 侧 `AtengBlockExceptionHandler` 返回 `4201~4205`。
-- **目标改造**：前置检查 `ateng.cloud.sentinel.enabled`，并评估提供 Sentinel 错误码与 `Retry-After` 口径对齐选项。
+### [C6] 中优先级（P2）：`AtengSentinelEnvironmentPostProcessor` 尊重总开关及限流口径对齐
+- **源码锚点**：未判断 `ateng.cloud.sentinel.enabled=false`；Gateway 与 MVC 侧限流状态码口径存在差异。
 - **状态**：- [ ] 已提 Issue 待评估（[atengk/ateng-cloud#205](https://github.com/atengk/ateng-cloud/issues/205)）
 
 ---
 
-## 3. `ateng-ui` (`1.0.0`) 待增强与上层适配项
+## 3. `ateng-ui` (`1.0.0` ➔ 目标 `1.0.1+` / `1.1.0+`)
 
-### [U1] 轻度增强：`ProMenuItemNode` 对字符串图标（Element Plus 图标名）的原生解析
+### [U0] 高优先级（硬停工等待发版）：等待 `ateng-ui` `dev` 已合入修复发布正式版至 npm
 
-- **现状与源码锚点**：
-  - `ProMenuItemNode.vue`（`packages/element-plus/src/components/pro-layout/ProMenuItemNode.vue`）渲染菜单图标时：当 `icon` 为 Vue 组件对象/函数时使用 `<component :is="itemIcon" />`；当 `icon` 为 `string` 时直接渲染 `<i :class="itemIcon" />`（仅适配 CSS 字体图标类名）。
-  - 后端菜单表 `sys_menu.icon` 通常存储图标名称字符串（如 `"User"`、`"Setting"` 或 `"ep:setting"`）。
-- **可选底层改造 vs 上层方案**：
-  - **可选改底层**：在 `AtengProLayoutProps` 增加 `iconRenderer` 或在内置支持按注册表解析图标名字符串；
-  - **上层零改底层方案（推荐直接采用）**：前端在将后端菜单树转换为 `ProMenuItem[]` 时，通过本地图标映射表将 `icon` 字符串转为对应 `@element-plus/icons-vue` 组件对象（或使用 `AtengProLayout` 已暴露的 `#menuItem` 插槽渲染）。
-- **状态**：- [ ] 已提 Issue 待评估改造（[atengk/ateng-ui#365](https://github.com/atengk/ateng-ui/issues/365)；上层亦可通过字段映射兼容，不阻塞开发）
-
----
-
-### [U2] 上层必须显式覆写：`AtengVue` 默认 `superAdminRoles` 去 `"admin"`
-
-- **现状与源码锚点**：
-  - `packages/vue/src/context/context.ts` 中 `DEFAULT_OPTIONS.superAdminRoles` 默认为 `['admin', 'super_admin']`；
-  - 当 `useAuth` / `v-permission` / `v-role` 运行时，凡角色列表含 `'admin'` 会自动跳过前端按钮权限校验。
-- **上层处理方式（待 `@atengk/vue` 1.0.1+ 发版生效）**：
-  - `atengk/ateng-ui#364` 已在 `ateng-ui` `dev` 分支合入全局 `superAdminRoles`，实测尚未随 `1.0.0` 发布至 npm；待 `ateng-ui` 下一正式版发布后，立即在 `src/main.ts` 显式覆写：`app.use(createAtengVue({ authManager: adminAuthManager, superAdminRoles: ['super_admin'] }))`，与后端 B2 保持完全对齐。
+- **现状与实测锚点**：
+  - 当前 npm 最新 `1.0.0` 存在三项核心不兼容与安全隐患，均已在 `ateng-ui` `dev` 修复但尚未发布至 npm：
+    1. **[`atengk/ateng-ui#362`](https://github.com/atengk/ateng-ui/issues/362)**（分页契约不兼容）：npm `1.0.0` 的 `PageQuery`/`PageResult` 仍为 `pageNum`/`pageSize`/`list`；`dev`（`ea2e643`）已净切对齐 `ateng-boot-core` 的 `current`/`size`/`sorts` 与 `records`/`total`/`pages`（同时 `AtengVueOptions.defaultPageSize` 更名为 `defaultSize`）；
+    2. **[`atengk/ateng-ui#363`](https://github.com/atengk/ateng-ui/issues/363)**（指令隔离缺陷）：npm `1.0.0` 的 `v-permission`/`v-role` 在自定义 `AuthManager` 实例（`satoken-admin`）下上下文隔离失效；`dev`（`1e90cd7`）已通过 `resolveAtengConfig` 修复；
+    3. **[`atengk/ateng-ui#364`](https://github.com/atengk/ateng-ui/issues/364)**（超管角色收口）：`dev`（`48105c4`）已支持 `createAtengVue({ superAdminRoles: ['super_admin'] })` 覆写默认含 `'admin'` 的集合。
+- **准入纪律**：`ateng-ui` 发布递进正式版至 npm 前，**前端停止编写业务分页、权限指令与布局编码**；发版后立即升级 `package.json` 并启用 `superAdminRoles: ['super_admin']`。
+- **状态**：- [ ] 上游 `dev` 已合入（`#362`、`#363`、`#364`），待 npm 发布正式递进版本后升级锁定
 
 ---
 
-### [U3] 上层业务集成职责：`KeepAlive` 多标签缓存联动
+### [U1] 中优先级（硬停工等待）：`AtengProLayout / ProMenuItemNode` 原生字符串图标解析扩展点
 
-- **现状与说明**：
-  - `AtengProLayout` 与 `AtengTabsNav` 负责 UI 布局与标签页状态派发，不直接内置 `vue-router` 与 `<KeepAlive>` 缓存列表绑定（符合 UI 组件库解耦原则）。
-- **上层处理方式**：在 `ateng-solid-admin-web` 布局壳中配合 `@atengk/vue` `useTabsNav` 与路由 `meta.keepAlive` 自行封装 `<router-view v-slot="{ Component, route }">` + `<keep-alive :include="cachedViews">`。
+- **现状与源码锚点**：
+  - `ProMenuItemNode.vue`（`packages/element-plus/src/components/pro-layout/ProMenuItemNode.vue`）遇到 `string` 类型 `icon` 时仅渲染 `<i :class="itemIcon" />`；在以 `@element-plus/icons-vue` 或其它图标库构建的后端动态路由菜单中，后端通常下发图标名称字符串（如 `"User"`、`"Setting"`）。
+- **目标通用改造**：
+  - 在 `AtengProLayoutProps` 提供通用的字符串图标解析扩展点（如 `iconResolver?: (name: string) => Component | string | undefined` 回调或透传插槽支持），不把 `@element-plus/icons-vue` 强绑定写死进无耦合的菜单渲染器，同时外部任意项目接入即开箱可用。
+- **准入纪律**：**严禁在上层提前编写把菜单树字符串属性硬改成组件对象的绕过适配器**，待 `ateng-ui#365` 在底座完成优雅扩展点并随新版发布后，上层仅通过配置式 `iconResolver` 回调接入。
+- **状态**：- [ ] 已提 Issue 待底座改造与双轴验收（[atengk/ateng-ui#365](https://github.com/atengk/ateng-ui/issues/365)）
+
+---
+
+### [U2] 纯配置集成：`AtengVue` 显式覆写 `superAdminRoles: ['super_admin']`
+- 依托 `U0`（`#364`）发版后，在 `src/main.ts` 配置 `createAtengVue({ httpClient, authManager: adminAuthManager, tenantManager, superAdminRoles: ['super_admin'] })`，与后端 B2 保持一致。
+
+### [U3] 纯布局集成：`KeepAlive` 多标签缓存联动
+- `AtengProLayout` 与 `AtengTabsNav` 负责 UI 布局与页签派发，`ateng-solid-admin-web` 在 `AdminLayout.vue` 组合 `useTabsNav`（`@atengk/vue`）与 `<KeepAlive :include="cachedViews">` 属于标准应用层布局装配，无需改底座。
