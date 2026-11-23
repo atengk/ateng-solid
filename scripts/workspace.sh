@@ -313,6 +313,7 @@ cmd_sync() {
     if [[ ! -d "$target/.git" ]]; then
       log_info "正在克隆 $name ($url)..."
       git clone "$url" "$target"
+      ensure_dev_branch "$target" "$name"
       configure_hooks "$target" "$name"
       continue
     fi
