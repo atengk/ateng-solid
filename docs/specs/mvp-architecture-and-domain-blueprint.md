@@ -2,7 +2,7 @@
 
 - **规划版本**：v1.1.0
 - **创建时间**：2026-11-18
-- **最新修订**：2026-11-20（收敛首期极简核心栈、枚举接管、Flyway 域内归属及实体基类体系对齐）
+- **最新修订**：2026-11-23（完成 `ateng-boot:1.2.0`、`ateng-cloud:1.1.0`、`ateng-ui:1.1.0` 双轴验收与锁版，`Spec 0` 解封）
 - **关联规范**：[跨端契约](../../.agents/rules/contracts.md) | [全仓编程与架构规范](../../.agents/rules/coding-and-architecture.md) | [底层增强清单](./foundation-enhancements-checklist.md)
 
 ---
@@ -76,9 +76,9 @@ flowchart TD
 ## 3. 演进拆分路线（Spec 规划）
 
 正式开始编码前，将按以下顺序分步推进并落实测试先行闭环（首期单体 MVP 统一收敛为 **`Spec 0 ~ Spec 4`**，后续 `ateng-cloud` 同源双态并存挂壳独立归口为 **`Spec 5`**）：
-1. **Spec 0（底层硬门禁前置）**：按 [底层缺口即停工规范](../../.agents/rules/foundation-first-gate.md) 与 [底层基础设施待增强清单](./foundation-enhancements-checklist.md) 完成 `ateng-boot#1134` 实体重构改造，并等待 `ateng-boot`（含 `#1076~#1080`、`#1093`、`#1094`、`#1134`、`flyway`）与 `ateng-ui`（含 `#362~#365`）发布递进正式版并锁定版本号。
+1. **Spec 0（底层硬门禁前置 · ✅ 已完成双轴验收并锁版解锁）**：已于 [底层基础设施待增强清单](./foundation-enhancements-checklist.md) 核验并锁定 `ateng-boot:1.2.0`（含 `#1076~#1080`、`#1093`、`#1094`、`#1134~#1137`、`#1163~#1167` 与 `ateng-boot-flyway`）、`ateng-cloud:1.1.0`（含 `#198~#206`）及 `ateng-ui:1.1.0`（`@atengk/{core,vue,element-plus}` 含 `#362~#367`），正式开启 `Spec 1 ~ Spec 4` 编码。
 2. **Spec 1（工程骨架、公共原语与扩展 SPI 定义）**：完善 `ateng-solid-server` 5 模块 POM/ArchUnit/Flyway 双模配置、公共常量/错误码/`DomainEventPublisher` 与内核 SPI 端口（如 `AuthGrantHandler` 接口定义），与 `ateng-solid-admin-web` Vite/Tailwind/ateng-ui 基座。
 3. **Spec 2（认证会话闭环）**：图形验证码与多租户开关透传、账密 PBKDF2 登录、防爆破、超管启动引导初始化、`getInfo`/动态路由与在线会话管理。
 4. **Spec 3（RBAC、数据权限与可开关多租户）**：菜单/角色/部门/岗位/用户管理、`@DataScope` 5 级数据权限、前端动态路由权限闭环，以及开关式 `sys_tenant`/`sys_tenant_package` 租户治理与套餐联动裁剪。
 5. **Spec 4（枚举、字典、参数、文件与审计）**：上层接管 `/admin/system/enums` 静态枚举、`sys_dict`、`sys_config`、头像上传与用户 Excel 原子校验批注回写导入导出、`sys_oper_log`/`sys_login_log`。
-6. **Spec 5（后续演进：`ateng-cloud` 同源双态并存挂壳）**：待 `ateng-cloud:1.0.1+` 正式发布且单体稳固后，同仓并列挂载 `ateng-solid-cloud/{gateway,auth,system}` 微服务启动壳，与 `ateng-solid-bootstrap` 长期双态并存共用同一套业务核心。
+6. **Spec 5（后续演进：`ateng-cloud` 同源双态并存挂壳）**：底座 `ateng-cloud:1.1.0` 已发布就绪，待首期单体（`Spec 1 ~ Spec 4`）稳固后，同仓并列挂载 `ateng-solid-cloud/{gateway,auth,system}` 微服务启动壳，与 `ateng-solid-bootstrap` 长期双态并存共用同一套业务核心。
