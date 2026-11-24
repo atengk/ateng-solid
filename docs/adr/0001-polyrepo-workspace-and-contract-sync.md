@@ -1,7 +1,7 @@
 # ADR-0001: Polyrepo 隔离、单向契约同步与子仓独立开发架构
 
-- **状态**：`Accepted`
-- **日期**：2026-11-18
+- **状态**：`Accepted`（`2026-11-25` 修订：取消 `.agents/rules/` 全量常驻，迁至 `docs/agents/` 渐进披露）
+- **日期**：2026-11-18（修订：`2026-11-25`）
 - **作者**：Ateng
 - **影响范围**：`ateng-solid`、`ateng-solid-server`、`ateng-solid-admin-web`
 
@@ -21,10 +21,11 @@
 
 1. **独立 Polyrepo + 根仓治理底座**：
    - `ateng-solid` 通过 `.gitignore` 忽略子工程目录，各子仓独立管理 Git 分支（`main` 发布 + `dev` 开发）、`.githooks`、CI/CD 流水线与 `CHANGELOG`。
-2. **根仓总控 `AGENTS.md` + 子仓独立自洽 `AGENTS.md`**：
-   - 根仓维护总控 `AGENTS.md`；每个子仓拥有完整、独立可单独开发的 `AGENTS.md` 及专职 `.agents/rules/`、`CONTEXT-MAP.md`、`docs/adr/`、`docs/specs/`。
+2. **极简常驻 `AGENTS.md` + `docs/agents/` 按需渐进披露（`2026-11-25` 修订）**：
+   - 早期将 4 份长篇规则全部置入 `.agents/rules/`（`trigger: always_on`）导致单仓常驻规则高达 15k~19k tokens，叠加个人全局规则直接突破 20k 上下文预算触发规则降级（Demoted），且 `trigger: model_decision` 存在 AI 工具厂商绑定问题；
+   - 修订为：**清空各仓 `.agents/rules/`**，仅保留极简常驻 `AGENTS.md`（每轮必守项目专属红线 + 强触发指针；根仓 ≤ 1,500 tok、单子仓 ≤ 2,500 tok），将跨端契约、停工联调 SOP 与各端专职细则下沉为 `docs/agents/*.md` 按需参考文档，100% 兼容 Antigravity / Claude Code / Codex / Cursor；每个子仓继续独立保有 `AGENTS.md`、`docs/agents/`、`CONTEXT*.md`、`docs/adr/` 与 `docs/specs/`。
 3. **公共规约单一真源单向同步防漂移（`workspace.sh`）**：
-   - 跨端契约 `.agents/rules/contracts.md` 与底层缺口硬门禁 `.agents/rules/foundation-first-gate.md` 主源位于根仓，由统一 Bash 脚本 `scripts/workspace.sh`（支持 Windows Git Bash 与 Unix）提供 `sync-rules` / `check-rules`（兼容保留 `sync-contracts` / `check-contracts`）校验子仓副本一致性，彻底消除跨仓契约与停工门禁脱节。
+   - 跨端契约 `docs/agents/contracts.md`、底层缺口停工与联调 SOP `docs/agents/foundation-first-gate.md`、精简编码与注释规范 `docs/agents/coding-standards.md` 与文档保真规范 `docs/agents/documentation-specification.md` 主源位于根仓，由统一 Bash 脚本 `scripts/workspace.sh`（支持 Windows Git Bash 与 Unix）提供 `sync-rules` / `check-rules`（兼容保留 `sync-contracts` / `check-contracts`）校验子仓副本一致性，消除跨仓漂移且零常驻 Token 开销。
 4. **集成 `oss-template` 工程化标准**：
    - 根仓及子仓按业务应用定位裁剪集成 `oss-template` 的提交钩子（`.githooks/commit-msg`）、语义化提交与发版脚本（`scripts/commit.sh`、`scripts/release.sh`）、PR/Issue 模板与 GitHub Actions 流水线。
 

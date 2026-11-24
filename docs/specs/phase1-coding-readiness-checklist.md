@@ -3,15 +3,15 @@
 - **关联路线图**：[第一阶段（MVP 内核）需求文档（PRD）与高保真交互原型路线图](https://github.com/atengk/ateng-solid/issues/1)
 - **收口工单**：[第一阶段 PRD 与技术 Specs / 术语表 1:1 终审与签收归档](https://github.com/atengk/ateng-solid/issues/10)
 - **终审范围**：
-  - 根仓真源：`.agents/rules/contracts.md`、`docs/specs/mvp-architecture-and-domain-blueprint.md`、`docs/specs/foundation-enhancements-checklist.md`、`docs/specs/prd/{design-system,00..04}.md`、`docs/prototypes/phase1/*`、`docs/adr/0001~0006`
+  - 根仓真源：`docs/agents/contracts.md`、`docs/specs/mvp-architecture-and-domain-blueprint.md`、`docs/specs/foundation-enhancements-checklist.md`、`docs/specs/prd/{design-system,00..04}.md`、`docs/prototypes/phase1/*`、`docs/adr/0001~0006`
   - 后端仓：`ateng-solid-server/docs/specs/*`、`ateng-solid-server/*/CONTEXT.md`、`ateng-solid-bootstrap/src/main/resources/application.yml`
-  - 前端仓：`ateng-solid-admin-web/docs/specs/*`、`ateng-solid-admin-web/CONTEXT.md`、`ateng-solid-admin-web/.agents/rules/styling-and-ateng-ui.md`、`ateng-solid-admin-web/docs/adr/0001-*`
+  - 前端仓：`ateng-solid-admin-web/docs/specs/*`、`ateng-solid-admin-web/CONTEXT.md`、`ateng-solid-admin-web/docs/agents/styling-and-ateng-ui.md`、`ateng-solid-admin-web/docs/adr/0001-*`
 
 ---
 
 ## 1. 跨端 1:1 一致性终审结论
 
-经逐项比对，`.agents/rules/contracts.md`（响应信封 `Result<T>`、6 位分段错误码 `100xxx`/`101xxx`/`102xxx`、雪花 `string` 主键、`tenant_id BIGINT NOT NULL DEFAULT 0`、`super_admin`、`satoken-admin`、`X-Tenant-Id`、`X-Trace-Id`、三段式权限码、Fesod 批注回执）与第一阶段 PRD（`00~04`）保持 **100% 协议一致**，无需修改跨端契约。
+经逐项比对，`docs/agents/contracts.md`（响应信封 `Result<T>`、6 位分段错误码 `100xxx`/`101xxx`/`102xxx`、雪花 `string` 主键、`tenant_id BIGINT NOT NULL DEFAULT 0`、`super_admin`、`satoken-admin`、`X-Tenant-Id`、`X-Trace-Id`、三段式权限码、Fesod 批注回执）与第一阶段 PRD（`00~04`）保持 **100% 协议一致**，无需修改跨端契约。
 
 在本次 `#10` 终审中，已将 PRD 阶段调研与决策确立的以下增量与纠偏 **1:1 同步回写至前后端子仓 Specs、Rules 与 ADR**：
 
@@ -24,13 +24,13 @@
 | `ateng-solid-server/ateng-solid-auth/CONTEXT.md` | 补充 `不透明会话句柄 (Opaque Session Handle)` 术语，并明确防爆破锁定覆盖 IP 熔断维度 |
 | `ateng-solid-admin-web/docs/specs/views-and-routes-spec.md` | 对齐定稿 **方案 A + `Precision Slate & Cobalt`**、`AdminLayout` 尺寸与 `U5` 约束、`/dashboard` 初始口令提醒、`/profile` 独立读写与头像上传、`/403` 零菜单退出兜底、`/system/online` 不透明会话句柄及 `/system/dict` 同屏双面板 |
 | `ateng-solid-admin-web/docs/specs/frontend-architecture-and-conventions.md` | 对齐 `src/styles/` 自定义 `Precision Slate & Cobalt` 令牌入口、`src/api/` 映射与 `/403`/`/404` 自适应布局 |
-| `ateng-solid-admin-web/.agents/rules/styling-and-ateng-ui.md` & `docs/adr/0001-*` | 正式修订为“脱离 `theme-pro.css` 默认靛紫皮肤、以 `Precision Slate & Cobalt` 自有令牌覆写或独立挂载（保留 TailwindCSS v4 无 Preflight 与 `@atengk/element-plus/style.css`）”；更新 `ateng-ui#365` 为已就绪状态，补充 `AtengCaptcha` `:refresh`、`AtengQueryForm` 防双重重置、`DictManager` `'default'` 归一化与 `U5~U8` 编码提示 |
+| `ateng-solid-admin-web/docs/agents/styling-and-ateng-ui.md` & `docs/adr/0001-*` | 正式修订为“脱离 `theme-pro.css` 默认靛紫皮肤、以 `Precision Slate & Cobalt` 自有令牌覆写或独立挂载（保留 TailwindCSS v4 无 Preflight 与 `@atengk/element-plus/style.css`）”；更新 `ateng-ui#365` 为已就绪状态，补充 `AtengCaptcha` `:refresh`、`AtengQueryForm` 防双重重置、`DictManager` `'default'` 归一化与 `U5~U8` 编码提示 |
 
 ---
 
 ## 2. 底座缺口再审计结论（`ateng-boot` / `ateng-ui`）
 
-经核对 `docs/specs/prd/_research/boot-1.2.0-constraints.md`、`ui-1.1.0-capabilities.md` 与上游仓库最新 `dev` 提交及 GitHub Issues 状态：**本次终审未发现新的未登记底座缺口**；且先前登记的 **6 项增量门禁均已在上游 `dev` 修复验收并关闭 Issue**（尚未发布 Maven Central / npm 正式版，已按 `.agents/rules/foundation-first-gate.md` 第 5 节 SOP 切入本地联调态供先行开发验证，**正式提交合入 `dev`/`main` 前须待发版并还原正式锁版**）：
+经核对 `docs/specs/prd/_research/boot-1.2.0-constraints.md`、`ui-1.1.0-capabilities.md` 与上游仓库最新 `dev` 提交及 GitHub Issues 状态：**本次终审未发现新的未登记底座缺口**；且先前登记的 **6 项增量门禁均已在上游 `dev` 修复验收并关闭 Issue**（尚未发布 Maven Central / npm 正式版，已按 `docs/agents/foundation-first-gate.md` 第 4 节 SOP 切入本地联调态供先行开发验证，**正式提交合入 `dev`/`main` 前须待发版并还原正式锁版**）：
 
 | 门禁编号 | 上游 Issue & `dev` 提交 | 当前状态 | 本地联调方式 | 正式合入红线 |
 | :---: | :--- | :---: | :--- | :--- |

@@ -4,7 +4,7 @@
 - **关联工单**：[确定认证登录、工作台、个人中心与在线会话域 PRD 与原型](https://github.com/atengk/ateng-solid/issues/5)（路线图：[第一阶段（MVP 内核）需求文档（PRD）与高保真交互原型路线图](https://github.com/atengk/ateng-solid/issues/1)）
 - **前置真源**：
   - [设计系统规范](./design-system.md) | [第一阶段总览与全站交互规范](./00-overview-and-ux-standards.md)
-  - [跨端通信协议与数据契约](../../../.agents/rules/contracts.md) | [底层缺口即停工规范](../../../.agents/rules/foundation-first-gate.md)
+  - [跨端通信协议与数据契约](../../agents/contracts.md) | [底层缺口即停工规范](../../agents/foundation-first-gate.md)
   - [Boot 1.2.0 一手源码调研](./_research/boot-1.2.0-constraints.md) | [UI 1.1.0 一手源码调研](./_research/ui-1.1.0-capabilities.md)
   - [底层基础设施待增强清单](../foundation-enhancements-checklist.md)
 - **交互参考原型**：[认证会话与工作台交互原型 (`auth-and-workspace.html`)](../../prototypes/phase1/auth-and-workspace.html) | [定稿方案 A 基础壳 (`shell-accepted.html`)](../../prototypes/phase1/shell-accepted.html)

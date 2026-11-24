@@ -7,7 +7,8 @@
 | [首期 MVP 架构与领域蓝图](./mvp-architecture-and-domain-blueprint.md) | 首期精简技术栈与底座模块范围、二期延后边界、后端 5 模块与数据表域归属、前后端联调拓扑 | 架构师、全端开发、AI Agent |
 | [底层基础设施待增强清单](./foundation-enhancements-checklist.md) | `ateng-boot`（B1–B15）、`ateng-cloud`（#198–#206 / C1–C6）与 `ateng-ui`（U0–U8）实测状态、`dev` 闭环核查与发版解锁门禁 | 底座维护者、开发启动前自检 |
 | [第一阶段编码开工准入检查表](./phase1-coding-readiness-checklist.md) | 跨端 1:1 终审汇总、第一阶段 `V1.0.1` 种子数据核对表与 `Spec 1 ~ Spec 4` 编码开工前门禁检查项 | 全端开发、代码评审、AI Agent |
-| [全仓代码与架构编程规范](../../.agents/rules/coding-and-architecture.md) | 跨仓统一的分层依赖、对象映射、事务防 N+1、空安全并发、安全脱敏与交付验证总规范 | 全端开发、代码评审、AI Agent |
+| [跨端通信协议与数据契约](../agents/contracts.md) | 统一响应信封、6 位分段错误码、雪花 `string` 主键、`tenant_id BIGINT`、`/admin/**` 路由与权限/Excel 协议唯一真源 | 全端开发、代码评审、AI Agent |
+| [编码规范、架构拆解与注释准则](../agents/coding-standards.md) | 公共提取阶梯、大类/大文件拆分线、设计模式选型、事务防 N+1 与文档/逻辑注释规范 | 全端开发、代码评审、AI Agent |
 
 ## 第一阶段产品需求文档 (PRD) 与高保真交互原型
 

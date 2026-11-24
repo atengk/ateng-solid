@@ -1,7 +1,7 @@
 # ateng-solid 设计系统规范 (`design-system.md` · MASTER)
 
 - **文档定位**：`ateng-solid` 第一阶段（PC 管理后台）全局视觉识别、设计令牌（Design Tokens）、排版标尺与通用组件视觉契约唯一真源。
-- **关联上游**：[`solid-admin-ux`](../../../.agents/skills/solid-admin-ux/SKILL.md) | [`contracts.md`](../../../.agents/rules/contracts.md) | [UI 底座调研报告](./_research/ui-1.1.0-capabilities.md)
+- **关联上游**：[`solid-admin-ux`](../../../.agents/skills/solid-admin-ux/SKILL.md) | [`contracts.md`](../../agents/contracts.md) | [UI 底座调研报告](./_research/ui-1.1.0-capabilities.md)
 - **技术边界声明**：本设计系统独立于 `@atengk/element-plus/theme-pro.css` 默认皮肤（上层可不加载 `theme-pro.css` 或完全覆写其令牌）；同时保持 `@atengk/core` + `@atengk/vue` 无头状态机、Element Plus 功能组件及 TailwindCSS **禁用 Preflight** 边界不变。
 
 ---

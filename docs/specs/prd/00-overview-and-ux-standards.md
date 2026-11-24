@@ -2,7 +2,7 @@
 
 - **所属阶段**：第一阶段（MVP 最小稳定内核）
 - **关联主单**：[第一阶段需求文档（PRD）与交互原型路线图](https://github.com/atengk/ateng-solid/issues/1)
-- **前置真源**：[设计系统规范](./design-system.md) | [跨端通信与数据契约](../../../.agents/rules/contracts.md) | [首期 MVP 架构与领域蓝图](../mvp-architecture-and-domain-blueprint.md) | [UI 底座调研](./_research/ui-1.1.0-capabilities.md) | [Boot 底座调研](./_research/boot-1.2.0-constraints.md)
+- **前置真源**：[设计系统规范](./design-system.md) | [跨端通信与数据契约](../../agents/contracts.md) | [首期 MVP 架构与领域蓝图](../mvp-architecture-and-domain-blueprint.md) | [UI 底座调研](./_research/ui-1.1.0-capabilities.md) | [Boot 底座调研](./_research/boot-1.2.0-constraints.md)
 - **交互参考原型**：[定稿方案 A 基础壳 (`shell-accepted.html`)](../../prototypes/phase1/shell-accepted.html) | [三结构探索存档 (`shell-variants.html`)](../../prototypes/phase1/shell-variants.html)
 
 ---
@@ -120,6 +120,6 @@
 ## 5. 后续前端工程规则同步备忘
 
 由于第一阶段正式确立了不绑定 `theme-pro.css` 默认皮肤、采用方案 A 与 `Precision Slate & Cobalt` 自有令牌体系的视觉路线，后续在 `Spec 1 / Spec 2` 启动 `ateng-solid-admin-web` 编码及 `#10` 终审归档时，需同步修订：
-- `ateng-solid-admin-web/.agents/rules/styling-and-ateng-ui.md`
+- `ateng-solid-admin-web/docs/agents/styling-and-ateng-ui.md`
 - `ateng-solid-admin-web/docs/adr/0001-tailwindcss-without-preflight-and-theme-pro.md`
 - 若保留或放弃 `AtengProLayout` 改由自建轻量 `AdminLayout` 配合 `useTabsNav`，须同步记录至上述前端规范文档与 `Spec 2` 评审单。

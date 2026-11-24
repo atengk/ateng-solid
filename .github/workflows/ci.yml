@@ -65,6 +65,7 @@ jobs:
               - '**'
               - '!*.md'
               - '!docs/**'
+              - 'docs/agents/**'
               - '!.gitignore'
               - '!.editorconfig'
               - '!LICENSE'
@@ -95,9 +96,9 @@ jobs:
 
       - name: 校验公共规约真源与同步脚本可用性
         run: |
-          test -s .agents/rules/contracts.md
-          test -s .agents/rules/foundation-first-gate.md
-          test -s .agents/rules/coding-and-architecture.md
+          test -s docs/agents/contracts.md
+          test -s docs/agents/foundation-first-gate.md
+          test -s docs/agents/coding-standards.md
           test -s docs/agents/documentation-specification.md
           bash scripts/workspace.sh check-rules --allow-missing
 

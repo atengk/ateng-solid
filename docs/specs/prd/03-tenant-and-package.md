@@ -5,7 +5,7 @@
 - **前置真源**：
   - [设计系统规范](./design-system.md) | [第一阶段总览与全站交互规范](./00-overview-and-ux-standards.md) | [组织架构与 RBAC PRD](./02-org-and-rbac.md)
   - [ADR-0002 行级多租户模型](../../adr/0002-multi-tenant-bigint-and-package-model.md) | [ADR-0003 多租户开关与隔离边界](../../adr/0003-tenant-toggle-auth-boundary-and-seed-strategy.md)
-  - [跨端通信协议与数据契约](../../../.agents/rules/contracts.md) | [Boot 1.2.0 调研](./_research/boot-1.2.0-constraints.md)
+  - [跨端通信协议与数据契约](../../agents/contracts.md) | [Boot 1.2.0 调研](./_research/boot-1.2.0-constraints.md)
 - **交互参考原型**：[多租户与租户套餐交互原型 (`tenant-and-package.html`)](../../prototypes/phase1/tenant-and-package.html) | [定稿方案 A 基础壳 (`shell-accepted.html`)](../../prototypes/phase1/shell-accepted.html)
 
 ---

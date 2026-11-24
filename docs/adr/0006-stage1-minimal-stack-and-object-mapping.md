@@ -3,7 +3,7 @@
 - **状态**：`Accepted`
 - **日期**：2026-11-20
 - **作者**：Ateng
-- **影响范围**：`ateng-solid-server`、`ateng-solid-admin-web`、[`.agents/rules/coding-and-architecture.md`](../../.agents/rules/coding-and-architecture.md)
+- **影响范围**：`ateng-solid-server`、`ateng-solid-admin-web`、[`ateng-solid-server/AGENTS.md`](../../ateng-solid-server/AGENTS.md)
 
 ---
 

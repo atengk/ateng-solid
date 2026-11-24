@@ -17,6 +17,6 @@
 
 ## 自检清单
 - [ ] 提交信息与 PR 标题符合 Conventional Commits 规范
-- [ ] 若修改了 `.agents/rules/contracts.md`，已运行 `bash scripts/workspace.sh sync-contracts` 同步至子仓
-- [ ] 已本地验证脚本语法与一致性检查（`bash scripts/workspace.sh check-contracts --allow-missing`）
+- [ ] 若修改了根仓 `docs/agents/{contracts,foundation-first-gate,coding-standards,documentation-specification}.md`，已运行 `bash scripts/workspace.sh sync-rules` 同步至子仓
+- [ ] 已本地验证脚本语法与一致性检查（`bash scripts/workspace.sh check-rules --allow-missing`）
 - [ ] Markdown 文档互链均采用相对路径，无绝对路径或敏感信息明文

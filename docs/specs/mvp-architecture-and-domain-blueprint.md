@@ -3,7 +3,7 @@
 - **规划版本**：v1.1.0
 - **创建时间**：2026-11-18
 - **最新修订**：2026-11-23（完成 `ateng-boot:1.2.0`、`ateng-cloud:1.1.0`、`ateng-ui:1.1.0` 双轴验收与锁版，`Spec 0` 解封）
-- **关联规范**：[跨端契约](../../.agents/rules/contracts.md) | [全仓编程与架构规范](../../.agents/rules/coding-and-architecture.md) | [底层增强清单](./foundation-enhancements-checklist.md)
+- **关联规范**：[跨端契约](../agents/contracts.md) | [底层缺口即停工与联调 SOP](../agents/foundation-first-gate.md) | [底层增强清单](./foundation-enhancements-checklist.md)
 
 ---
 

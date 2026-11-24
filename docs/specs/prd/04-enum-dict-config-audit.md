@@ -4,7 +4,7 @@
 - **关联工单**：[确定静态枚举、动态字典、系统参数与审计日志域 PRD 与原型](https://github.com/atengk/ateng-solid/issues/8)（路线图：[第一阶段（MVP 内核）需求文档（PRD）与高保真交互原型路线图](https://github.com/atengk/ateng-solid/issues/1)）
 - **前置真源**：
   - [设计系统规范](./design-system.md) | [第一阶段总览与全站交互规范](./00-overview-and-ux-standards.md)
-  - [跨端通信协议与数据契约](../../../.agents/rules/contracts.md) | [Boot 1.2.0 调研](./_research/boot-1.2.0-constraints.md) | [UI 1.1.0 调研](./_research/ui-1.1.0-capabilities.md)
+  - [跨端通信协议与数据契约](../../agents/contracts.md) | [Boot 1.2.0 调研](./_research/boot-1.2.0-constraints.md) | [UI 1.1.0 调研](./_research/ui-1.1.0-capabilities.md)
   - [EnumDictionaryController.java](../../../../ateng-boot/ateng-boot-web/src/main/java/io/github/atengk/boot/web/dict/EnumDictionaryController.java)（底座参考）
 - **交互参考原型**：[枚举、字典、参数与审计原型 (`enum-dict-config-audit.html`)](../../prototypes/phase1/enum-dict-config-audit.html) | [定稿方案 A 基础壳 (`shell-accepted.html`)](../../prototypes/phase1/shell-accepted.html)
 

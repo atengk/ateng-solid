@@ -6,7 +6,7 @@
 #   status                         巡检根仓与各子仓分支、工作区洁净度、Hooks 与公共规约同步状态
 #   init                           幂等初始化: 配置 Git Hooks、准备 dev 开发分支、检查本地工具链基线
 #   sync [--pull]                  克隆缺失子仓；传入 --pull 时在干净工作区增量拉取，并同步公共规约
-#   sync-rules                     将根仓 .agents/rules/ 公共真源单向同步至各子仓（兼容 sync-contracts）
+#   sync-rules                     将根仓 docs/agents/ 公共真源单向同步至各子仓（兼容 sync-contracts）
 #   check-rules [--allow-missing]  校验根仓与各子仓公共规约一致性（兼容 check-contracts）
 #   sync-contracts                 [兼容别名] 等同于 sync-rules
 #   check-contracts [--allow-missing]  [兼容别名] 等同于 check-rules
@@ -22,9 +22,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 SHARED_RULES=(
-  ".agents/rules/contracts.md"
-  ".agents/rules/foundation-first-gate.md"
-  ".agents/rules/coding-and-architecture.md"
+  "docs/agents/contracts.md"
+  "docs/agents/foundation-first-gate.md"
+  "docs/agents/coding-standards.md"
   "docs/agents/documentation-specification.md"
 )
 
@@ -62,7 +62,7 @@ show_help() {
   status                            查看工作区全仓状态（分支、变更、Hooks、公共规约一致性）
   init                              幂等初始化全仓 Git Hooks、dev 开发分支并巡检本地工具链
   sync [--pull]                     克隆缺失子仓；带 --pull 时对干净子仓拉取更新并同步公共规约
-  sync-rules                        将根仓公共规约 (contracts / foundation-first-gate / coding-and-architecture / documentation-specification) 单向同步至各子仓
+  sync-rules                        将根仓公共规约 (docs/agents/{contracts,foundation-first-gate,coding-standards,documentation-specification}.md) 单向同步至各子仓
   check-rules [--allow-missing]     校验全仓公共规约一致性（CI 可传 --allow-missing）
   sync-contracts                    [兼容别名] 等同于 sync-rules
   check-contracts [--allow-missing] [兼容别名] 等同于 check-rules

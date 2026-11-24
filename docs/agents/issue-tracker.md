@@ -2,7 +2,7 @@
 
 本仓库（`atengk/ateng-solid`）使用 **GitHub Issues** 管理跨端工作区规划、全局规格与跨仓协调任务，统一通过 `gh` CLI 操作（标签映射详见 [`triage-labels.md`](./triage-labels.md)）。
 
-> **多仓分工**：跨端蓝图与工作区治理单归属 `atengk/ateng-solid`；后端实现单归属 `atengk/ateng-solid-server`；前端实现单归属 `atengk/ateng-solid-admin-web`；上游底座缺口按 [`.agents/rules/foundation-first-gate.md`](../../.agents/rules/foundation-first-gate.md) 提至对应底座仓库（`ateng-boot` / `ateng-cloud` / `ateng-ui`）。
+> **多仓分工**：跨端蓝图与工作区治理单归属 `atengk/ateng-solid`；后端实现单归属 `atengk/ateng-solid-server`；前端实现单归属 `atengk/ateng-solid-admin-web`；上游底座缺口按 [`foundation-first-gate.md`](./foundation-first-gate.md) 提至对应底座仓库（`ateng-boot` / `ateng-cloud` / `ateng-ui`）。
 
 ---
 

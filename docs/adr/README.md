@@ -6,7 +6,7 @@
 
 | 编号 | 决策标题 | 状态 | 核心收益与权衡 | 影响范围 | 详细文档 |
 | :---: | :--- | :---: | :--- | :--- | :---: |
-| **0001** | **Polyrepo 隔离、单向契约同步与子仓独立开发架构** | 🟢 Accepted | 兼顾多仓库独立发版隔离与单开子仓 AI 规约自洽，根仓持有 `contracts.md` 真源并通过 `workspace.sh` 同步与防漂移校验 | 全工作区 | [查看](./0001-polyrepo-workspace-and-contract-sync.md) |
+| **0001** | **Polyrepo 隔离、单向契约同步与渐进披露治理架构** | 🟢 Accepted | 兼顾多仓独立发版与单开子仓 AI 自洽；采用极简常驻 `AGENTS.md` + `docs/agents/` 按需渐进披露控预算，根仓持有公共规约真源并通过 `workspace.sh` 同步防漂移 | 全工作区 | [查看](./0001-polyrepo-workspace-and-contract-sync.md) |
 | **0002** | **行级多租户 `tenant_id BIGINT` 与租户套餐边界模型** | 🟢 Accepted | 统一全库 `tenant_id` 为 `BIGINT`（默认 `0`、`tenant_code='000000'`），100% 契合 `ateng-boot` `DefaultTenantLineHandler` 防索引失效；纳入 `sys_tenant_package` 与超管受控切租户边界 | 跨端契约、后端、前端 | [查看](./0002-multi-tenant-bigint-and-package-model.md) |
 | **0003** | **多租户默认关闭可开关策略、权限隔离边界与安全初始化协议** | 🟢 Accepted | 确立多租户默认关闭可开关（零重构保留 `tenant_id`）、4 张关联表携带 `tenant_id`、平台/租户分层、超管启动引导器动态初始化及 Excel 原子批注回写协议 | 跨端契约、后端、前端 | [查看](./0003-tenant-toggle-auth-boundary-and-seed-strategy.md) |
 | **0004** | **“独立通用底座 + 零补丁上层框架”双生演进模型与三层能力边界** | 🟢 Accepted | 确立底座通用独立性、上层“验证底座 + 可二开企业级框架”双定位、硬停工零降级原则及四项双轴验收门禁 | 全工作区 | [查看](./0004-foundation-driven-framework-coevolution.md) |

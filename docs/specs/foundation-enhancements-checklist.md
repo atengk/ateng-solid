@@ -1,6 +1,6 @@
 # 底层基础设施待增强清单 (Foundation Enhancements Checklist)
 
-本文档基于对同级目录 `ateng-boot`、`ateng-cloud`、`ateng-ui` 源码、Git 提交记录及 GitHub Issues 状态核查整理，受 [底层缺口即停工规范](../../.agents/rules/foundation-first-gate.md) 硬门禁约束：**凡标为“硬停工等待项”的缺口，上层严禁编写临时降级/绕过补丁，必须待底座完成通用改造、通过独立性验收并发布递进正式版后，再升级恢复上层开发**。
+本文档基于对同级目录 `ateng-boot`、`ateng-cloud`、`ateng-ui` 源码、Git 提交记录及 GitHub Issues 状态核查整理，受 [底层缺口即停工规范](../agents/foundation-first-gate.md) 硬门禁约束：**凡标为“硬停工等待项”的缺口，上层严禁编写临时降级/绕过补丁，必须待底座完成通用改造、通过独立性验收并发布递进正式版后，再升级恢复上层开发**。
 
 > **最新修订（2026-11-24 · `Spec 0` 已解锁，`B14~B15` 与 `U5~U8` 上游已修复关单、本地联调态已激活、待发版锁版合入）**：
 > - **首轮基础底座锁版（`Spec 0` ✅ 解封）**：`ateng-boot:1.2.0`、`ateng-cloud:1.1.0`、`ateng-ui:1.1.0`（`@atengk/{core,vue,element-plus}`）已完成双轴验收并锁版；

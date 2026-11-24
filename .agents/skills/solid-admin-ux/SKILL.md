@@ -38,7 +38,7 @@ Check `docs/specs/prd/design-system.md`. If missing (or when establishing the gl
 
 Before prototyping a page or domain:
 
-1. Ground copy and flows in canonical domain terms (`CONTEXT-MAP.md`, `ateng-solid-admin-web/CONTEXT.md`, `.agents/rules/contracts.md`).
+1. Ground copy and flows in canonical domain terms (`CONTEXT-MAP.md`, `ateng-solid-admin-web/CONTEXT.md`, `docs/agents/contracts.md`).
 2. Audit every button label, field validation, empty state, and error message against [ux-and-copy-checklist.md](./references/ux-and-copy-checklist.md):
    - Specific action verbs ("保存配置" / "强退会话" / "确认删除", never vague "提交").
    - In-memory plaintext in edit forms vs. `formatMask*` in read-only tables/descriptions.

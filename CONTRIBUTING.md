@@ -21,8 +21,8 @@
    git checkout -b feat/your-feature-name
    ```
 3. **跨仓契约单一真源**：
-   - 跨端协议统一维护在根仓 [`.agents/rules/contracts.md`](./.agents/rules/contracts.md)；
-   - 修改跨端契约后，必须运行 `bash scripts/workspace.sh sync-contracts` 同步至各子仓并分别提交。
+   - 跨端协议统一维护在根仓 [`docs/agents/contracts.md`](./docs/agents/contracts.md)；
+   - 修改跨端契约或公共规约后，必须运行 `bash scripts/workspace.sh sync-rules` 同步至各子仓并分别提交。
 4. **发起 Pull Request**：向目标仓库的 `dev` 分支发起 PR（版本发布时由 `dev` 合并至 `main` 并打标签）。
 
 ---

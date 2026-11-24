@@ -5,18 +5,17 @@
 ## AI 编程助手必读约定 (Instructions for AI Agents)
 
 - **基线版本真源**：严禁在此写死依赖版本号；后端基线与底座版本查阅 [ateng-solid-server/pom.xml](./ateng-solid-server/pom.xml)，前端基线与包版本查阅 [ateng-solid-admin-web/package.json](./ateng-solid-admin-web/package.json)。
-- **底座缺口硬门禁（零补丁原则）**：遇 `ateng-boot` / `ateng-cloud` / `ateng-ui` 能力不足或缺陷时，立即停止受阻上层特性编码并向对应底座提通用改造 Issue（严禁写死本项目约定，严禁在上层打临时补丁），详见 [底层缺口即停工规范](./.agents/rules/foundation-first-gate.md) 与 [底层基础设施待增强清单](./docs/specs/foundation-enhancements-checklist.md)。
-- **代码复用、拆分与 1:1 文档保真**：严格遵循 [全仓代码与架构编程规范](./.agents/rules/coding-and-architecture.md) 与 [文档 1:1 保真与模块规范](./docs/agents/documentation-specification.md)；所有开发功能须先通过离线测试，再 1:1 逆向沉淀至对应模块 `README.md`、Specs、`CONTEXT.md` 与 `llms.txt`。
+- **底座缺口硬门禁（零补丁原则）**：遇 `ateng-boot` / `ateng-cloud` / `ateng-ui` 能力不足或缺陷时，立即停止受阻上层特性编码并向对应底座提通用改造 Issue（严禁写死本项目约定，严禁在上层打临时补丁），详见 [底层缺口即停工与联调 SOP](./docs/agents/foundation-first-gate.md) 与 [底层基础设施待增强清单](./docs/specs/foundation-enhancements-checklist.md)。
+- **1:1 文档保真沉淀**：遵循 [文档 1:1 保真与模块规范](./docs/agents/documentation-specification.md)；所有开发功能须先通过离线测试，再 1:1 逆向沉淀至对应模块 `README.md`、Specs、`CONTEXT.md` 与 `llms.txt`。
 
 ## 根工作区治理与全端规约 (Single Source of Truth)
 
 - [工作区门面 README](./README.md): 全端仓库矩阵、架构原则与环境快速初始化
 - [全端上下文地图](./CONTEXT-MAP.md): 根仓与子仓职责边界、终端隔离与依赖拓扑
-- [工作区总控规范](./AGENTS.md): 多仓隔离纪律、`workspace.sh` 工具与导航入口
-- [跨端通信与数据契约](./.agents/rules/contracts.md): 响应信封 `Result<T>`、6 位分段错误码、雪花 `string` 主键、`tenant_id BIGINT`、`/admin/**` 路由与权限标识
-- [全仓代码与架构编程规范](./.agents/rules/coding-and-architecture.md): 分层依赖、对象映射、公共提取与大类拆分、设计模式选型、事务防 N+1 与并发安全
-- [底层缺口即停工规范](./.agents/rules/foundation-first-gate.md): 三层生态边界、停工提单流程与跨仓本地联调 SOP
-- [研发推进工作流与保真准则](./.agents/rules/workflow.md): Blueprint ➔ Spec ➔ Ticket 门禁与 1:1 文档准则
+- [工作区总控规范](./AGENTS.md): 多仓隔离纪律、硬红线、`workspace.sh` 工具与按需触发导航
+- [跨端通信与数据契约](./docs/agents/contracts.md): 响应信封 `Result<T>`、6 位分段错误码、雪花 `string` 主键、`tenant_id BIGINT`、`/admin/**` 路由与权限标识
+- [编码规范、架构拆解与注释准则](./docs/agents/coding-standards.md): 公共提取阶梯、大类/大文件拆分线、设计模式选型、事务防 N+1 与文档/逻辑注释规范
+- [底层缺口即停工与联调 SOP](./docs/agents/foundation-first-gate.md): 三层生态边界、停工提单闭环、四项双轴验收与跨仓本地联调 SOP
 - [文档 1:1 保真与模块规范](./docs/agents/documentation-specification.md): Code & Test-First 逆向沉淀、应用五维 `README.md` 模板与 10 项自检清单
 
 ## 系统级架构蓝图与决策 (Specs & ADRs)

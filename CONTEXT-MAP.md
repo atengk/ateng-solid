@@ -7,7 +7,7 @@
 ## Contexts (工作区与子工程边界)
 
 - **[Root 根工作区](./AGENTS.md)**（`ateng-solid`）：
-  聚合工作区总控中心。维护全端跨端契约唯一真源（[`.agents/rules/contracts.md`](./.agents/rules/contracts.md)）、底层缺口即停工硬门禁（[`.agents/rules/foundation-first-gate.md`](./.agents/rules/foundation-first-gate.md)）、全仓代码与架构编程总规范（[`.agents/rules/coding-and-architecture.md`](./.agents/rules/coding-and-architecture.md)）、分级工作流规约（[`.agents/rules/workflow.md`](./.agents/rules/workflow.md)）、系统级 ADR（[`docs/adr/`](./docs/adr/README.md)）、首期架构蓝图与底层待增强清单（[`docs/specs/`](./docs/specs/README.md)）及统一运维脚本 [`scripts/workspace.sh`](./scripts/workspace.sh)。
+  聚合工作区总控中心。维护全端跨端契约唯一真源（[`docs/agents/contracts.md`](./docs/agents/contracts.md)）、底层缺口即停工与联调 SOP（[`docs/agents/foundation-first-gate.md`](./docs/agents/foundation-first-gate.md)）、编码与注释规范（[`docs/agents/coding-standards.md`](./docs/agents/coding-standards.md)）、文档 1:1 保真规范（[`docs/agents/documentation-specification.md`](./docs/agents/documentation-specification.md)）、系统级 ADR（[`docs/adr/`](./docs/adr/README.md)）、首期架构蓝图与底层待增强清单（[`docs/specs/`](./docs/specs/README.md)）及统一运维脚本 [`scripts/workspace.sh`](./scripts/workspace.sh)。
 - **[Server 后端核心服务](./ateng-solid-server/CONTEXT-MAP.md)**（`atengk/ateng-solid-server`，首期落地）：
   Spring Boot 3.3 + `ateng-boot`（1.2.0+）**同源双装配**后端工程：首期稳固 `common` ➔ `system-api` ➔ `{system, auth}` ➔ `bootstrap` 5 模块单体，面向后续 `ateng-cloud`（`1.0.0+`）并存微服务启动壳保留零重构扩展边界，对外以对称路径 `/admin/**` 暴露管理端契约。
 - **[Admin Web PC 管理后台](./ateng-solid-admin-web/CONTEXT.md)**（`atengk/ateng-solid-admin-web`，首期落地）：
@@ -22,7 +22,7 @@
 ```mermaid
 flowchart LR
     subgraph Root["ateng-solid (根工作区真源)"]
-        CONTRACTS[".agents/rules/<br/>contracts + gate + coding"]
+        CONTRACTS["docs/agents/<br/>contracts + gate + coding + docs"]
         SPECS["docs/specs/ & docs/adr/<br/>蓝图 / 待增强清单 / 决策"]
         SCRIPT["scripts/workspace.sh<br/>多仓初始化与公共规约同步"]
     end
