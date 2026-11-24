@@ -2,20 +2,21 @@
 
 本文档基于对同级目录 `ateng-boot`、`ateng-cloud`、`ateng-ui` 源码、Git 提交记录及 GitHub Issues 状态核查整理，受 [底层缺口即停工规范](../../.agents/rules/foundation-first-gate.md) 硬门禁约束：**凡标为“硬停工等待项”的缺口，上层严禁编写临时降级/绕过补丁，必须待底座完成通用改造、通过独立性验收并发布递进正式版后，再升级恢复上层开发**。
 
-> **2026-11-23 双轴验收与解封结论（`Spec 0` 已通过并锁版解锁）**：
-> - `ateng-boot`（已发布 **`v1.2.0`**至 Maven Central，含 `#1076~#1080`、`#1093`、`#1094`、`#1134~#1137`、`ateng-boot-flyway` 及新闭环的 **`#1163~#1167`**，GitHub `Java CI` 与 `Release v1.2.0` 全绿）、`ateng-cloud`（已发布 **`v1.1.0`** 至 Maven Central，对齐 `<ateng-boot.version>1.2.0</ateng-boot.version>`，含 `#198~#206`）、`ateng-ui`（已发布 `@atengk/core`/`vue`/`element-plus` **`1.1.0`** 至官方 npm，含 `#362~#367`）全部完成递进正式发版；
-> - 经四项双轴验收审计（① 底座源码与 diff 零 `ateng-solid` 专属命名污染；② 向后兼容与 CI 独立全绿；③ Maven Central / npm 正式版本闭环；④ 上层已解锁 `ateng-boot-flyway` 与 `@atengk/*@1.1.0` 且无临时降级补丁），**`Spec 0` 正式解锁，可进入 `Spec 1 ~ Spec 4` 正式编码**。
+> **最新修订（2026-11-24 · `Spec 0` 已解锁，`B14~B15` 与 `U5~U8` 上游已修复关单、本地联调态已激活、待发版锁版合入）**：
+> - **首轮基础底座锁版（`Spec 0` ✅ 解封）**：`ateng-boot:1.2.0`、`ateng-cloud:1.1.0`、`ateng-ui:1.1.0`（`@atengk/{core,vue,element-plus}`）已完成双轴验收并锁版；
+> - **一阶段增量底座增强项（`B14~B15` & `U5~U8` · 🟢 上游 `dev` 已实现并关单 · 🔵 本地联调中 · ⏳ 正式合入前待发版锁版）**：6 项增量缺口（`ateng-boot#1171`、`#1172` 与 `ateng-ui#369`–`#372`）均已在底座仓库 `dev` 分支完成通用改造、单测验收并关闭 Issue，尚未发布 Maven Central / npm 正式版。本地开发阶段按第 5 节 SOP 消费本地临时构建（`ateng-boot:1.2.1-SNAPSHOT` 与 `pnpm pack + yalc` `@atengk/element-plus`），**正式代码提交合入 `dev`/`main` 前须待底座发布递进正式版（`1.2.1` / `1.1.1`）并还原锁版（由 `pre-commit` 硬拦截守护）**。
 
 ---
 
 ## 0. 阻塞与就绪矩阵总览 (Spec 0 ~ Spec 5)
 
-| 上层阶段 | 依赖底座项 | 当前状态 | 规划期可推进工作 | 编码开工解锁条件 |
+| 上层阶段 | 依赖底座项 | 当前状态 | 规划期/本地联调可推进工作 | 正式提交合入解锁条件 |
 | :--- | :--- | :---: | :--- | :--- |
+| **第一阶段 PRD & HTML 原型** | 已完成 `#2`/`#3` 调研 | 🟢 **已完结待签收** | 按 `atengk/ateng-solid#1` 路线图已完成全套 PRD、总装原型与跨仓 1:1 终审 | 已完结 |
 | **Spec 1**（公共原语/事件/骨架） | `ateng-boot-core:1.2.0`（含 **B9** `#1163`） | 🟢 **已发版并锁版验收通过** | 公共常量、错误码、`DomainEventPublisher`、`AuthGrantHandler` 接口与骨架 | 已解锁（`ateng-boot:1.2.0` + `ateng-ui:1.1.0`） |
-| **Spec 2**（认证会话/动态路由/基础壳） | **B1** (`#1076`)、**B2** (`#1077`)、**B4** (`#1079`)、**B5** (`flyway`/`#1094`)、**B9** (`#1163`)、**B10** (`#1164`)、**B12** (`#1166`)、**U0** (`#362~#364`)、**U1** (`#365`) | 🟢 **已发版并锁版验收通过** | 认证中心、验证码、防爆破、动态路由与在线会话治理 | 已解锁（`ateng-boot:1.2.0` + `ateng-ui:1.1.0`） |
-| **Spec 3**（RBAC/数据权限/可开关多租户） | **B2** (`#1077`)、**B3** (`#1078`)、**B7** (`#1093`)、**B8** (`#1134`)、**B9** (`#1163`)、**B10** (`#1164`)、**U0** (`#362~#364`) | 🟢 **已发版并锁版验收通过** | DDL 与实体映射（`BaseLogicEntity`/`TenantAware<Long>`）、RBAC 与 `@DataScope` | 已解锁（`ateng-boot:1.2.0` + `ateng-ui:1.1.0`） |
-| **Spec 4**（枚举/字典/参数/Excel批注/头像/审计） | **B5** (`#1094`)、**B8** (`#1134`)、**B9** (`#1163`)、**B11** (`#1165`)、**B13** (`#1167`)、**U0** (`#362`)、**U4** (`#367`) | 🟢 **已发版并锁版验收通过** | 枚举接管、字典/参数、头像直传、Excel 精确批注与审计日志 | 已解锁（`ateng-boot:1.2.0` + `ateng-ui:1.1.0`） |
+| **Spec 2**（认证会话/动态路由/基础壳） | **B1** (`#1076`)、**B2** (`#1077`)、**B4** (`#1079`)、**B5** (`flyway`/`#1094`)、**B9** (`#1163`)、**B10** (`#1164`)、**B12** (`#1166`)、**U0** (`#362~#364`)、**U1** (`#365`)；**增量**：**U5** (`#369` 已关单) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 认证中心、验证码、防爆破、动态路由、在线会话与 `AdminLayout`（本地通过 `yalc` 接入 `#369`） | `ateng-ui` 发布含 `#369` 的递进正式版并还原锁版 |
+| **Spec 3**（RBAC/数据权限/可开关多租户） | **B2** (`#1077`)、**B3** (`#1078`)、**B7** (`#1093`)、**B8** (`#1134`)、**B9** (`#1163`)、**B10** (`#1164`)、**U0** (`#362~#364`)；**增量**：**B14** (`#1171` 已关单)、**U6** (`#370` 已关单)、**U7** (`#371` 已关单)、**U8** (`#372` 已关单) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 全量 DDL、RBAC、`@DataScope`、可开关多租户及 Excel 原子导入导出（本地通过 `1.2.1-SNAPSHOT` 与 `yalc` 联调验证） | `ateng-boot` 发布含 `#1171`、`ateng-ui` 发布含 `#370~#372` 的递进正式版并还原锁版 |
+| **Spec 4**（枚举/字典/参数/Excel批注/头像/审计） | **B5** (`#1094`)、**B8** (`#1134`)、**B9** (`#1163`)、**B11** (`#1165`)、**B13** (`#1167`)、**U0** (`#362`)、**U4** (`#367`)；**增量**：**B15** (`#1172` 已关单) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 枚举接管、字典/参数、审计日志与预签名头像直链（本地消费 `1.2.1-SNAPSHOT` 验证 `whitelist-presigned-download: true`） | `ateng-boot` 发布含 `#1172` 的递进正式版并还原锁版 |
 | **Spec 5**（`ateng-cloud` 双态并存挂壳） | **B6** (`#1080`)、**C1~C6** (`#198~#205`) | 🟢 **`ateng-cloud:1.1.0` 已随 `1.2.0` 发版**（按规划排期在单体稳固后实施） | 双装配桥接设计与目录规划 | 已解锁（`ateng-cloud:1.1.0` 已发布至 Maven Central） |
 
 ---
@@ -145,6 +146,24 @@
 
 ---
 
+### [B14] 高优先级（上游 `dev` 已闭环 · 本地 `1.2.1-SNAPSHOT` 联调中 · 正式合入待发版锁版）：`ExcelUtil.readWithResult` 强制执行 `maxSyncRows` 安全上限防御
+
+- **现状与源码锚点**：`ateng-boot-excel` 中 `ExcelUtil.read`（`ExcelUtil.java:940`）与 `ExcelUtil.readWithValidation`（`ExcelUtil.java:1221`）均校验 `maxSyncRows`（默认 `100_000`）；但 `ExcelUtil.readWithResult`（`ExcelUtil.java:1314-1342`）在无流式消费器（`dataConsumer = null`）全量驻留内存聚合法定数据与错误行时，完全未检查 `maxSyncRows`，存在大文件触发 OOM 的风险。
+- **目标通用改造**：在 `BatchValidationListener`（非流式全量聚合场景）与 `ExcelUtil.readWithResult` 中纳管 `maxSyncRows` 上限检查，超过即 Fail-Fast 抛出 `BusinessException(400, ...)`，100% 向后兼容。
+- **准入纪律**：**严禁在上层放弃 `ExcelUtil.readWithResult` 或自写全量计数监听器绕过**；本地开发阶段消费 `1.2.1-SNAPSHOT` 提前联调验证，正式合入 `dev`/`main` 前须待底座发布正式版并还原锁版。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1171`](https://github.com/atengk/ateng-boot/issues/1171)，`dev` 提交 `8e7bef82`），本地已接入 `1.2.1-SNAPSHOT` 联调，待发布正式版后锁版勾选
+
+---
+
+### [B15] 中优先级（上游 `dev` 已闭环 · 本地 `1.2.1-SNAPSHOT` 联调中 · 正式合入待发版锁版）：本地存储预签名只读下载端点与 Sa-Token 可选白名单协同开关
+
+- **现状与源码锚点**：`ateng-boot-storage` 自动装配了 `LocalStorageDownloadController`（默认 `/storage/local/download`，内置 HMAC-SHA256 签名与 `expires` 时效防盗链）；但当宿主启用 `ateng-boot-satoken` 全局拦截（`check-login=true`、`includes=["/**"]`）时，浏览器 `<img>` / `<el-avatar>` 直接加载预签名链接会因无法携带自定义 Token 头返回 `401`。
+- **实际落地通用改造**：`LocalStorageProperties` 新增细粒度开关 `download-endpoint-enabled` / `upload-endpoint-enabled`（默认 `true`）与 `whitelist-presigned-download` / `whitelist-presigned-upload`（默认 `false`），在 `ateng-boot-storage` 中通过 `LocalStorageSaTokenWhitelistConfiguration`（类加载隔离）按需注册精确路径白名单。
+- **准入纪律**：**严禁在业务配置硬编码绕过内部下载端点或自写冗余转发代理控制器**；本地开发阶段消费 `1.2.1-SNAPSHOT` 提前联调验证，正式合入 `dev`/`main` 前须待底座发布正式版并还原锁版。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1172`](https://github.com/atengk/ateng-boot/issues/1172)，`dev` 提交 `0c172a12`），本地已接入 `1.2.1-SNAPSHOT` 联调，待发布正式版后锁版勾选
+
+---
+
 ## 2. `ateng-cloud`（已锁定正式版 **`1.1.0`** / 对齐 `ateng-boot:1.2.0`）
 
 > 经核查，`ateng-cloud` 已于 `2026-11-23` 正式发布 **`v1.1.0`**（提交 `a8b9fe4`）至 Maven Central，锁定 `<ateng-boot.version>1.2.0</ateng-boot.version>`，以下全部 8 个关联 Issue 均已闭环发版：
@@ -195,6 +214,38 @@
 - **目标通用改造**：在 `AtengUploadProps` 声明可选 `httpRequest` 类型属性，模板改为 `:http-request="chunk ? handleCustomHttpRequest : httpRequest"`，并在 `defineOptions` 补上 `inheritAttrs: false` 与 `uploaderAttrs` 隔离。
 - **准入纪律**：**严禁在上层放弃 `AtengUpload` 退回裸写 `ElUpload` 或绕过类型声明强塞 `$attrs`**。
 - **核实状态**：- [x] 已随 `v1.1.0` 正式发布至 npm（提交 `f8838c2`，[`atengk/ateng-ui#367`](https://github.com/atengk/ateng-ui/issues/367)）并通过双轴验收
+
+---
+
+### [U5] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 联调中 · 正式合入待发版锁版）：`AtengProLayout` `'mix'` 模式 `headerRight` 补充 `#headerActions` / `#user` 默认兜底
+
+- **现状与源码锚点**：`AtengProLayout.vue` 在 `'side'`（lines 473–480）与 `'top'`（lines 553–560）模式下均于 `#headerRight` 内提供 `#headerActions` 与 `#user` 默认兜底插槽，但 `'mix'` 模式（lines 625–627）仅渲染 `<slot name="headerRight" />`，导致切至 `'mix'` 模式时顶栏右侧操作区与用户信息消失。
+- **目标通用改造**：在 `'mix'` 模式补齐与 `'side'`/`'top'` 完全一致的 `#headerActions` 与 `#user` 默认兜底，100% 向后兼容。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#369`](https://github.com/atengk/ateng-ui/issues/369)，`dev` 提交 `36da58c`），本地已通过 `pnpm pack + yalc` 接入验证，待 npm 发版后还原锁版勾选
+
+---
+
+### [U6] 低/中优先级（上游 `dev` 已闭环 · 本地 `yalc` 联调中 · 正式合入待发版锁版）：`AtengDrawer` `#footer` 插槽透传 `{ confirm, cancel, loading }` 作用域参数
+
+- **现状与源码锚点**：`AtengDialog.vue:310` 向 `#footer` 透传 `{ confirm, cancel, loading }` 作用域参数，而 `AtengDrawer.vue:247` 与 `drawer/types.ts:156` 未透传任何作用域参数，不对称导致自定义抽屉页脚无法直接联动 `formRef` 校验与 `beforeConfirm` loading 锁。
+- **目标通用改造**：新增 `AtengDrawerFooterScope` 并在 `AtengDrawer.vue` 透传 `{ confirm: handleConfirm, cancel: handleCancel, loading: isLoading }`，100% 向后兼容。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#370`](https://github.com/atengk/ateng-ui/issues/370)，`dev` 提交 `36da58c`），本地已通过 `pnpm pack + yalc` 接入验证，待 npm 发版后还原锁版勾选
+
+---
+
+### [U7] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 联调中 · 正式合入待发版锁版）：`AtengIconSelect` 实现 `types.ts` 已声明的 `#icon` 与 `#footer` 插槽透传
+
+- **现状与源码锚点**：`icon-select/types.ts:148-157` 已公开声明 `icon` 与 `footer` 作用域插槽，但 `AtengIconSelect.vue` 与 `IconPanel.vue` 仅实现了 `#prefix`，`#icon` 与 `#footer` 均未透传及渲染。
+- **目标通用改造**：在 `IconPanel.vue` 补齐 `<slot name="icon">` 与 `<slot name="footer">` 渲染并在 `AtengIconSelect.vue` 两个模式中透传，保持默认视图兜底。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#371`](https://github.com/atengk/ateng-ui/issues/371)，`dev` 提交 `36da58c`），本地已通过 `pnpm pack + yalc` 接入验证，待 npm 发版后还原锁版勾选
+
+---
+
+### [U8] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 联调中 · 正式合入待发版锁版）：`AtengExcelExport` 直传 `Blob` 时优先解析 `Content-Disposition` 服务端文件名
+
+- **现状与源码锚点**：`AtengExcelExport.vue:106-111` 在未传 `props.filename` 时直接回退 `export_${Date.now()}.xlsx`，未像同库 `@atengk/vue` `useExcel` 一样优先读取 `@atengk/core` `getBlobDisposition` + `parseContentDispositionFilename` 提取的服务端文件名。
+- **目标通用改造**：在 `AtengExcelExport.vue` 接入 `props.filename || parseContentDispositionFilename(getBlobDisposition(result)) || 'export_' + Date.now() + '.xlsx'`，100% 向后兼容。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#372`](https://github.com/atengk/ateng-ui/issues/372)，`dev` 提交 `36da58c`），本地已通过 `pnpm pack + yalc` 接入验证，待 npm 发版后还原锁版勾选
 
 ---
 

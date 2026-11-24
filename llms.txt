@@ -23,6 +23,9 @@
 
 - [首期 MVP 架构与领域蓝图](./docs/specs/mvp-architecture-and-domain-blueprint.md): 首期精简技术栈、核心表归属与 Spec 0~5 演进路线
 - [底层基础设施待增强清单](./docs/specs/foundation-enhancements-checklist.md): `ateng-boot` / `ateng-cloud` / `ateng-ui` 底座 Issue 状态与解锁门禁
+- [第一阶段编码开工准入检查表](./docs/specs/phase1-coding-readiness-checklist.md): 跨端 1:1 终审结论、第一阶段种子数据核对表与 `Spec 1~4` 准入门禁
+- [第一阶段 PRD 与设计系统](./docs/specs/prd/00-overview-and-ux-standards.md): `Precision Slate & Cobalt` 设计令牌（[design-system.md](./docs/specs/prd/design-system.md)）及 01~04 分域产品需求文档
+- [第一阶段高保真交互原型套件](./docs/prototypes/phase1/README.md): 全站 17 路由离线可交互 HTML 原型与 10 维边界覆盖矩阵
 - [工作区 ADR 看板](./docs/adr/README.md): Polyrepo 同步、`tenant_id BIGINT`、多租户开关、底座共进、可插拔扩展与首期栈/映射策略
 
 ## 已启用独立子仓库 (Active Sub-Repos)

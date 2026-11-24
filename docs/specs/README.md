@@ -5,8 +5,24 @@
 | 文档 | 核心内容 | 适用角色 |
 | :--- | :--- | :--- |
 | [首期 MVP 架构与领域蓝图](./mvp-architecture-and-domain-blueprint.md) | 首期精简技术栈与底座模块范围、二期延后边界、后端 5 模块与数据表域归属、前后端联调拓扑 | 架构师、全端开发、AI Agent |
-| [底层基础设施待增强清单](./foundation-enhancements-checklist.md) | `ateng-boot`（B1–B8）、`ateng-cloud`（#198–#205 / C1–C6）与 `ateng-ui`（U0–U3）实测状态、`dev` 闭环核查与发版解锁门禁 | 底座维护者、开发启动前自检 |
+| [底层基础设施待增强清单](./foundation-enhancements-checklist.md) | `ateng-boot`（B1–B15）、`ateng-cloud`（#198–#206 / C1–C6）与 `ateng-ui`（U0–U8）实测状态、`dev` 闭环核查与发版解锁门禁 | 底座维护者、开发启动前自检 |
+| [第一阶段编码开工准入检查表](./phase1-coding-readiness-checklist.md) | 跨端 1:1 终审汇总、第一阶段 `V1.0.1` 种子数据核对表与 `Spec 1 ~ Spec 4` 编码开工前门禁检查项 | 全端开发、代码评审、AI Agent |
 | [全仓代码与架构编程规范](../../.agents/rules/coding-and-architecture.md) | 跨仓统一的分层依赖、对象映射、事务防 N+1、空安全并发、安全脱敏与交付验证总规范 | 全端开发、代码评审、AI Agent |
+
+## 第一阶段产品需求文档 (PRD) 与高保真交互原型
+
+- **设计系统与全站交互规范**：
+  - [Precision Slate & Cobalt 设计系统规范](./prd/design-system.md)
+  - [第一阶段总览与全站交互规范](./prd/00-overview-and-ux-standards.md)
+- **分域产品需求文档（PRD）**：
+  - [01 · 认证登录、工作台、个人中心与在线会话 PRD](./prd/01-auth-and-workspace.md)
+  - [02 · 组织架构与 RBAC 权限管理 PRD](./prd/02-org-and-rbac.md)
+  - [03 · SaaS 多租户与租户套餐管理 PRD](./prd/03-tenant-and-package.md)
+  - [04 · 静态枚举、动态字典、系统参数与审计日志 PRD](./prd/04-enum-dict-config-audit.md)
+- **底座一手调研基线与交互原型套件**：
+  - [`ateng-boot:1.2.0` 一手源码调研与约束报告](./prd/_research/boot-1.2.0-constraints.md)
+  - [`@atengk/{core,vue,element-plus}@1.1.0` 组件能力调研报告](./prd/_research/ui-1.1.0-capabilities.md)
+  - [第一阶段高保真可交互 HTML 原型套件索引](../prototypes/phase1/README.md)（主总装入口：[`index.html`](../prototypes/phase1/index.html)）
 
 ## 子仓库专职设计规范入口
 

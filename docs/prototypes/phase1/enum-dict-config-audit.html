@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ateng-solid 第一阶段静态枚举、动态字典、系统参数与只读审计日志原型</title>
+  <style>
+    :root {
+      --solid-bg-canvas: #F6F7F9;
+      --solid-bg-surface: #FFFFFF;
+      --solid-bg-elevated: #FFFFFF;
+      --solid-bg-subtle: #EEF1F5;
+      --solid-text-primary: #0F172A;
+      --solid-text-regular: #334155;
+      --solid-text-secondary: #475569;
+      --solid-text-muted: #64748B;
+      --solid-primary: #1D4ED8;
+      --solid-primary-hover: #1E40AF;
+      --solid-primary-soft: #EFF6FF;
+      --solid-primary-border: #BFDBFE;
+      --solid-border: rgba(15, 23, 42, 0.10);
+      --solid-border-light: rgba(15, 23, 42, 0.06);
+      --solid-success: #047857;
+      --solid-success-soft: #ECFDF5;
+      --solid-success-border: #A7F3D0;
+      --solid-warning: #B45309;
+      --solid-warning-soft: #FFFBEB;
+      --solid-warning-border: #FDE68A;
+      --solid-danger: #DC2626;
+      --solid-danger-soft: #FEF2F2;
+      --solid-danger-border: #FECACA;
+      --solid-info: #475569;
+      --solid-info-soft: #F1F5F9;
+      --solid-radius-sm: 4px;
+      --solid-radius-md: 6px;
+      --solid-radius-lg: 8px;
+      --solid-radius-pill: 9999px;
+      --solid-shadow-popover: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+      --solid-focus-ring: 0 0 0 2px var(--solid-bg-surface), 0 0 0 4px var(--solid-primary);
+      --solid-font-sans: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --solid-font-mono: 'JetBrains Mono', 'Cascadia Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+    html.dark {
+      --solid-bg-canvas: #0B0F17;
+      --solid-bg-surface: #111827;
+      --solid-bg-elevated: #182234;
+      --solid-bg-subtle: #1E293B;
+      --solid-text-primary: #F8FAFC;
+      --solid-text-regular: #CBD5E1;
+      --solid-text-secondary: #94A3B8;
+      --solid-text-muted: #64748B;
+      --solid-primary: #3B82F6;
+      --solid-primary-hover: #60A5FA;
+      --solid-primary-soft: rgba(59, 130, 246, 0.15);
+      --solid-primary-border: rgba(59, 130, 246, 0.35);
+      --solid-border: rgba(226, 232, 240, 0.12);
+      --solid-border-light: rgba(226, 232, 240, 0.07);
+      --solid-success: #10B981;
+      --solid-success-soft: rgba(16, 185, 129, 0.14);
+      --solid-success-border: rgba(16, 185, 129, 0.30);
+      --solid-warning: #F59E0B;
+      --solid-warning-soft: rgba(245, 158, 11, 0.14);
+      --solid-warning-border: rgba(245, 158, 11, 0.32);
+      --solid-danger: #F87171;
+      --solid-danger-soft: rgba(248, 113, 113, 0.14);
+      --solid-danger-border: rgba(248, 113, 113, 0.32);
+      --solid-info: #94A3B8;
+      --solid-info-soft: #1E293B;
+      --solid-shadow-popover: 0 16px 36px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(226, 232, 240, 0.14);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; font-family: var(--solid-font-sans); font-size: 14px; line-height: 1.5; background: var(--solid-bg-canvas); color: var(--solid-text-primary); -webkit-font-smoothing: antialiased; }
+    button, input, select, textarea { font-family: inherit; }
+    :focus-visible { outline: none; box-shadow: var(--solid-focus-ring); }
+    .mono { font-family: var(--solid-font-mono); font-variant-numeric: tabular-nums; }
+    .tabular { font-variant-numeric: tabular-nums; }
+
+    /* Shell */
+    .app-shell { display: flex; height: 100vh; width: 100vw; overflow: hidden; background: var(--solid-bg-canvas); }
+    .sidebar { width: 228px; flex-shrink: 0; background: var(--solid-bg-surface); border-right: 1px solid var(--solid-border); display: flex; flex-direction: column; transition: width 0.2s ease; }
+    .sidebar.collapsed { width: 60px; }
+    .brand-bar { height: 48px; padding: 0 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--solid-border-light); flex-shrink: 0; overflow: hidden; }
+    .brand-logo { width: 28px; height: 28px; border-radius: var(--solid-radius-md); background: var(--solid-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .brand-name { font-weight: 600; font-size: 14px; white-space: nowrap; }
+    .brand-sub { font-size: 11px; color: var(--solid-text-secondary); margin-left: 2px; }
+    .sidebar.collapsed .brand-text, .sidebar.collapsed .menu-group-label, .sidebar.collapsed .menu-item-label { display: none; }
+    .menu-scroll { flex: 1; overflow-y: auto; padding: 10px 8px; }
+    .menu-group-label { font-size: 12px; font-weight: 600; color: var(--solid-text-muted); padding: 8px 10px 4px; }
+    .menu-item { width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 9px; padding: 8px 10px; border-radius: var(--solid-radius-md); color: var(--solid-text-regular); font-size: 13px; cursor: pointer; text-align: left; margin-bottom: 2px; }
+    .menu-item:hover { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .menu-item.active { background: var(--solid-primary-soft); color: var(--solid-primary); font-weight: 600; }
+    .sidebar.collapsed .menu-item { justify-content: center; padding: 9px; }
+
+    .main-column { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 48px; background: var(--solid-bg-surface); border-bottom: 1px solid var(--solid-border); padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--solid-text-secondary); white-space: nowrap; }
+    .breadcrumb .current { color: var(--solid-text-primary); font-weight: 600; }
+
+    .tenant-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: var(--solid-radius-md); border: 1px solid var(--solid-border); background: var(--solid-bg-subtle); color: var(--solid-text-primary); font-size: 12px; cursor: pointer; }
+    .tenant-pill.switched { background: var(--solid-warning-soft); border-color: var(--solid-warning-border); color: var(--solid-warning); font-weight: 600; }
+    .user-trigger { display: inline-flex; align-items: center; gap: 8px; padding: 3px 8px 3px 4px; font-size: 13px; }
+    .avatar-circle { width: 26px; height: 26px; border-radius: var(--solid-radius-pill); background: var(--solid-primary-soft); color: var(--solid-primary); border: 1px solid var(--solid-primary-border); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+
+    .tabs-bar { height: 36px; background: var(--solid-bg-surface); border-bottom: 1px solid var(--solid-border); padding: 0 12px; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .tab-chip { height: 26px; padding: 0 10px; border-radius: var(--solid-radius-sm); border: 1px solid transparent; background: transparent; color: var(--solid-text-secondary); font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+    .tab-chip.active { background: var(--solid-primary-soft); border-color: var(--solid-primary-border); color: var(--solid-primary); font-weight: 600; }
+    .tab-close { width: 14px; height: 14px; border-radius: 3px; border: none; background: transparent; color: inherit; cursor: pointer; font-size: 11px; padding: 0; opacity: 0.7; }
+
+    .tenant-banner { background: var(--solid-warning-soft); border-bottom: 1px solid var(--solid-warning-border); color: var(--solid-warning); padding: 6px 16px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+    .workspace { flex: 1; overflow: auto; padding: 14px 16px 84px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* UI Controls */
+    .card { background: var(--solid-bg-surface); border: 1px solid var(--solid-border); border-radius: var(--solid-radius-lg); }
+    .btn { height: 32px; padding: 0 12px; border-radius: var(--solid-radius-md); border: 1px solid var(--solid-border); background: var(--solid-bg-surface); color: var(--solid-text-regular); font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+    .btn:hover:not(:disabled) { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-sm { height: 26px; padding: 0 9px; font-size: 12px; }
+    .btn-primary { background: var(--solid-primary); border-color: var(--solid-primary); color: #FFFFFF; }
+    .btn-primary:hover:not(:disabled) { background: var(--solid-primary-hover); border-color: var(--solid-primary-hover); color: #FFFFFF; }
+    .btn-link { border: none; background: transparent; color: var(--solid-primary); padding: 2px 6px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: var(--solid-radius-sm); }
+    .btn-link:hover:not(:disabled) { background: var(--solid-primary-soft); }
+    .btn-link.danger { color: var(--solid-danger); }
+    .btn-link.danger:hover:not(:disabled) { background: var(--solid-danger-soft); }
+    .btn-link:disabled { color: var(--solid-text-muted); cursor: not-allowed; opacity: 0.55; }
+    .icon-btn { width: 32px; height: 32px; border-radius: var(--solid-radius-md); border: 1px solid transparent; background: transparent; color: var(--solid-text-regular); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .icon-btn:hover { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+
+    .input, .select, .textarea { height: 32px; padding: 0 10px; border-radius: var(--solid-radius-md); border: 1px solid var(--solid-border); background: var(--solid-bg-surface); color: var(--solid-text-primary); font-size: 13px; width: 100%; }
+    .textarea { height: auto; min-height: 64px; padding: 8px 10px; resize: vertical; }
+    .input.is-error, .select.is-error { border-color: var(--solid-danger); }
+    .input:disabled, .select:disabled { background: var(--solid-bg-subtle); color: var(--solid-text-muted); cursor: not-allowed; }
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 12px; font-weight: 500; color: var(--solid-text-secondary); display: flex; align-items: center; justify-content: space-between; }
+    .field-error { font-size: 12px; color: var(--solid-danger); }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .tag { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: var(--solid-radius-sm); font-size: 12px; font-weight: 500; white-space: nowrap; border: 1px solid transparent; }
+    .tag-default { background: var(--solid-bg-subtle); border-color: var(--solid-border); color: var(--solid-text-regular); }
+    .tag-primary { background: var(--solid-primary-soft); border-color: var(--solid-primary-border); color: var(--solid-primary); }
+    .tag-success { background: var(--solid-success-soft); border-color: var(--solid-success-border); color: var(--solid-success); }
+    .tag-warning { background: var(--solid-warning-soft); border-color: var(--solid-warning-border); color: var(--solid-warning); }
+    .tag-danger { background: var(--solid-danger-soft); border-color: var(--solid-danger-border); color: var(--solid-danger); }
+    .tag-info { background: var(--solid-info-soft); color: var(--solid-info); }
+
+    .switch { width: 34px; height: 18px; border-radius: var(--solid-radius-pill); background: var(--solid-text-muted); border: none; position: relative; cursor: pointer; vertical-align: middle; }
+    .switch.on { background: var(--solid-primary); }
+    .switch:disabled { opacity: 0.45; cursor: not-allowed; }
+    .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
+    .switch.on::after { transform: translateX(16px); }
+
+    .alert-box { padding: 9px 12px; border-radius: var(--solid-radius-md); border: 1px solid var(--solid-border); font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .alert-warning { background: var(--solid-warning-soft); border-color: var(--solid-warning-border); color: var(--solid-warning); }
+    .alert-danger { background: var(--solid-danger-soft); border-color: var(--solid-danger-border); color: var(--solid-danger); }
+    .alert-info { background: var(--solid-primary-soft); border-color: var(--solid-primary-border); color: var(--solid-primary); }
+
+    /* Dual Panel Dict */
+    .dict-split { display: grid; grid-template-columns: 42% 58%; gap: 12px; min-height: 0; flex: 1; }
+    .panel-col { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .row-selected { background: var(--solid-primary-soft) !important; }
+
+    /* Query & Table */
+    .query-card { padding: 12px 14px; }
+    .query-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 10px 14px; align-items: end; }
+    .query-actions { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .table-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+    .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .table-scroll { overflow: auto; border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); }
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data-table th { background: var(--solid-bg-subtle); color: var(--solid-text-secondary); font-weight: 600; text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--solid-border); white-space: nowrap; }
+    table.data-table td { padding: 9px 12px; border-bottom: 1px solid var(--solid-border-light); color: var(--solid-text-regular); white-space: nowrap; }
+    table.data-table tbody tr:hover { background: var(--solid-primary-soft); }
+    .col-sticky-right { position: sticky; right: 0; background: var(--solid-bg-surface); border-left: 1px solid var(--solid-border-light); }
+    th.col-sticky-right { background: var(--solid-bg-subtle); }
+    .ellipsis { max-width: 210px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
+    .pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--solid-text-secondary); padding-top: 2px; }
+
+    /* Detail Drawer & Code Blocks */
+    .desc-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); overflow: hidden; }
+    .desc-cell { padding: 8px 12px; border-bottom: 1px solid var(--solid-border-light); border-right: 1px solid var(--solid-border-light); font-size: 13px; display: flex; flex-direction: column; gap: 2px; }
+    .desc-cell.full { grid-column: span 2; border-right: none; }
+    .desc-k { font-size: 12px; color: var(--solid-text-secondary); }
+    .desc-v { color: var(--solid-text-primary); font-weight: 500; word-break: break-all; }
+
+    .code-box-wrap { border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); overflow: hidden; background: var(--solid-bg-canvas); }
+    .code-box-head { padding: 6px 12px; background: var(--solid-bg-subtle); border-bottom: 1px solid var(--solid-border-light); display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 600; }
+    .code-pre { margin: 0; padding: 10px 12px; font-family: var(--solid-font-mono); font-size: 12px; line-height: 1.55; max-height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-all; color: var(--solid-text-primary); }
+    .code-pre.expanded { max-height: none; }
+
+    .preview-stage { padding: 12px; border: 1px dashed var(--solid-border); border-radius: var(--solid-radius-md); background: var(--solid-bg-canvas); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+    .enum-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    .enum-card { padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+
+    .popover-menu { position: fixed; z-index: 1200; min-width: 185px; background: var(--solid-bg-elevated); border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); box-shadow: var(--solid-shadow-popover); padding: 5px; display: none; flex-direction: column; gap: 2px; }
+    .popover-menu.open { display: flex; }
+    .popover-item { border: none; background: transparent; padding: 7px 10px; border-radius: var(--solid-radius-sm); font-size: 13px; color: var(--solid-text-regular); text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .popover-item:hover:not(:disabled) { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .modal-backdrop.open { display: flex; }
+    .drawer-backdrop { justify-content: flex-end; }
+    .drawer-panel { width: 720px; max-width: 100vw; height: 100vh; background: var(--solid-bg-surface); border-left: 1px solid var(--solid-border); display: flex; flex-direction: column; box-shadow: var(--solid-shadow-popover); }
+    .dialog-panel { width: 520px; max-width: calc(100vw - 32px); max-height: 90vh; background: var(--solid-bg-surface); border: 1px solid var(--solid-border); border-radius: var(--solid-radius-lg); box-shadow: var(--solid-shadow-popover); display: flex; flex-direction: column; }
+    .dialog-panel.w-480 { width: 480px; }
+    .panel-header { padding: 14px 18px; border-bottom: 1px solid var(--solid-border); display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 600; flex-shrink: 0; }
+    .panel-body { padding: 16px 18px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .panel-footer { padding: 12px 18px; border-top: 1px solid var(--solid-border); display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+
+    .toast-stack { position: fixed; top: 16px; right: 16px; z-index: 1500; display: flex; flex-direction: column; gap: 8px; max-width: 440px; }
+    .toast-item { background: var(--solid-bg-elevated); border: 1px solid var(--solid-border); border-left: 3px solid var(--solid-primary); border-radius: var(--solid-radius-md); box-shadow: var(--solid-shadow-popover); padding: 10px 14px; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .toast-item.danger { border-left-color: var(--solid-danger); }
+    .toast-item.warning { border-left-color: var(--solid-warning); }
+    .toast-item.success { border-left-color: var(--solid-success); }
+
+    .sim-bar { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 1400; background: #0F172A; color: #F8FAFC; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: var(--solid-radius-pill); padding: 6px 12px; display: flex; align-items: center; gap: 6px; box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.45); font-size: 12px; max-width: calc(100vw - 24px); overflow-x: auto; white-space: nowrap; }
+    .sim-btn { border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.08); color: #F8FAFC; padding: 3px 9px; border-radius: var(--solid-radius-pill); cursor: pointer; font-size: 12px; }
+    .sim-btn:hover { background: rgba(255, 255, 255, 0.16); }
+    .sim-btn.on { border-color: #60A5FA; background: rgba(37, 99, 235, 0.45); font-weight: 600; }
+    .sim-sep { width: 1px; height: 14px; background: rgba(255, 255, 255, 0.22); flex-shrink: 0; }
+
+    @media (max-width: 1120px) { .dict-split { grid-template-columns: 1fr; } .enum-grid, .query-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 768px) { .form-grid-2, .desc-grid { grid-template-columns: 1fr; } .desc-cell.full { grid-column: span 1; } }
+  </style>
+</head>
+<body>
+  <div id="app" class="app-shell"></div>
+  <div id="tenantPopover" class="popover-menu" role="menu"></div>
+  <div id="confirmBackdrop" class="modal-backdrop">
+    <div class="dialog-panel w-480" role="dialog" aria-modal="true">
+      <div class="panel-header"><span id="confirmTitle">确认操作</span><button class="icon-btn" type="button" onclick="closeConfirm(false)">✕</button></div>
+      <div class="panel-body" id="confirmMessage"></div>
+      <div class="panel-footer"><button class="btn" type="button" onclick="closeConfirm(false)">取消</button><button id="confirmOkBtn" class="btn btn-primary" type="button" onclick="closeConfirm(true)">确认执行</button></div>
+    </div>
+  </div>
+  <div id="modalRoot"></div>
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+  <div class="sim-bar" aria-label="原型导航控制台">
+    <button id="sim-dict" class="sim-btn" type="button" onclick="openRoute('/system/dict')">数据字典</button>
+    <button id="sim-config" class="sim-btn" type="button" onclick="openRoute('/system/config')">系统参数</button>
+    <button id="sim-oper" class="sim-btn" type="button" onclick="openRoute('/system/oper-log')">操作日志</button>
+    <button id="sim-login" class="sim-btn" type="button" onclick="openRoute('/system/login-log')">登录日志</button>
+    <button id="sim-enums" class="sim-btn" type="button" onclick="openRoute('/enums')">静态枚举 (/enums)</button>
+    <span class="sim-sep"></span>
+    <button id="sim-theme" class="sim-btn" type="button" onclick="toggleTheme()">Light</button>
+    <button id="sim-tenant" class="sim-btn" type="button" onclick="toggleTenantEnabled()">多租户: 关</button>
+    <button id="sim-actor" class="sim-btn" type="button" onclick="toggleSwitchTenant()">视角: 平台(0)</button>
+  </div>
+
+  <script>
+    const STATIC_ENUMS = {
+      commonStatus: [
+        { code: 0, label: '正常', tagType: 'success' },
+        { code: 1, label: '停用', tagType: 'danger' },
+      ],
+      menuType: [
+        { code: 'M', label: '目录', tagType: 'primary' },
+        { code: 'C', label: '页面菜单', tagType: 'success' },
+        { code: 'F', label: '按钮权限', tagType: 'info' },
+      ],
+      dataScopeType: [
+        { code: 1, label: '全部数据权限' },
+        { code: 2, label: '自定部门数据权限' },
+        { code: 3, label: '本部门数据权限' },
+        { code: 4, label: '本部门及以下数据权限' },
+        { code: 5, label: '仅本人数据权限' },
+      ],
+      operateType: [
+        { code: 0, label: '其他', tagType: 'info' },
+        { code: 1, label: '新增', tagType: 'primary' },
+        { code: 2, label: '修改', tagType: 'warning' },
+        { code: 3, label: '删除', tagType: 'danger' },
+        { code: 4, label: '查询', tagType: 'info' },
+        { code: 5, label: '导出', tagType: 'success' },
+        { code: 6, label: '导入', tagType: 'success' },
+        { code: 7, label: '登录', tagType: 'primary' },
+        { code: 8, label: '登出', tagType: 'warning' },
+        { code: 9, label: '授权', tagType: 'primary' },
+        { code: 10, label: '清空', tagType: 'danger' },
+      ],
+      logStatus: [
+        { code: 0, label: '成功', tagType: 'success' },
+        { code: 1, label: '失败', tagType: 'danger' },
+      ],
+      configType: [
+        { code: 'Y', label: '系统内置', tagType: 'primary' },
+        { code: 'N', label: '业务自建', tagType: 'info' },
+      ],
+      visibleStatus: [
+        { code: 0, label: '显示', tagType: 'success' },
+        { code: 1, label: '隐藏', tagType: 'info' },
+      ],
+    };
+
+    const TAG_TYPES = [
+      { value: '', label: '默认中性 (无色)' },
+      { value: 'primary', label: '主色钴蓝 (primary)' },
+      { value: 'success', label: '成功翠绿 (success)' },
+      { value: 'warning', label: '警告琥珀 (warning)' },
+      { value: 'danger', label: '危险告警 (danger)' },
+      { value: 'info', label: '灰底信息 (info)' },
+    ];
+
+    const DB = {
+      dictTypes: [
+        { id: 'dt1', dictName: '用户性别', dictType: 'sys_user_gender', status: 0, remark: '个人中心与用户管理性别字段', createTime: '2026-11-18 09:00:00' },
+        { id: 'dt2', dictName: '系统是否', dictType: 'sys_yes_no', status: 0, remark: '通用布尔选项配置', createTime: '2026-11-18 09:05:00' },
+        { id: 'dt3', dictName: '空测试字典(可删)', dictType: 'sys_demo_empty', status: 0, remark: '无明细数据，可演示删除成功', createTime: '2026-11-24 10:00:00' },
+      ],
+      dictData: [
+        { id: 'dd1', dictType: 'sys_user_gender', dictLabel: '男', dictValue: '0', tagType: 'primary', cssClass: '', sort: 1, isDefault: false, status: 0, remark: '' },
+        { id: 'dd2', dictType: 'sys_user_gender', dictLabel: '女', dictValue: '1', tagType: 'warning', cssClass: '', sort: 2, isDefault: false, status: 0, remark: '' },
+        { id: 'dd3', dictType: 'sys_user_gender', dictLabel: '未知', dictValue: '2', tagType: 'info', cssClass: '', sort: 3, isDefault: true, status: 0, remark: '默认项' },
+        { id: 'dd4', dictType: 'sys_yes_no', dictLabel: '是', dictValue: 'Y', tagType: 'success', cssClass: '', sort: 1, isDefault: false, status: 0, remark: '' },
+        { id: 'dd5', dictType: 'sys_yes_no', dictLabel: '否', dictValue: 'N', tagType: 'info', cssClass: '', sort: 2, isDefault: true, status: 0, remark: '' },
+      ],
+      configs: {
+        '0': [
+          { id: 'c1', configName: '用户管理-初始默认密码', configKey: 'sys.user.initPassword', configValue: 'Ateng@2026', configType: 'Y', remark: '新建用户、重置密码与导入默认口令（须符合强口令规则）', createTime: '2026-11-18 09:00:00' },
+          { id: 'c2', configName: '操作日志保留备注阈值(天)', configKey: 'biz.audit.archiveHintDays', configValue: '90', configType: 'N', remark: '业务自建示例参数，可自由编辑或删除', createTime: '2026-11-20 14:20:00' },
+        ],
+        '10002': [
+          { id: 'c10', configName: '用户管理-初始默认密码', configKey: 'sys.user.initPassword', configValue: 'XingChen#2026', configType: 'Y', remark: '星辰租户专属初始口令覆盖', createTime: '2026-11-20 10:00:00' },
+        ],
+      },
+      operLogs: {
+        '0': [
+          { id: '8800101', traceId: 'trc-9a81f02b11c', module: '用户管理', operateType: 1, requestMethod: 'POST', requestUrl: '/admin/system/user', userId: '1002', userName: 'chenmo (陈默)', clientIp: '10.10.2.18', browser: 'Chrome 130', os: 'Windows 10', status: 0, costTime: 46, operateTime: '2026-11-24 17:45:12', requestParams: '{"username":"linyun","nickname":"林芸","deptId":"103","password":"[EXCLUDED]","phone":"13788886666","roleIds":["r3"]}', responseResult: '{"code":200,"msg":"操作成功","data":"1003","success":true,"traceId":"trc-9a81f02b11c"}', errorMsg: '' },
+          { id: '8800102', traceId: 'trc-7c20d41a90e', module: '个人中心', operateType: 2, requestMethod: 'PUT', requestUrl: '/admin/auth/password', userId: '1002', userName: 'chenmo (陈默)', clientIp: '10.10.2.18', browser: 'Chrome 130', os: 'Windows 10', status: 1, costTime: 19, operateTime: '2026-11-24 17:12:04', requestParams: '{"oldPassword":"[EXCLUDED]","newPassword":"[EXCLUDED]"}', responseResult: '', errorMsg: '当前密码输入有误，请核对后重试 (101006)' },
+          { id: '8800103', traceId: 'trc-3f11b88c02a', module: '用户导入', operateType: 6, requestMethod: 'POST', requestUrl: '/admin/system/user/import', userId: '1001', userName: 'super_admin', clientIp: '10.10.2.9', browser: 'Edge 130', os: 'macOS 15', status: 0, costTime: 218, operateTime: '2026-11-23 15:30:40', requestParams: '{"fileName":"2026研发入职名单.xlsx","rows":14}', responseResult: '{"code":200,"data":{"totalCount":14,"successCount":0,"failCount":5,"feedbackToken":"fb_98a1c3e2","errors":[{"rowNum":2,"columnName":"用户账号","errorMessage":"用户账号 chenmo 在当前租户下已存在"},{"rowNum":5,"columnName":"角色编码","errorMessage":"禁止分配保留角色 super_admin"}]}}', errorMsg: '' },
+        ],
+        '10002': [
+          { id: '8900201', traceId: 'trc-xc88120a11b', module: '角色管理', operateType: 9, requestMethod: 'PUT', requestUrl: '/admin/system/role/r11/data-scope', userId: '2001', userName: 'xc_admin (林星辰)', clientIp: '192.168.18.42', browser: 'Chrome 130', os: 'Windows 10', status: 0, costTime: 31, operateTime: '2026-11-24 16:08:22', requestParams: '{"dataScope":3,"deptIds":[]}', responseResult: '{"code":200,"msg":"操作成功","success":true}', errorMsg: '' },
+        ],
+      },
+      loginLogs: {
+        '0': [
+          { id: '7700101', traceId: 'trc-lg90012a1f', username: 'chenmo', loginType: 'admin', clientIp: '10.10.2.18', browser: 'Chrome 130', os: 'Windows 10', status: 0, msg: '登录成功', loginTime: '2026-11-24 16:42:10' },
+          { id: '7700102', traceId: 'trc-lg90012a10', username: 'chenmo', loginType: 'admin', clientIp: '10.10.2.18', browser: 'Chrome 130', os: 'Windows 10', status: 1, msg: '图形验证码无效或已过期 (101001)', loginTime: '2026-11-24 16:41:55' },
+          { id: '7700103', traceId: 'trc-lg88120c99', username: 'zhouhang', loginType: 'admin', clientIp: '172.16.8.104', browser: 'Firefox 132', os: 'Linux', status: 1, msg: '连续登录失败已触发防爆破锁定，请 15 分钟后重试 (101004)', loginTime: '2026-11-22 11:20:09' },
+        ],
+        '10002': [
+          { id: '7800201', traceId: 'trc-xc-lg1102', username: 'xc_admin', loginType: 'admin', clientIp: '192.168.18.42', browser: 'Chrome 130', os: 'Windows 10', status: 0, msg: '登录成功', loginTime: '2026-11-24 15:20:05' },
+        ],
+      },
+    };
+
+    const state = {
+      dark: false,
+      tenantEnabled: false,
+      activeTenantId: '0',
+      activeRoute: '/system/dict',
+      sidebarCollapsed: false,
+      tabs: [
+        { path: '/system/dict', title: '数据字典', affix: false },
+        { path: '/system/config', title: '系统参数', affix: false },
+        { path: '/system/oper-log', title: '操作日志', affix: false },
+      ],
+      selectedDictType: 'sys_user_gender',
+      dictTypeQuery: { keyword: '', status: '' },
+      configQuery: { configName: '', configKey: '', configType: '' },
+      selectedConfigIds: new Set(),
+      operQuery: { module: '', userName: '', operateType: '', status: '', traceId: '', dateQuick: 'all', collapsed: true },
+      loginQuery: { username: '', clientIp: '', status: '', traceId: '', dateQuick: 'all', collapsed: true },
+      modal: null,
+      confirmCallback: null,
+    };
+
+    function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function effTenantId() { return !state.tenantEnabled ? '0' : state.activeTenantId; }
+    function tagCls(t) { return t ? `tag-${t}` : 'tag-default'; }
+    function showToast(type, msg) {
+      const stack = document.getElementById('toastStack');
+      const div = document.createElement('div');
+      div.className = 'toast-item ' + type;
+      div.innerHTML = `<span>${esc(msg)}</span><button class="icon-btn" style="width:22px;height:22px;" onclick="this.closest('.toast-item').remove()">✕</button>`;
+      stack.appendChild(div);
+      setTimeout(() => { if (div.parentNode) div.remove(); }, 4200);
+    }
+    function hidePopovers() { document.querySelectorAll('.popover-menu').forEach(p => p.classList.remove('open')); }
+    function openConfirm(title, html, onOk, okText = '确认执行') {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').innerHTML = html;
+      document.getElementById('confirmOkBtn').textContent = okText;
+      state.confirmCallback = onOk;
+      document.getElementById('confirmBackdrop').classList.add('open');
+    }
+    function closeConfirm(ok) {
+      document.getElementById('confirmBackdrop').classList.remove('open');
+      if (ok && state.confirmCallback) state.confirmCallback();
+      state.confirmCallback = null;
+    }
+    function copyText(label, val) {
+      navigator.clipboard?.writeText(val).catch(() => {});
+      showToast('success', `已复制 ${label}`);
+    }
+    function formatJsonPretty(raw) {
+      if (!raw) return '--';
+      try { return JSON.stringify(JSON.parse(raw), null, 2); } catch { return raw; }
+    }
+    function checkPwdStrength(pwd) {
+      const cats = [/[A-Z]/.test(pwd), /[a-z]/.test(pwd), /\d/.test(pwd), /[^A-Za-z0-9\s]/.test(pwd)].filter(Boolean).length;
+      return pwd.length >= 8 && pwd.length <= 20 && !/\s/.test(pwd) && cats >= 3;
+    }
+    function getNavMenus() {
+      const eff = effTenantId();
+      const all = [
+        { path: '/system/dict', title: '数据字典', group: '基础配置', icon: '▤', platformOnly: true },
+        { path: '/system/config', title: '系统参数', group: '基础配置', icon: '⚙' },
+        { path: '/system/oper-log', title: '操作日志', group: '审计安全', icon: '☷' },
+        { path: '/system/login-log', title: '登录日志', group: '审计安全', icon: '☷' },
+        { path: '/enums', title: '静态枚举 (/enums)', group: '基础配置', icon: '◫' },
+      ];
+      return all.filter(m => !(m.platformOnly && state.tenantEnabled && eff !== '0'));
+    }
+
+    function openRoute(path) {
+      hidePopovers();
+      const vis = getNavMenus();
+      if (!vis.some(m => m.path === path)) {
+        showToast('warning', '当前切入非 0 租户视角，平台专属【数据字典】已自动隐藏');
+        path = '/system/config';
+      }
+      state.activeRoute = path;
+      const m = vis.find(x => x.path === path);
+      if (m && !state.tabs.some(t => t.path === path)) state.tabs.push({ path, title: m.title, affix: false });
+      render();
+    }
+    function closeTab(path) {
+      const idx = state.tabs.findIndex(t => t.path === path);
+      if (idx < 0) return;
+      const was = state.activeRoute === path;
+      state.tabs.splice(idx, 1);
+      if (was) state.activeRoute = state.tabs[0]?.path || '/system/config';
+      if (state.tabs.length === 0) state.tabs.push({ path: state.activeRoute, title: getNavMenus().find(m => m.path === state.activeRoute)?.title || '系统参数', affix: false });
+      render();
+    }
+    function toggleTheme() { state.dark = !state.dark; document.documentElement.classList.toggle('dark', state.dark); render(); }
+    function toggleTenantEnabled() {
+      state.tenantEnabled = !state.tenantEnabled;
+      if (!state.tenantEnabled) state.activeTenantId = '0';
+      state.selectedConfigIds.clear();
+      render();
+    }
+    function toggleSwitchTenant() {
+      if (!state.tenantEnabled) state.tenantEnabled = true;
+      state.activeTenantId = state.activeTenantId === '0' ? '10002' : '0';
+      state.selectedConfigIds.clear();
+      const vis = getNavMenus();
+      state.tabs = state.tabs.filter(t => vis.some(m => m.path === t.path));
+      if (!vis.some(m => m.path === state.activeRoute)) openRoute('/system/config');
+      else render();
+    }
+
+    // ==================== DICT ACTIONS ====================
+    function openDictTypeModal(id) {
+      const t = id ? DB.dictTypes.find(x => x.id === id) : null;
+      state.modal = { type: 'dict_type', mode: t ? 'edit' : 'create', form: t ? { ...t } : { id: '', dictName: '', dictType: '', status: 0, remark: '' }, errors: {} };
+      render();
+    }
+    function saveDictType() {
+      const { mode, form } = state.modal;
+      const errors = {};
+      const name = form.dictName.trim();
+      const dtype = form.dictType.trim();
+      if (name.length < 2 || name.length > 50) errors.dictName = '字典名称须为 2~50 个字符';
+      if (mode === 'create') {
+        if (!/^[a-z][a-z0-9_]{1,63}$/.test(dtype)) errors.dictType = '仅支持小写字母开头、数字及下划线 (2~64 位)';
+        if (DB.dictTypes.some(x => x.dictType === dtype)) errors.dictType = '字典类型编码已存在 (102002)';
+      }
+      if (Object.keys(errors).length) { state.modal.errors = errors; render(); return; }
+      if (mode === 'create') {
+        DB.dictTypes.push({ ...form, id: 'dt_' + Date.now(), dictName: name, dictType: dtype, status: Number(form.status), createTime: '2026-11-24 18:28:00' });
+        state.selectedDictType = dtype;
+        showToast('success', `已新增字典类型【${name}】`);
+      } else {
+        Object.assign(DB.dictTypes.find(x => x.id === form.id), { dictName: name, status: Number(form.status), remark: form.remark });
+        showToast('success', `已保存字典类型【${name}】并清理 DictManager 缓存`);
+      }
+      state.modal = null; render();
+    }
+    function deleteDictType(id) {
+      const t = DB.dictTypes.find(x => x.id === id);
+      const count = DB.dictData.filter(d => d.dictType === t.dictType).length;
+      if (count > 0) {
+        showToast('danger', `字典类型【${t.dictName}】下尚有 ${count} 条字典数据，请先清空后再删除 (102005)`);
+        return;
+      }
+      openConfirm('确认删除字典类型', `确认删除空字典类型 <strong>【${esc(t.dictName)}】</strong>？`, () => {
+        DB.dictTypes = DB.dictTypes.filter(x => x.id !== id);
+        if (state.selectedDictType === t.dictType) state.selectedDictType = DB.dictTypes[0]?.dictType || '';
+        showToast('success', `已删除字典类型 ${t.dictName}`);
+        render();
+      }, '确认删除');
+    }
+    function openDictDataModal(id) {
+      const d = id ? DB.dictData.find(x => x.id === id) : null;
+      state.modal = { type: 'dict_data', mode: d ? 'edit' : 'create', form: d ? { ...d } : { id: '', dictType: state.selectedDictType, dictLabel: '', dictValue: '', tagType: 'primary', cssClass: '', sort: 1, isDefault: false, status: 0, remark: '' }, errors: {} };
+      render();
+    }
+    function saveDictData() {
+      const { mode, form } = state.modal;
+      const errors = {};
+      const lbl = form.dictLabel.trim();
+      const val = form.dictValue.trim();
+      if (!lbl) errors.dictLabel = '请输入字典标签';
+      if (!val) errors.dictValue = '请输入字典键值';
+      if (DB.dictData.some(x => x.dictType === form.dictType && x.dictValue === val && x.id !== form.id)) errors.dictValue = '同类型下字典键值不可重复 (102002)';
+      if (Object.keys(errors).length) { state.modal.errors = errors; render(); return; }
+
+      if (form.isDefault) {
+        DB.dictData.filter(x => x.dictType === form.dictType).forEach(x => { x.isDefault = false; });
+      }
+      if (mode === 'create') {
+        DB.dictData.push({ ...form, id: 'dd_' + Date.now(), dictLabel: lbl, dictValue: val, sort: Number(form.sort) || 0, status: Number(form.status) });
+        showToast('success', `已新增字典项【${lbl}】并刷新 ${form.dictType} 缓存`);
+      } else {
+        Object.assign(DB.dictData.find(x => x.id === form.id), form, { dictLabel: lbl, dictValue: val, sort: Number(form.sort) || 0, status: Number(form.status) });
+        showToast('success', `已保存字典项【${lbl}】并刷新 ${form.dictType} 缓存`);
+      }
+      state.modal = null; render();
+    }
+    function deleteDictData(id) {
+      const d = DB.dictData.find(x => x.id === id);
+      openConfirm('确认删除字典数据', `确认删除字典项 <strong>【${esc(d.dictLabel)}】</strong>？`, () => {
+        DB.dictData = DB.dictData.filter(x => x.id !== id);
+        showToast('success', `已删除字典项并清理 ${d.dictType} 缓存`);
+        render();
+      }, '确认删除');
+    }
+
+    // ==================== CONFIG ACTIONS ====================
+    function openConfigModal(id) {
+      const eff = effTenantId();
+      const c = id ? (DB.configs[eff] || []).find(x => x.id === id) : null;
+      state.modal = { type: 'config', mode: c ? 'edit' : 'create', isBuiltIn: c?.configType === 'Y', form: c ? { ...c } : { id: '', configName: '', configKey: '', configValue: '', configType: 'N', remark: '' }, errors: {} };
+      render();
+    }
+    function saveConfigModal() {
+      const { mode, isBuiltIn, form } = state.modal;
+      const eff = effTenantId();
+      const list = DB.configs[eff] || [];
+      const errors = {};
+      const name = form.configName.trim();
+      const key = form.configKey.trim();
+      const val = form.configValue.trim();
+      if (name.length < 2 || name.length > 100) errors.configName = '参数名称须为 2~100 个字符';
+      if (!/^[a-zA-Z0-9._-]{2,100}$/.test(key)) errors.configKey = '参数键须为 2~100 位字母/数字/点/下划线';
+      if (list.some(x => x.configKey === key && x.id !== form.id)) errors.configKey = '当前租户下参数键已存在 (102002)';
+      if (!val) errors.configValue = '请输入参数键值';
+      if (key === 'sys.user.initPassword' && !checkPwdStrength(val)) {
+        errors.configValue = '默认初始密码须满足 8~20 位无空白且至少含大小写/数字/符号中 3 类';
+      }
+      if (Object.keys(errors).length) { state.modal.errors = errors; render(); return; }
+
+      if (mode === 'create') {
+        list.push({ ...form, id: 'c_' + Date.now(), configName: name, configKey: key, configValue: val, createTime: '2026-11-24 18:29:00' });
+        showToast('success', `已新增系统参数 ${key}`);
+      } else {
+        Object.assign(list.find(x => x.id === form.id), form, { configName: name, configKey: isBuiltIn ? form.configKey : key, configValue: val, configType: isBuiltIn ? 'Y' : form.configType });
+        showToast('success', `已保存参数 ${key}`);
+      }
+      state.modal = null; render();
+    }
+    function deleteConfigs(ids) {
+      const eff = effTenantId();
+      const list = DB.configs[eff] || [];
+      if (ids.some(id => list.find(x => x.id === id)?.configType === 'Y')) {
+        showToast('danger', '系统内置核心参数受保护，禁止删除 (102007)');
+        return;
+      }
+      openConfirm('确认删除参数', `确认删除选中的 <strong>${ids.length}</strong> 条自建参数？`, () => {
+        DB.configs[eff] = list.filter(x => !ids.includes(x.id));
+        ids.forEach(id => state.selectedConfigIds.delete(id));
+        showToast('success', '已删除系统参数');
+        render();
+      }, '确认删除');
+    }
+
+    // ==================== OPER LOG DETAIL ====================
+    function openOperDetail(id) {
+      const eff = effTenantId();
+      const log = (DB.operLogs[eff] || []).find(x => x.id === id);
+      if (!log) return;
+      state.modal = { type: 'oper_detail', log, expandReq: false, expandRes: false };
+      render();
+    }
+
+    // ==================== RENDERERS ====================
+    function renderDictPage() {
+      const types = DB.dictTypes.filter(t => !state.dictTypeQuery.keyword.trim() || t.dictName.includes(state.dictTypeQuery.keyword) || t.dictType.includes(state.dictTypeQuery.keyword));
+      const curType = DB.dictTypes.find(t => t.dictType === state.selectedDictType) || types[0];
+      const items = curType ? DB.dictData.filter(d => d.dictType === curType.dictType).sort((a, b) => a.sort - b.sort) : [];
+      const activeItemsForPreview = curType && curType.status === 0 ? items.filter(x => x.status === 0) : [];
+
+      return `
+        <div class="dict-split">
+          <div class="panel-col">
+            <section class="card table-card">
+              <div class="table-toolbar">
+                <div class="toolbar-left"><strong>字典类型 (sys_dict_type)</strong></div>
+                <div class="toolbar-right">
+                  <input id="dtSearch" class="input" style="width:150px;" placeholder="检索名称/编码" value="${esc(state.dictTypeQuery.keyword)}" oninput="state.dictTypeQuery.keyword=this.value; render();" />
+                  <button class="btn btn-primary btn-sm" type="button" onclick="openDictTypeModal(null)">+ 新增类型</button>
+                </div>
+              </div>
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead><tr><th>字典名称</th><th>类型编码</th><th>状态</th><th class="col-sticky-right">操作</th></tr></thead>
+                  <tbody>
+                    ${types.map(t => `
+                      <tr class="${curType && t.id === curType.id ? 'row-selected' : ''}" style="cursor:pointer;" onclick="state.selectedDictType='${t.dictType}'; render();">
+                        <td style="font-weight:500;">${esc(t.dictName)}</td>
+                        <td class="mono">${esc(t.dictType)}</td>
+                        <td onclick="event.stopPropagation();"><button class="switch ${t.status === 0 ? 'on' : ''}" type="button" onclick="openConfirm('切换字典类型状态','确认切换【${esc(t.dictName)}】状态？（停用后消费端下发空选项）', ()=>{ const x=DB.dictTypes.find(k=>k.id==='${t.id}'); x.status=x.status===0?1:0; showToast('warning','已更新字典类型状态并刷新缓存'); render(); })"></button></td>
+                        <td class="col-sticky-right" onclick="event.stopPropagation();">
+                          <button class="btn-link" type="button" onclick="openDictTypeModal('${t.id}')">编辑</button>
+                          <button class="btn-link danger" type="button" onclick="deleteDictType('${t.id}')">删除</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+
+          <div class="panel-col">
+            <section class="card table-card">
+              <div class="table-toolbar">
+                <div class="toolbar-left">
+                  <strong>字典数据 (sys_dict_data)</strong>
+                  ${curType ? `<span class="tag tag-primary mono">${esc(curType.dictName)} (${esc(curType.dictType)})</span>` : ''}
+                  ${curType && curType.status === 1 ? '<span class="tag tag-danger">类型已停用</span>' : ''}
+                </div>
+                <div class="toolbar-right">
+                  <button class="btn btn-sm" type="button" onclick="showToast('success','已执行 DictManager.clearCache(\\'${curType?.dictType || ''}\\')')">刷新缓存</button>
+                  <button class="btn btn-primary btn-sm" type="button" ${!curType ? 'disabled' : ''} onclick="openDictDataModal(null)">+ 新增字典数据</button>
+                </div>
+              </div>
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead><tr><th>标签效果 (AtengDictTag)</th><th>键值</th><th>排序</th><th>默认</th><th>状态</th><th class="col-sticky-right">操作</th></tr></thead>
+                  <tbody>
+                    ${items.length === 0 ? `<tr><td colspan="6" style="text-align:center;padding:28px;color:var(--solid-text-secondary);">当前字典类型暂无字典数据项</td></tr>` : items.map(d => `
+                      <tr>
+                        <td><span class="tag ${tagCls(d.tagType)}">${esc(d.dictLabel)}</span></td>
+                        <td class="mono">${esc(d.dictValue)}</td>
+                        <td class="mono">${d.sort}</td>
+                        <td>${d.isDefault ? '<span class="tag tag-primary">默认</span>' : '--'}</td>
+                        <td><button class="switch ${d.status === 0 ? 'on' : ''}" type="button" onclick="openConfirm('切换字典项状态','确认切换【${esc(d.dictLabel)}】状态？', ()=>{ const x=DB.dictData.find(k=>k.id==='${d.id}'); x.status=x.status===0?1:0; showToast('success','已更新字典项状态并清缓存'); render(); })"></button></td>
+                        <td class="col-sticky-right">
+                          <button class="btn-link" type="button" onclick="openDictDataModal('${d.id}')">编辑</button>
+                          <button class="btn-link danger" type="button" onclick="deleteDictData('${d.id}')">删除</button>
+                        </td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div class="preview-stage">
+                <span style="font-size:12px;color:var(--solid-text-secondary);">消费侧模拟（仅正常态进入下拉，历史停用值降级显示原值）：</span>
+                <select class="select" style="width:180px;">
+                  ${activeItemsForPreview.length === 0 ? '<option value="">无可用选项 (type disabled/empty)</option>' : activeItemsForPreview.map(x => `<option value="${esc(x.dictValue)}" ${x.isDefault ? 'selected' : ''}>${esc(x.dictLabel)}${x.isDefault ? ' (默认)' : ''}</option>`).join('')}
+                </select>
+              </div>
+            </section>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderConfigPage() {
+      const eff = effTenantId();
+      const rows = (DB.configs[eff] || []).filter(c => {
+        if (state.configQuery.configName.trim() && !c.configName.includes(state.configQuery.configName.trim())) return false;
+        if (state.configQuery.configKey.trim() && !c.configKey.includes(state.configQuery.configKey.trim())) return false;
+        if (state.configQuery.configType !== '' && c.configType !== state.configQuery.configType) return false;
+        return true;
+      });
+      const selectable = rows.filter(c => c.configType !== 'Y');
+      const allSel = selectable.length > 0 && selectable.every(c => state.selectedConfigIds.has(c.id));
+
+      return `
+        <section class="card query-card">
+          <div class="query-grid">
+            <div class="field-group"><label class="field-label">参数名称</label><input id="cqName" class="input" placeholder="输入参数名称" value="${esc(state.configQuery.configName)}" oninput="state.configQuery.configName=this.value" /></div>
+            <div class="field-group"><label class="field-label">参数键名</label><input id="cqKey" class="input mono" placeholder="如 sys.user.initPassword" value="${esc(state.configQuery.configKey)}" oninput="state.configQuery.configKey=this.value" /></div>
+            <div class="field-group"><label class="field-label">参数类型</label><select class="select" onchange="state.configQuery.configType=this.value; render();"><option value="" ${state.configQuery.configType===''?'selected':''}>全部</option><option value="Y" ${state.configQuery.configType==='Y'?'selected':''}>系统内置 (Y)</option><option value="N" ${state.configQuery.configType==='N'?'selected':''}>业务自建 (N)</option></select></div>
+            <div class="query-actions"><button class="btn btn-primary" type="button" onclick="render()">查询</button><button class="btn" type="button" onclick="state.configQuery={configName:'',configKey:'',configType:''}; render();">重置</button></div>
+          </div>
+        </section>
+        <section class="card table-card">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <button class="btn btn-primary" type="button" onclick="openConfigModal(null)">+ 新增参数</button>
+              <button class="btn" type="button" ${state.selectedConfigIds.size === 0 ? 'disabled' : ''} onclick="deleteConfigs([...state.selectedConfigIds])">批量删除 (${state.selectedConfigIds.size})</button>
+            </div>
+            <div class="toolbar-right"><span style="font-size:12px;color:var(--solid-text-secondary);">系统内置参数 (Y) 禁改键名、禁删；编辑 sys.user.initPassword 强校验口令复杂度</span></div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th style="width:36px;"><input type="checkbox" ${allSel ? 'checked' : ''} onchange="const s=${JSON.stringify(selectable.map(x=>x.id)).replace(/"/g,'&quot;')}; this.checked?s.forEach(i=>state.selectedConfigIds.add(i)):s.forEach(i=>state.selectedConfigIds.delete(i)); render();" /></th><th>参数名称</th><th>参数键名</th><th>参数键值</th><th>类型</th><th>备注</th><th>创建时间</th><th class="col-sticky-right">操作</th></tr></thead>
+              <tbody>
+                ${rows.map(c => {
+                  const builtIn = c.configType === 'Y';
+                  const tip = '系统内置核心参数受保护，禁止删除';
+                  return `
+                    <tr>
+                      <td><input type="checkbox" ${builtIn ? 'disabled title="' + tip + '"' : ''} ${state.selectedConfigIds.has(c.id) ? 'checked' : ''} onchange="this.checked?state.selectedConfigIds.add('${c.id}'):state.selectedConfigIds.delete('${c.id}'); render();" /></td>
+                      <td>${esc(c.configName)}</td>
+                      <td class="mono">${esc(c.configKey)}</td>
+                      <td class="mono"><span class="ellipsis" title="${esc(c.configValue)}">${esc(c.configValue)}</span></td>
+                      <td>${builtIn ? '<span class="tag tag-primary">系统内置</span>' : '<span class="tag tag-info">业务自建</span>'}</td>
+                      <td><span class="ellipsis" title="${esc(c.remark)}">${esc(c.remark || '--')}</span></td>
+                      <td class="mono">${c.createTime}</td>
+                      <td class="col-sticky-right">
+                        <button class="btn-link" type="button" onclick="openConfigModal('${c.id}')">编辑</button>
+                        <button class="btn-link danger" type="button" ${builtIn ? 'disabled title="' + tip + '"' : ''} onclick="deleteConfigs(['${c.id}'])">删除</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderOperLogPage() {
+      const eff = effTenantId();
+      const opMap = Object.fromEntries(STATIC_ENUMS.operateType.map(x => [x.code, x]));
+      const rows = (DB.operLogs[eff] || []).filter(l => {
+        if (state.operQuery.module.trim() && !l.module.includes(state.operQuery.module.trim())) return false;
+        if (state.operQuery.userName.trim() && !l.userName.includes(state.operQuery.userName.trim())) return false;
+        if (state.operQuery.operateType !== '' && String(l.operateType) !== state.operQuery.operateType) return false;
+        if (state.operQuery.status !== '' && String(l.status) !== state.operQuery.status) return false;
+        if (state.operQuery.traceId.trim() && l.traceId !== state.operQuery.traceId.trim()) return false;
+        if (state.operQuery.dateQuick === 'today' && !l.operateTime.startsWith('2026-11-24')) return false;
+        return true;
+      });
+      return `
+        <section class="card query-card">
+          <div class="query-grid">
+            <div class="field-group"><label class="field-label">操作模块</label><input id="oqMod" class="input" placeholder="如 用户管理" value="${esc(state.operQuery.module)}" oninput="state.operQuery.module=this.value" /></div>
+            <div class="field-group"><label class="field-label">操作类型 (静态枚举)</label><select class="select" onchange="state.operQuery.operateType=this.value; render();"><option value="" ${state.operQuery.operateType===''?'selected':''}>全部</option>${STATIC_ENUMS.operateType.map(o => `<option value="${o.code}" ${state.operQuery.operateType===String(o.code)?'selected':''}>${o.label}</option>`).join('')}</select></div>
+            <div class="field-group"><label class="field-label">操作状态</label><select class="select" onchange="state.operQuery.status=this.value; render();"><option value="" ${state.operQuery.status===''?'selected':''}>全部</option><option value="0" ${state.operQuery.status==='0'?'selected':''}>成功</option><option value="1" ${state.operQuery.status==='1'?'selected':''}>失败</option></select></div>
+            <div class="query-actions">
+              <button class="btn btn-primary" type="button" onclick="render()">查询</button>
+              <button class="btn" type="button" onclick="state.operQuery={module:'',userName:'',operateType:'',status:'',traceId:'',dateQuick:'all',collapsed:state.operQuery.collapsed}; render();">重置</button>
+              <button class="btn-link" type="button" onclick="state.operQuery.collapsed=!state.operQuery.collapsed; render();">${state.operQuery.collapsed ? '展开 ▾' : '收起 ▴'}</button>
+            </div>
+          </div>
+          ${!state.operQuery.collapsed ? `
+            <div class="query-grid" style="margin-top:10px;">
+              <div class="field-group"><label class="field-label">操作人员</label><input id="oqUser" class="input" value="${esc(state.operQuery.userName)}" oninput="state.operQuery.userName=this.value" /></div>
+              <div class="field-group"><label class="field-label">traceId (精确匹配)</label><input id="oqTrace" class="input mono" placeholder="如 trc-9a81f02b11c" value="${esc(state.operQuery.traceId)}" oninput="state.operQuery.traceId=this.value" /></div>
+              <div class="field-group"><label class="field-label">快捷时间范围</label><div style="display:flex;gap:6px;">${[['all','全部'],['today','今天'],['7d','最近7天'],['30d','最近30天']].map(([k,l]) => `<button class="btn btn-sm ${state.operQuery.dateQuick===k?'btn-primary':''}" type="button" onclick="state.operQuery.dateQuick='${k}'; render();">${l}</button>`).join('')}</div></div>
+            </div>
+          ` : ''}
+        </section>
+        <section class="card table-card">
+          <div class="table-toolbar">
+            <div class="toolbar-left"><strong>操作审计日志</strong><span class="tag tag-info">严格只读流水（无新增/修改/删除/清空/导出）</span></div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>traceId</th><th>操作模块</th><th>操作类型</th><th>请求方式 & 路径</th><th>操作人员</th><th>客户端 IP</th><th>浏览器 / 系统</th><th>状态</th><th>耗时</th><th>操作时间</th><th class="col-sticky-right">操作</th></tr></thead>
+              <tbody>
+                ${rows.map(l => {
+                  const op = opMap[l.operateType] || { label: '其他', tagType: 'info' };
+                  return `
+                    <tr>
+                      <td class="mono">${esc(l.traceId)} <button class="btn-link" type="button" onclick="copyText('traceId', '${esc(l.traceId)}')">复制</button></td>
+                      <td>${esc(l.module)}</td>
+                      <td><span class="tag ${tagCls(op.tagType)}">${op.label}</span></td>
+                      <td class="mono"><span class="ellipsis" title="${esc(l.requestMethod + ' ' + l.requestUrl)}">${esc(l.requestMethod)} ${esc(l.requestUrl)}</span></td>
+                      <td>${esc(l.userName)}</td>
+                      <td class="mono">${esc(l.clientIp)}</td>
+                      <td>${esc(l.browser)} / ${esc(l.os)}</td>
+                      <td>${l.status === 0 ? '<span class="tag tag-success">成功</span>' : '<span class="tag tag-danger">失败</span>'}</td>
+                      <td class="mono">${l.costTime} ms</td>
+                      <td class="mono">${l.operateTime}</td>
+                      <td class="col-sticky-right"><button class="btn-link" type="button" onclick="openOperDetail('${l.id}')">详情</button></td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderLoginLogPage() {
+      const eff = effTenantId();
+      const rows = (DB.loginLogs[eff] || []).filter(l => {
+        if (state.loginQuery.username.trim() && !l.username.includes(state.loginQuery.username.trim())) return false;
+        if (state.loginQuery.clientIp.trim() && !l.clientIp.includes(state.loginQuery.clientIp.trim())) return false;
+        if (state.loginQuery.status !== '' && String(l.status) !== state.loginQuery.status) return false;
+        if (state.loginQuery.traceId.trim() && l.traceId !== state.loginQuery.traceId.trim()) return false;
+        if (state.loginQuery.dateQuick === 'today' && !l.loginTime.startsWith('2026-11-24')) return false;
+        return true;
+      });
+      return `
+        <section class="card query-card">
+          <div class="query-grid">
+            <div class="field-group"><label class="field-label">登录账号</label><input id="lqUser" class="input" value="${esc(state.loginQuery.username)}" oninput="state.loginQuery.username=this.value" /></div>
+            <div class="field-group"><label class="field-label">客户端 IP</label><input id="lqIp" class="input mono" value="${esc(state.loginQuery.clientIp)}" oninput="state.loginQuery.clientIp=this.value" /></div>
+            <div class="field-group"><label class="field-label">登录状态</label><select class="select" onchange="state.loginQuery.status=this.value; render();"><option value="" ${state.loginQuery.status===''?'selected':''}>全部</option><option value="0" ${state.loginQuery.status==='0'?'selected':''}>成功</option><option value="1" ${state.loginQuery.status==='1'?'selected':''}>失败</option></select></div>
+            <div class="query-actions">
+              <button class="btn btn-primary" type="button" onclick="render()">查询</button>
+              <button class="btn" type="button" onclick="state.loginQuery={username:'',clientIp:'',status:'',traceId:'',dateQuick:'all',collapsed:state.loginQuery.collapsed}; render();">重置</button>
+              <button class="btn-link" type="button" onclick="state.loginQuery.collapsed=!state.loginQuery.collapsed; render();">${state.loginQuery.collapsed ? '展开 ▾' : '收起 ▴'}</button>
+            </div>
+          </div>
+          ${!state.loginQuery.collapsed ? `
+            <div class="query-grid" style="margin-top:10px;">
+              <div class="field-group"><label class="field-label">traceId</label><input id="lqTrace" class="input mono" value="${esc(state.loginQuery.traceId)}" oninput="state.loginQuery.traceId=this.value" /></div>
+              <div class="field-group"><label class="field-label">快捷时间范围</label><div style="display:flex;gap:6px;">${[['all','全部'],['today','今天'],['7d','最近7天'],['30d','最近30天']].map(([k,l]) => `<button class="btn btn-sm ${state.loginQuery.dateQuick===k?'btn-primary':''}" type="button" onclick="state.loginQuery.dateQuick='${k}'; render();">${l}</button>`).join('')}</div></div>
+            </div>
+          ` : ''}
+        </section>
+        <section class="card table-card">
+          <div class="table-toolbar"><div class="toolbar-left"><strong>登录审计日志</strong><span class="tag tag-info">严格只读 · 由 UserAgentUtil 解析浏览器与操作系统</span></div></div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>日志ID</th><th>traceId</th><th>登录账号</th><th>登录体系</th><th>客户端 IP</th><th>浏览器</th><th>操作系统</th><th>状态</th><th>提示消息</th><th>登录时间</th></tr></thead>
+              <tbody>
+                ${rows.map(l => `
+                  <tr>
+                    <td class="mono">${l.id}</td>
+                    <td class="mono">${esc(l.traceId)} <button class="btn-link" type="button" onclick="copyText('traceId', '${esc(l.traceId)}')">复制</button></td>
+                    <td class="mono">${esc(l.username)}</td>
+                    <td class="mono">${l.loginType}</td>
+                    <td class="mono">${esc(l.clientIp)}</td>
+                    <td>${esc(l.browser)}</td>
+                    <td>${esc(l.os)}</td>
+                    <td>${l.status === 0 ? '<span class="tag tag-success">成功</span>' : '<span class="tag tag-danger">失败</span>'}</td>
+                    <td><span class="ellipsis" title="${esc(l.msg)}">${esc(l.msg)}</span></td>
+                    <td class="mono">${l.loginTime}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderEnumsPage() {
+      return `
+        <div class="alert-box alert-info">
+          <span>静态枚举由 <span class="mono">SysEnumController</span>（<span class="mono">@SaCheckLogin</span>）统一挂载于 <span class="mono">/admin/system/enums/**</span> 只读暴露，前端映射为 <span class="mono">DictItem</span> 消费，无后台增删改入口。</span>
+        </div>
+        <div class="enum-grid">
+          ${Object.entries(STATIC_ENUMS).map(([name, items]) => `
+            <section class="card enum-card">
+              <div style="display:flex;justify-content:space-between;align-items:center;">
+                <strong class="mono">${name}</strong>
+                <span class="mono" style="font-size:12px;color:var(--solid-text-secondary);">GET /admin/system/enums/${name}</span>
+              </div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                ${items.map(it => `<span class="tag ${tagCls(it.tagType)}"><span class="mono">${esc(it.code)}</span>: ${esc(it.label)}</span>`).join('')}
+              </div>
+            </section>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderModal() {
+      const m = state.modal;
+      if (!m) return '';
+      if (m.type === 'dict_type') {
+        const f = m.form;
+        return `
+          <div class="modal-backdrop open"><div class="dialog-panel w-480" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>${m.mode === 'edit' ? '编辑字典类型' : '新增字典类型'}</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="field-group"><label class="field-label">字典名称 *</label><input class="input ${m.errors.dictName ? 'is-error' : ''}" value="${esc(f.dictName)}" oninput="state.modal.form.dictName=this.value" />${m.errors.dictName ? `<div class="field-error">${esc(m.errors.dictName)}</div>` : ''}</div>
+              <div class="field-group"><label class="field-label">字典类型编码 *${m.mode === 'edit' ? '（编辑锁定只读）' : ''}</label><input class="input mono ${m.errors.dictType ? 'is-error' : ''}" ${m.mode === 'edit' ? 'disabled' : ''} value="${esc(f.dictType)}" oninput="state.modal.form.dictType=this.value" />${m.errors.dictType ? `<div class="field-error">${esc(m.errors.dictType)}</div>` : ''}</div>
+              <div class="field-group"><label class="field-label">状态</label><select class="select" onchange="state.modal.form.status=Number(this.value)"><option value="0" ${f.status===0?'selected':''}>正常</option><option value="1" ${f.status===1?'selected':''}>停用</option></select></div>
+              <div class="field-group"><label class="field-label">备注</label><textarea class="textarea" oninput="state.modal.form.remark=this.value">${esc(f.remark)}</textarea></div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="saveDictType()">保存字典类型</button></div>
+          </div></div>
+        `;
+      }
+      if (m.type === 'dict_data') {
+        const f = m.form;
+        return `
+          <div class="modal-backdrop open"><div class="dialog-panel" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>${m.mode === 'edit' ? '编辑字典数据' : '新增字典数据'}</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="field-group"><label class="field-label">所属字典类型</label><input class="input mono" value="${esc(f.dictType)}" disabled /></div>
+              <div class="form-grid-2">
+                <div class="field-group"><label class="field-label">字典标签 *</label><input id="ddLbl" class="input ${m.errors.dictLabel ? 'is-error' : ''}" value="${esc(f.dictLabel)}" oninput="state.modal.form.dictLabel=this.value; render();" />${m.errors.dictLabel ? `<div class="field-error">${esc(m.errors.dictLabel)}</div>` : ''}</div>
+                <div class="field-group"><label class="field-label">字典键值 *</label><input class="input mono ${m.errors.dictValue ? 'is-error' : ''}" value="${esc(f.dictValue)}" oninput="state.modal.form.dictValue=this.value" />${m.errors.dictValue ? `<div class="field-error">${esc(m.errors.dictValue)}</div>` : ''}</div>
+              </div>
+              <div class="form-grid-2">
+                <div class="field-group"><label class="field-label">回显标签样式 (tagType)</label><select class="select" onchange="state.modal.form.tagType=this.value; render();">${TAG_TYPES.map(t => `<option value="${t.value}" ${f.tagType===t.value?'selected':''}>${t.label}</option>`).join('')}</select></div>
+                <div class="field-group"><label class="field-label">显示排序</label><input class="input mono" type="number" value="${f.sort}" oninput="state.modal.form.sort=this.value" /></div>
+              </div>
+              <div class="preview-stage">
+                <span style="font-size:12px;color:var(--solid-text-secondary);">AtengDictTag 实时样式预览：</span>
+                <span class="tag ${tagCls(f.tagType)}">${esc(f.dictLabel || '标签预览')}</span>
+              </div>
+              <div class="form-grid-2">
+                <label><input type="checkbox" ${f.isDefault ? 'checked' : ''} onchange="state.modal.form.isDefault=this.checked" /> 设为默认项（同类型下自动互斥）</label>
+                <label><input type="checkbox" ${f.status === 0 ? 'checked' : ''} onchange="state.modal.form.status=this.checked?0:1" /> 正常启用</label>
+              </div>
+              <div class="field-group"><label class="field-label">备注</label><textarea class="textarea" oninput="state.modal.form.remark=this.value">${esc(f.remark)}</textarea></div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="saveDictData()">保存字典数据</button></div>
+          </div></div>
+        `;
+      }
+      if (m.type === 'config') {
+        const f = m.form;
+        return `
+          <div class="modal-backdrop open"><div class="dialog-panel" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>${m.mode === 'edit' ? '编辑系统参数' : '新增系统参数'}</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              ${m.isBuiltIn ? `<div class="alert-box alert-info"><span>系统内置参数不可修改键名或降级为业务自建；若为 sys.user.initPassword 将强校验口令复杂度。</span></div>` : ''}
+              <div class="field-group"><label class="field-label">参数名称 *</label><input class="input ${m.errors.configName ? 'is-error' : ''}" value="${esc(f.configName)}" oninput="state.modal.form.configName=this.value" />${m.errors.configName ? `<div class="field-error">${esc(m.errors.configName)}</div>` : ''}</div>
+              <div class="field-group"><label class="field-label">参数键名 *${m.isBuiltIn ? '（内置锁定只读）' : ''}</label><input class="input mono ${m.errors.configKey ? 'is-error' : ''}" ${m.isBuiltIn ? 'disabled' : ''} value="${esc(f.configKey)}" oninput="state.modal.form.configKey=this.value" />${m.errors.configKey ? `<div class="field-error">${esc(m.errors.configKey)}</div>` : ''}</div>
+              <div class="field-group"><label class="field-label">参数键值 *</label><textarea class="textarea mono ${m.errors.configValue ? 'is-error' : ''}" oninput="state.modal.form.configValue=this.value">${esc(f.configValue)}</textarea>${m.errors.configValue ? `<div class="field-error">${esc(m.errors.configValue)}</div>` : ''}</div>
+              <div class="field-group"><label class="field-label">备注</label><textarea class="textarea" oninput="state.modal.form.remark=this.value">${esc(f.remark)}</textarea></div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="saveConfigModal()">保存参数</button></div>
+          </div></div>
+        `;
+      }
+      if (m.type === 'oper_detail') {
+        const l = m.log;
+        const op = STATIC_ENUMS.operateType.find(x => x.code === l.operateType)?.label || '其他';
+        return `
+          <div class="modal-backdrop drawer-backdrop open"><div class="drawer-panel" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>操作日志详情 · #${l.id}</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              ${l.status === 1 ? `<div class="alert-box alert-danger"><span><strong>失败异常摘要：</strong>${esc(l.errorMsg)}</span></div>` : ''}
+              <div class="desc-grid">
+                <div class="desc-cell"><span class="desc-k">traceId</span><span class="desc-v mono">${esc(l.traceId)} <button class="btn-link" type="button" onclick="copyText('traceId', '${esc(l.traceId)}')">复制</button></span></div>
+                <div class="desc-cell"><span class="desc-k">操作模块 / 类型</span><span class="desc-v">${esc(l.module)} · ${op}</span></div>
+                <div class="desc-cell"><span class="desc-k">操作人员</span><span class="desc-v">${esc(l.userName)} (ID: ${esc(l.userId)})</span></div>
+                <div class="desc-cell"><span class="desc-k">客户端 IP / 归属地</span><span class="desc-v mono">${esc(l.clientIp)} · --</span></div>
+                <div class="desc-cell"><span class="desc-k">浏览器 / 操作系统</span><span class="desc-v">${esc(l.browser)} / ${esc(l.os)}</span></div>
+                <div class="desc-cell"><span class="desc-k">执行耗时 / 操作时间</span><span class="desc-v mono">${l.costTime} ms · ${l.operateTime}</span></div>
+                <div class="desc-cell full"><span class="desc-k">请求地址</span><span class="desc-v mono">${esc(l.requestMethod)} ${esc(l.requestUrl)}</span></div>
+              </div>
+              <div class="code-box-wrap">
+                <div class="code-box-head">
+                  <span>请求参数 (requestParams · 敏感键已置为 [EXCLUDED])</span>
+                  <div style="display:flex;gap:8px;"><button class="btn-link" type="button" onclick="copyText('请求参数', formatJsonPretty(state.modal.log.requestParams))">复制</button><button class="btn-link" type="button" onclick="state.modal.expandReq=!state.modal.expandReq; render();">${m.expandReq ? '收起' : '展开完整'}</button></div>
+                </div>
+                <pre class="code-pre ${m.expandReq ? 'expanded' : ''}">${esc(formatJsonPretty(l.requestParams))}</pre>
+              </div>
+              <div class="code-box-wrap">
+                <div class="code-box-head">
+                  <span>响应结果 (responseResult)</span>
+                  <div style="display:flex;gap:8px;"><button class="btn-link" type="button" onclick="copyText('响应结果', formatJsonPretty(state.modal.log.responseResult))">复制</button><button class="btn-link" type="button" onclick="state.modal.expandRes=!state.modal.expandRes; render();">${m.expandRes ? '收起' : '展开完整'}</button></div>
+                </div>
+                <pre class="code-pre ${m.expandRes ? 'expanded' : ''}">${esc(formatJsonPretty(l.responseResult))}</pre>
+              </div>
+            </div>
+            <div class="panel-footer"><button class="btn btn-primary" type="button" onclick="state.modal=null; render();">关闭</button></div>
+          </div></div>
+        `;
+      }
+      return '';
+    }
+
+    function render() {
+      const activeId = document.activeElement?.id;
+      const selStart = document.activeElement?.selectionStart;
+      const selEnd = document.activeElement?.selectionEnd;
+
+      const vis = getNavMenus();
+      const cur = vis.find(m => m.path === state.activeRoute) || vis[0];
+      const groups = [];
+      vis.forEach(m => { if (!groups.includes(m.group)) groups.push(m.group); });
+
+      const tenantCtrl = !state.tenantEnabled ? '' : `<span class="tenant-pill ${state.activeTenantId !== '0' ? 'switched' : ''}" onclick="toggleSwitchTenant()">${state.activeTenantId === '0' ? '租户: 平台默认租户 (0)' : '租户: 星辰智能科技 (10002)'}</span>`;
+      const bannerHtml = (state.tenantEnabled && state.activeTenantId !== '0')
+        ? `<div class="tenant-banner"><span>当前正以平台超管身份查看工作租户：<strong>星辰智能科技</strong>（<span class="mono">X-Tenant-Id: 10002</span>，平台专属【数据字典】已自动隐藏）</span><button class="btn btn-sm" type="button" onclick="toggleSwitchTenant()">切回平台默认租户 (0)</button></div>`
+        : '';
+
+      let body = '';
+      if (state.activeRoute === '/system/dict') body = renderDictPage();
+      else if (state.activeRoute === '/system/config') body = renderConfigPage();
+      else if (state.activeRoute === '/system/oper-log') body = renderOperLogPage();
+      else if (state.activeRoute === '/system/login-log') body = renderLoginLogPage();
+      else body = renderEnumsPage();
+
+      document.getElementById('app').innerHTML = `
+        <aside class="sidebar ${state.sidebarCollapsed ? 'collapsed' : ''}">
+          <div class="brand-bar"><span class="brand-logo">S</span><span class="brand-text"><span class="brand-name">ateng-solid</span><span class="brand-sub">Admin</span></span></div>
+          <div class="menu-scroll">
+            ${groups.map(g => `<div class="menu-group-label">${g}</div>${vis.filter(m => m.group === g).map(m => `<button class="menu-item ${m.path === state.activeRoute ? 'active' : ''}" type="button" onclick="openRoute('${m.path}')"><span>${m.icon}</span><span class="menu-item-label">${esc(m.title)}</span></button>`).join('')}`).join('')}
+          </div>
+        </aside>
+        <div class="main-column">
+          <header class="topbar">
+            <div class="topbar-left">
+              <button class="icon-btn" type="button" onclick="state.sidebarCollapsed=!state.sidebarCollapsed; render();">☰</button>
+              <nav class="breadcrumb"><span>${esc(cur.group)}</span><span>/</span><span class="current">${esc(cur.title)}</span></nav>
+            </div>
+            <div class="topbar-right">
+              ${tenantCtrl}
+              <button class="icon-btn" type="button" onclick="toggleTheme()">${state.dark ? '☀' : '☾'}</button>
+              <span class="user-trigger"><span class="avatar-circle">超</span><span>陈默</span></span>
+            </div>
+          </header>
+          <div class="tabs-bar">
+            ${state.tabs.map(t => `<div class="tab-chip ${t.path === state.activeRoute ? 'active' : ''}" onclick="openRoute('${t.path}')"><span>${esc(t.title)}</span><button class="tab-close" type="button" onclick="event.stopPropagation(); closeTab('${t.path}')">✕</button></div>`).join('')}
+          </div>
+          ${bannerHtml}
+          <main class="workspace">${body}</main>
+        </div>
+      `;
+
+      document.getElementById('modalRoot').innerHTML = renderModal();
+
+      const keyMap = { '/system/dict': 'sim-dict', '/system/config': 'sim-config', '/system/oper-log': 'sim-oper', '/system/login-log': 'sim-login', '/enums': 'sim-enums' };
+      Object.values(keyMap).forEach(id => document.getElementById(id)?.classList.remove('on'));
+      document.getElementById(keyMap[state.activeRoute])?.classList.add('on');
+      const bt = document.getElementById('sim-theme'); bt.textContent = state.dark ? 'Dark' : 'Light'; bt.classList.toggle('on', state.dark);
+      const bten = document.getElementById('sim-tenant'); bten.textContent = state.tenantEnabled ? '多租户: 开' : '多租户: 关'; bten.classList.toggle('on', state.tenantEnabled);
+      const ba = document.getElementById('sim-actor'); ba.textContent = `视角: ${state.activeTenantId === '0' ? '平台(0)' : '星辰(10002)'}`; ba.classList.toggle('on', state.activeTenantId !== '0');
+
+      if (activeId) {
+        const el = document.getElementById(activeId);
+        if (el && typeof el.focus === 'function') {
+          el.focus();
+          if (typeof selStart === 'number' && typeof el.setSelectionRange === 'function') {
+            try { el.setSelectionRange(selStart, selEnd); } catch {}
+          }
+        }
+      }
+    }
+
+    document.addEventListener('click', () => hidePopovers());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        hidePopovers();
+        if (document.getElementById('confirmBackdrop').classList.contains('open')) closeConfirm(false);
+        else if (state.modal) { state.modal = null; render(); }
+      }
+    });
+    render();
+  </script>
+</body>
+</html>

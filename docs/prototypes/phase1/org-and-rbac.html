@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ateng-solid 第一阶段组织架构与 RBAC（含 @DataScope 与 Fesod Excel 批注）原型</title>
+  <style>
+    /* ============================================================
+     * Precision Slate & Cobalt Design Tokens (design-system.md)
+     * ============================================================ */
+    :root {
+      --solid-bg-canvas: #F6F7F9;
+      --solid-bg-surface: #FFFFFF;
+      --solid-bg-elevated: #FFFFFF;
+      --solid-bg-subtle: #EEF1F5;
+
+      --solid-text-primary: #0F172A;
+      --solid-text-regular: #334155;
+      --solid-text-secondary: #475569;
+      --solid-text-muted: #64748B;
+
+      --solid-primary: #1D4ED8;
+      --solid-primary-hover: #1E40AF;
+      --solid-primary-soft: #EFF6FF;
+      --solid-primary-border: #BFDBFE;
+
+      --solid-border: rgba(15, 23, 42, 0.10);
+      --solid-border-light: rgba(15, 23, 42, 0.06);
+
+      --solid-success: #047857;
+      --solid-success-soft: #ECFDF5;
+      --solid-success-border: #A7F3D0;
+      --solid-warning: #B45309;
+      --solid-warning-soft: #FFFBEB;
+      --solid-warning-border: #FDE68A;
+      --solid-danger: #DC2626;
+      --solid-danger-soft: #FEF2F2;
+      --solid-danger-border: #FECACA;
+      --solid-info: #475569;
+      --solid-info-soft: #F1F5F9;
+
+      --solid-radius-sm: 4px;
+      --solid-radius-md: 6px;
+      --solid-radius-lg: 8px;
+      --solid-radius-pill: 9999px;
+
+      --solid-shadow-popover: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+      --solid-focus-ring: 0 0 0 2px var(--solid-bg-surface), 0 0 0 4px var(--solid-primary);
+
+      --solid-font-sans: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --solid-font-mono: 'JetBrains Mono', 'Cascadia Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    html.dark {
+      --solid-bg-canvas: #0B0F17;
+      --solid-bg-surface: #111827;
+      --solid-bg-elevated: #182234;
+      --solid-bg-subtle: #1E293B;
+
+      --solid-text-primary: #F8FAFC;
+      --solid-text-regular: #CBD5E1;
+      --solid-text-secondary: #94A3B8;
+      --solid-text-muted: #64748B;
+
+      --solid-primary: #3B82F6;
+      --solid-primary-hover: #60A5FA;
+      --solid-primary-soft: rgba(59, 130, 246, 0.15);
+      --solid-primary-border: rgba(59, 130, 246, 0.35);
+
+      --solid-border: rgba(226, 232, 240, 0.12);
+      --solid-border-light: rgba(226, 232, 240, 0.07);
+
+      --solid-success: #10B981;
+      --solid-success-soft: rgba(16, 185, 129, 0.14);
+      --solid-success-border: rgba(16, 185, 129, 0.30);
+      --solid-warning: #F59E0B;
+      --solid-warning-soft: rgba(245, 158, 11, 0.14);
+      --solid-warning-border: rgba(245, 158, 11, 0.32);
+      --solid-danger: #F87171;
+      --solid-danger-soft: rgba(248, 113, 113, 0.14);
+      --solid-danger-border: rgba(248, 113, 113, 0.32);
+      --solid-info: #94A3B8;
+      --solid-info-soft: #1E293B;
+
+      --solid-shadow-popover: 0 16px 36px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(226, 232, 240, 0.14);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: var(--solid-font-sans); font-size: 14px; line-height: 1.5;
+      background: var(--solid-bg-canvas); color: var(--solid-text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select, textarea { font-family: inherit; }
+    :focus-visible { outline: none; box-shadow: var(--solid-focus-ring); }
+    .mono { font-family: var(--solid-font-mono); font-variant-numeric: tabular-nums; }
+    .tabular { font-variant-numeric: tabular-nums; }
+    .hidden { display: none !important; }
+
+    /* Shell */
+    .app-shell { display: flex; height: 100vh; width: 100vw; overflow: hidden; background: var(--solid-bg-canvas); }
+    .sidebar {
+      width: 228px; flex-shrink: 0; background: var(--solid-bg-surface);
+      border-right: 1px solid var(--solid-border); display: flex; flex-direction: column; transition: width 0.2s ease;
+    }
+    .sidebar.collapsed { width: 60px; }
+    .brand-bar { height: 48px; padding: 0 14px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--solid-border-light); flex-shrink: 0; overflow: hidden; }
+    .brand-logo { width: 28px; height: 28px; border-radius: var(--solid-radius-md); background: var(--solid-primary); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+    .brand-name { font-weight: 600; font-size: 14px; white-space: nowrap; }
+    .brand-sub { font-size: 11px; color: var(--solid-text-secondary); margin-left: 2px; }
+    .sidebar.collapsed .brand-text, .sidebar.collapsed .menu-group-label, .sidebar.collapsed .menu-item-label { display: none; }
+    .menu-scroll { flex: 1; overflow-y: auto; padding: 10px 8px; }
+    .menu-group-label { font-size: 12px; font-weight: 600; color: var(--solid-text-muted); padding: 8px 10px 4px; }
+    .menu-item {
+      width: 100%; border: none; background: transparent; display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px; border-radius: var(--solid-radius-md); color: var(--solid-text-regular);
+      font-size: 13px; cursor: pointer; text-align: left; margin-bottom: 2px;
+    }
+    .menu-item:hover { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .menu-item.active { background: var(--solid-primary-soft); color: var(--solid-primary); font-weight: 600; }
+    .sidebar.collapsed .menu-item { justify-content: center; padding: 9px; }
+
+    .main-column { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar { height: 48px; background: var(--solid-bg-surface); border-bottom: 1px solid var(--solid-border); padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--solid-text-secondary); white-space: nowrap; }
+    .breadcrumb .current { color: var(--solid-text-primary); font-weight: 600; }
+
+    .tenant-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px; border-radius: var(--solid-radius-md); border: 1px solid var(--solid-border); background: var(--solid-bg-subtle); color: var(--solid-text-primary); font-size: 12px; cursor: pointer; }
+    .tenant-pill.switched { background: var(--solid-warning-soft); border-color: var(--solid-warning-border); color: var(--solid-warning); font-weight: 600; }
+    .tenant-pill.readonly { cursor: default; }
+    .user-trigger { display: inline-flex; align-items: center; gap: 8px; padding: 3px 8px 3px 4px; border-radius: var(--solid-radius-md); border: 1px solid transparent; background: transparent; color: var(--solid-text-primary); cursor: pointer; font-size: 13px; }
+    .avatar-circle { width: 26px; height: 26px; border-radius: var(--solid-radius-pill); background: var(--solid-primary-soft); color: var(--solid-primary); border: 1px solid var(--solid-primary-border); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; }
+
+    .tabs-bar { height: 36px; background: var(--solid-bg-surface); border-bottom: 1px solid var(--solid-border); padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0; }
+    .tabs-list { display: flex; align-items: center; gap: 4px; overflow-x: auto; flex: 1; min-width: 0; scrollbar-width: none; }
+    .tab-chip { height: 26px; padding: 0 10px; border-radius: var(--solid-radius-sm); border: 1px solid transparent; background: transparent; color: var(--solid-text-secondary); font-size: 12px; display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    .tab-chip:hover { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .tab-chip.active { background: var(--solid-primary-soft); border-color: var(--solid-primary-border); color: var(--solid-primary); font-weight: 600; }
+    .tab-close { width: 14px; height: 14px; border-radius: 3px; border: none; background: transparent; color: inherit; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; padding: 0; opacity: 0.7; }
+
+    .tenant-banner { background: var(--solid-warning-soft); border-bottom: 1px solid var(--solid-warning-border); color: var(--solid-warning); padding: 6px 16px; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+    .workspace { flex: 1; overflow: auto; padding: 14px 16px 84px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* Shared UI Controls */
+    .card { background: var(--solid-bg-surface); border: 1px solid var(--solid-border); border-radius: var(--solid-radius-lg); }
+    .btn { height: 32px; padding: 0 12px; border-radius: var(--solid-radius-md); border: 1px solid var(--solid-border); background: var(--solid-bg-surface); color: var(--solid-text-regular); font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; white-space: nowrap; }
+    .btn:hover:not(:disabled) { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-sm { height: 26px; padding: 0 9px; font-size: 12px; }
+    .btn-primary { background: var(--solid-primary); border-color: var(--solid-primary); color: #FFFFFF; }
+    .btn-primary:hover:not(:disabled) { background: var(--solid-primary-hover); border-color: var(--solid-primary-hover); color: #FFFFFF; }
+    .btn-link { border: none; background: transparent; color: var(--solid-primary); padding: 2px 6px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: var(--solid-radius-sm); }
+    .btn-link:hover:not(:disabled) { background: var(--solid-primary-soft); }
+    .btn-link.danger { color: var(--solid-danger); }
+    .btn-link.danger:hover:not(:disabled) { background: var(--solid-danger-soft); }
+    .btn-link:disabled { color: var(--solid-text-muted); cursor: not-allowed; opacity: 0.55; }
+    .icon-btn { width: 32px; height: 32px; border-radius: var(--solid-radius-md); border: 1px solid transparent; background: transparent; color: var(--solid-text-regular); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .icon-btn:hover { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+
+    .input, .select, .textarea {
+      height: 32px; padding: 0 10px; border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border); background: var(--solid-bg-surface);
+      color: var(--solid-text-primary); font-size: 13px; width: 100%;
+    }
+    .textarea { height: auto; min-height: 64px; padding: 8px 10px; resize: vertical; }
+    .input.is-error, .select.is-error { border-color: var(--solid-danger); }
+    .input:disabled, .select:disabled { background: var(--solid-bg-subtle); color: var(--solid-text-muted); cursor: not-allowed; }
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 12px; font-weight: 500; color: var(--solid-text-secondary); display: flex; align-items: center; justify-content: space-between; }
+    .field-error { font-size: 12px; color: var(--solid-danger); }
+    .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .tag { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: var(--solid-radius-sm); font-size: 12px; font-weight: 500; white-space: nowrap; }
+    .tag-primary { background: var(--solid-primary-soft); color: var(--solid-primary); }
+    .tag-success { background: var(--solid-success-soft); color: var(--solid-success); }
+    .tag-warning { background: var(--solid-warning-soft); color: var(--solid-warning); }
+    .tag-danger { background: var(--solid-danger-soft); color: var(--solid-danger); }
+    .tag-info { background: var(--solid-info-soft); color: var(--solid-info); }
+
+    .switch { width: 34px; height: 18px; border-radius: var(--solid-radius-pill); background: var(--solid-text-muted); border: none; position: relative; cursor: pointer; vertical-align: middle; }
+    .switch.on { background: var(--solid-primary); }
+    .switch:disabled { opacity: 0.45; cursor: not-allowed; }
+    .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
+    .switch.on::after { transform: translateX(16px); }
+
+    .alert-box { padding: 9px 12px; border-radius: var(--solid-radius-md); border: 1px solid var(--solid-border); font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .alert-warning { background: var(--solid-warning-soft); border-color: var(--solid-warning-border); color: var(--solid-warning); }
+    .alert-danger { background: var(--solid-danger-soft); border-color: var(--solid-danger-border); color: var(--solid-danger); }
+    .alert-info { background: var(--solid-primary-soft); border-color: var(--solid-primary-border); color: var(--solid-primary); }
+
+    /* Query & Table */
+    .split-wrap { display: flex; gap: 12px; min-height: 0; flex: 1; }
+    .dept-panel { width: 230px; flex-shrink: 0; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .dept-node { display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: var(--solid-radius-sm); font-size: 13px; color: var(--solid-text-regular); cursor: pointer; }
+    .dept-node:hover { background: var(--solid-bg-subtle); }
+    .dept-node.active { background: var(--solid-primary-soft); color: var(--solid-primary); font-weight: 600; }
+    .table-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+
+    .query-card { padding: 12px 14px; }
+    .query-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 10px 14px; align-items: end; }
+    .query-actions { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .table-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+    .table-card.fullscreen { position: fixed; inset: 12px; z-index: 900; box-shadow: var(--solid-shadow-popover); }
+    .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .table-scroll { overflow: auto; border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); }
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data-table th { background: var(--solid-bg-subtle); color: var(--solid-text-secondary); font-weight: 600; text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--solid-border); white-space: nowrap; }
+    table.data-table td { padding: 9px 12px; border-bottom: 1px solid var(--solid-border-light); color: var(--solid-text-regular); white-space: nowrap; }
+    table.data-table.density-large th, table.data-table.density-large td { padding: 12px 12px; }
+    table.data-table.density-small th, table.data-table.density-small td { padding: 5px 10px; font-size: 12px; }
+    table.data-table.striped tbody tr:nth-child(even) { background: var(--solid-bg-canvas); }
+    table.data-table tbody tr:hover { background: var(--solid-primary-soft); }
+    .col-sticky-right { position: sticky; right: 0; background: var(--solid-bg-surface); border-left: 1px solid var(--solid-border-light); }
+    th.col-sticky-right { background: var(--solid-bg-subtle); }
+    .pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--solid-text-secondary); padding-top: 2px; }
+
+    /* Tree Controls inside Drawers / Dialogs */
+    .tree-box { border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); padding: 10px 12px; background: var(--solid-bg-canvas); max-height: 260px; overflow: auto; display: flex; flex-direction: column; gap: 4px; }
+    .tree-row { display: flex; align-items: center; gap: 8px; padding: 4px 6px; border-radius: var(--solid-radius-sm); font-size: 13px; }
+    .tree-row:hover { background: var(--solid-bg-subtle); }
+    .tree-tools { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 6px; font-size: 12px; }
+    .segmented { display: inline-flex; border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); overflow: hidden; }
+    .segmented button { border: none; background: var(--solid-bg-surface); color: var(--solid-text-regular); padding: 6px 14px; font-size: 13px; cursor: pointer; border-right: 1px solid var(--solid-border); }
+    .segmented button:last-child { border-right: none; }
+    .segmented button.active { background: var(--solid-primary); color: #fff; font-weight: 600; }
+
+    .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; padding: 8px; border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); background: var(--solid-bg-canvas); }
+    .icon-cell { height: 32px; border: 1px solid var(--solid-border-light); border-radius: var(--solid-radius-sm); background: var(--solid-bg-surface); color: var(--solid-text-regular); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .icon-cell.active { border-color: var(--solid-primary); background: var(--solid-primary-soft); color: var(--solid-primary); }
+
+    .multi-chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); background: var(--solid-bg-canvas); }
+    .chip-check { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: var(--solid-radius-sm); border: 1px solid var(--solid-border); background: var(--solid-bg-surface); font-size: 12px; cursor: pointer; }
+    .chip-check.disabled { opacity: 0.45; cursor: not-allowed; }
+
+    /* Modals & Drawers */
+    .popover-menu { position: fixed; z-index: 1200; min-width: 170px; background: var(--solid-bg-elevated); border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); box-shadow: var(--solid-shadow-popover); padding: 5px; display: none; flex-direction: column; gap: 2px; }
+    .popover-menu.open { display: flex; }
+    .popover-item { border: none; background: transparent; padding: 7px 10px; border-radius: var(--solid-radius-sm); font-size: 13px; color: var(--solid-text-regular); text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .popover-item:hover:not(:disabled) { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .popover-item:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .modal-backdrop.open { display: flex; }
+    .drawer-backdrop { justify-content: flex-end; }
+    .drawer-panel { width: 520px; max-width: 100vw; height: 100vh; background: var(--solid-bg-surface); border-left: 1px solid var(--solid-border); display: flex; flex-direction: column; box-shadow: var(--solid-shadow-popover); }
+    .drawer-panel.size-large { width: 720px; }
+    .dialog-panel { width: 520px; max-width: calc(100vw - 32px); max-height: 90vh; background: var(--solid-bg-surface); border: 1px solid var(--solid-border); border-radius: var(--solid-radius-lg); box-shadow: var(--solid-shadow-popover); display: flex; flex-direction: column; }
+    .dialog-panel.w-480 { width: 480px; }
+    .dialog-panel.w-640 { width: 640px; }
+    .dialog-panel.w-720 { width: 720px; }
+    .panel-header { padding: 14px 18px; border-bottom: 1px solid var(--solid-border); display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 600; flex-shrink: 0; }
+    .panel-body { padding: 16px 18px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+    .panel-footer { padding: 12px 18px; border-top: 1px solid var(--solid-border); display: flex; align-items: center; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
+
+    .toast-stack { position: fixed; top: 16px; right: 16px; z-index: 1500; display: flex; flex-direction: column; gap: 8px; max-width: 440px; }
+    .toast-item { background: var(--solid-bg-elevated); border: 1px solid var(--solid-border); border-left: 3px solid var(--solid-primary); border-radius: var(--solid-radius-md); box-shadow: var(--solid-shadow-popover); padding: 10px 14px; font-size: 13px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .toast-item.danger { border-left-color: var(--solid-danger); }
+    .toast-item.warning { border-left-color: var(--solid-warning); }
+    .toast-item.success { border-left-color: var(--solid-success); }
+
+    .sim-bar {
+      position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%);
+      z-index: 1400; background: #0F172A; color: #F8FAFC;
+      border: 1px solid rgba(255, 255, 255, 0.16); border-radius: var(--solid-radius-pill);
+      padding: 6px 12px; display: flex; align-items: center; gap: 6px;
+      box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.45); font-size: 12px; max-width: calc(100vw - 24px); overflow-x: auto; white-space: nowrap;
+    }
+    .sim-btn { border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.08); color: #F8FAFC; padding: 3px 9px; border-radius: var(--solid-radius-pill); cursor: pointer; font-size: 12px; }
+    .sim-btn:hover { background: rgba(255, 255, 255, 0.16); }
+    .sim-btn.on { border-color: #60A5FA; background: rgba(37, 99, 235, 0.45); font-weight: 600; }
+    .sim-sep { width: 1px; height: 14px; background: rgba(255, 255, 255, 0.22); flex-shrink: 0; }
+
+    @media (max-width: 1120px) { .query-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .dept-panel { width: 190px; } }
+    @media (max-width: 768px) {
+      .split-wrap { flex-direction: column; } .dept-panel { width: 100%; }
+      .query-grid, .form-grid-2 { grid-template-columns: 1fr; }
+      .drawer-panel, .drawer-panel.size-large { width: 100vw; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app-shell"></div>
+
+  <div id="tenantPopover" class="popover-menu" role="menu"></div>
+  <div id="exportPopover" class="popover-menu" role="menu"></div>
+  <div id="columnPopover" class="popover-menu" role="menu" onclick="event.stopPropagation()"></div>
+
+  <!-- Generic Confirm Dialog -->
+  <div id="confirmBackdrop" class="modal-backdrop">
+    <div class="dialog-panel w-480" role="dialog" aria-modal="true">
+      <div class="panel-header"><span id="confirmTitle">确认操作</span><button class="icon-btn" type="button" onclick="closeConfirm(false)">✕</button></div>
+      <div class="panel-body" id="confirmMessage"></div>
+      <div class="panel-footer"><button class="btn" type="button" onclick="closeConfirm(false)">取消</button><button id="confirmOkBtn" class="btn btn-primary" type="button" onclick="closeConfirm(true)">确认执行</button></div>
+    </div>
+  </div>
+
+  <!-- Form Modal / Drawer Container -->
+  <div id="modalRoot"></div>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+  <div class="sim-bar" aria-label="原型模块与环境控制台">
+    <button id="sim-dept" class="sim-btn" type="button" onclick="openRoute('/system/dept')">部门</button>
+    <button id="sim-post" class="sim-btn" type="button" onclick="openRoute('/system/post')">岗位</button>
+    <button id="sim-menu" class="sim-btn" type="button" onclick="openRoute('/system/menu')">菜单(平台)</button>
+    <button id="sim-role" class="sim-btn" type="button" onclick="openRoute('/system/role')">角色/@DataScope</button>
+    <button id="sim-user" class="sim-btn" type="button" onclick="openRoute('/system/user')">用户/Excel</button>
+    <span class="sim-sep"></span>
+    <button id="sim-theme" class="sim-btn" type="button" onclick="toggleTheme()">Light</button>
+    <button id="sim-tenant" class="sim-btn" type="button" onclick="toggleTenantEnabled()">多租户: 关</button>
+    <button id="sim-actor" class="sim-btn" type="button" onclick="cycleActor()">超管 (0)</button>
+    <button class="sim-btn" type="button" onclick="openRoute('/system/user'); openImportModal('demo_errors');">一键演练 Excel 批注流</button>
+  </div>
+
+  <script>
+    const TENANTS = [
+      { id: '0', code: '000000', name: '平台默认租户', packageId: null, accountCount: -1 },
+      { id: '10002', code: '100002', name: '星辰智能科技', packageId: 'pkg_std', accountCount: 4 }, // cap=4 for quota test!
+    ];
+    // Package pkg_std allows menu ids except platformOnly menus
+    const PACKAGES = { pkg_std: ['m_sys', 'm_user', 'm_user_q', 'm_user_c', 'm_user_u', 'm_user_d', 'm_user_imp', 'm_user_exp', 'm_role', 'm_role_q', 'm_role_c', 'm_role_u', 'm_dept', 'm_dept_q', 'm_dept_c', 'm_post', 'm_post_q', 'm_cfg'] };
+
+    const ICONS = ['⌂', '👤', '🛡', '⎇', '⚑', '☰', '▤', '⚙', '⊞', '◫', '☷', '◉'];
+    const DATA_SCOPES = [
+      { code: 1, label: '全部数据权限 (ALL)' },
+      { code: 2, label: '自定部门数据权限 (CUSTOM)' },
+      { code: 3, label: '本部门数据权限 (DEPT)' },
+      { code: 4, label: '本部门及以下数据权限 (DEPT_AND_CHILD)' },
+      { code: 5, label: '仅本人数据权限 (SELF)' },
+    ];
+
+    const NAV_MENUS = [
+      { path: '/system/dept', title: '部门管理', domainLabel: '组织权限', icon: '⎇' },
+      { path: '/system/post', title: '岗位管理', domainLabel: '组织权限', icon: '⚑' },
+      { path: '/system/menu', title: '菜单管理', domainLabel: '组织权限', icon: '☰', platformOnly: true },
+      { path: '/system/role', title: '角色管理', domainLabel: '组织权限', icon: '🛡' },
+      { path: '/system/user', title: '用户管理', domainLabel: '组织权限', icon: '👤' },
+    ];
+
+    const DB = {
+      depts: {
+        '0': [
+          { id: '100', parentId: '0', ancestors: '0', deptName: '平台总部', sort: 0, leaderUserId: '1001', phone: '13800138000', email: 'hq@ateng.dev', status: 0, createTime: '2026-11-18 09:00:00' },
+          { id: '101', parentId: '100', ancestors: '0,100', deptName: '研发中心', sort: 1, leaderUserId: '1002', phone: '13912345678', email: 'rd@ateng.dev', status: 0, createTime: '2026-11-18 09:05:00' },
+          { id: '102', parentId: '101', ancestors: '0,100,101', deptName: '后端架构组', sort: 1, leaderUserId: '1002', phone: '13912345679', email: 'be@ateng.dev', status: 0, createTime: '2026-11-19 10:00:00' },
+          { id: '103', parentId: '101', ancestors: '0,100,101', deptName: '前端工程组', sort: 2, leaderUserId: '1003', phone: '13788886666', email: 'fe@ateng.dev', status: 0, createTime: '2026-11-19 10:10:00' },
+          { id: '104', parentId: '100', ancestors: '0,100', deptName: '财务合规部', sort: 2, leaderUserId: '', phone: '13611112222', email: 'fin@ateng.dev', status: 0, createTime: '2026-11-20 11:00:00' },
+        ],
+        '10002': [
+          { id: '200', parentId: '0', ancestors: '0', deptName: '星辰科技总部', sort: 0, leaderUserId: '2001', phone: '15011119999', email: 'xc@xingchen.cn', status: 0, createTime: '2026-11-20 10:00:00' },
+          { id: '201', parentId: '200', ancestors: '0,200', deptName: '智能制造事业部', sort: 1, leaderUserId: '2002', phone: '15822223333', email: 'mfg@xingchen.cn', status: 0, createTime: '2026-11-20 10:30:00' },
+        ],
+      },
+      posts: {
+        '0': [
+          { id: 'p1', postCode: 'ceo', postName: '总经理', sort: 1, status: 0, remark: '核心管理层', createTime: '2026-11-18 09:00:00' },
+          { id: 'p2', postCode: 'arch', postName: '系统架构师', sort: 2, status: 0, remark: '技术架构负责人', createTime: '2026-11-18 09:05:00' },
+          { id: 'p3', postCode: 'dev', postName: '研发工程师', sort: 3, status: 0, remark: '', createTime: '2026-11-19 11:00:00' },
+          { id: 'p4', postCode: 'qa_old', postName: '驻场质检专员(已停用)', sort: 4, status: 1, remark: '历史归档岗位', createTime: '2026-11-19 14:00:00' },
+        ],
+        '10002': [
+          { id: 'p10', postCode: 'xc_mgr', postName: '事业部总监', sort: 1, status: 0, remark: '', createTime: '2026-11-20 10:00:00' },
+          { id: 'p11', postCode: 'xc_ops', postName: '运营专员', sort: 2, status: 0, remark: '', createTime: '2026-11-20 10:15:00' },
+        ],
+      },
+      menus: [
+        { id: 'm_sys', parentId: '0', menuType: 'M', title: '系统管理', name: '', path: '/system', component: '', redirect: '/system/user', perms: '', icon: '⚙', sort: 1, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_user', parentId: 'm_sys', menuType: 'C', title: '用户管理', name: 'SysUser', path: '/system/user', component: 'system/user/index', redirect: '', perms: 'system:user:list', icon: '👤', sort: 1, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: false },
+        { id: 'm_user_q', parentId: 'm_user', menuType: 'F', title: '用户查询', name: '', path: '', component: '', redirect: '', perms: 'system:user:list', icon: '', sort: 1, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_user_c', parentId: 'm_user', menuType: 'F', title: '新增用户', name: '', path: '', component: '', redirect: '', perms: 'system:user:create', icon: '', sort: 2, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_user_u', parentId: 'm_user', menuType: 'F', title: '修改用户', name: '', path: '', component: '', redirect: '', perms: 'system:user:update', icon: '', sort: 3, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_user_d', parentId: 'm_user', menuType: 'F', title: '删除用户', name: '', path: '', component: '', redirect: '', perms: 'system:user:delete', icon: '', sort: 4, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_user_imp', parentId: 'm_user', menuType: 'F', title: '导入用户', name: '', path: '', component: '', redirect: '', perms: 'system:user:import', icon: '', sort: 5, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_user_exp', parentId: 'm_user', menuType: 'F', title: '导出用户', name: '', path: '', component: '', redirect: '', perms: 'system:user:export', icon: '', sort: 6, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_role', parentId: 'm_sys', menuType: 'C', title: '角色管理', name: 'SysRole', path: '/system/role', component: 'system/role/index', redirect: '', perms: 'system:role:list', icon: '🛡', sort: 2, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: false },
+        { id: 'm_role_q', parentId: 'm_role', menuType: 'F', title: '角色查询', name: '', path: '', component: '', redirect: '', perms: 'system:role:list', icon: '', sort: 1, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_role_c', parentId: 'm_role', menuType: 'F', title: '新增角色', name: '', path: '', component: '', redirect: '', perms: 'system:role:create', icon: '', sort: 2, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_role_u', parentId: 'm_role', menuType: 'F', title: '修改角色', name: '', path: '', component: '', redirect: '', perms: 'system:role:update', icon: '', sort: 3, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_menu', parentId: 'm_sys', menuType: 'C', title: '菜单管理', name: 'SysMenu', path: '/system/menu', component: 'system/menu/index', redirect: '', perms: 'system:menu:list', icon: '☰', sort: 3, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: true },
+        { id: 'm_menu_c', parentId: 'm_menu', menuType: 'F', title: '新增菜单', name: '', path: '', component: '', redirect: '', perms: 'system:menu:create', icon: '', sort: 1, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: true },
+        { id: 'm_dept', parentId: 'm_sys', menuType: 'C', title: '部门管理', name: 'SysDept', path: '/system/dept', component: 'system/dept/index', redirect: '', perms: 'system:dept:list', icon: '⎇', sort: 4, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: false },
+        { id: 'm_dept_q', parentId: 'm_dept', menuType: 'F', title: '部门查询', name: '', path: '', component: '', redirect: '', perms: 'system:dept:list', icon: '', sort: 1, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_dept_c', parentId: 'm_dept', menuType: 'F', title: '新增部门', name: '', path: '', component: '', redirect: '', perms: 'system:dept:create', icon: '', sort: 2, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_post', parentId: 'm_sys', menuType: 'C', title: '岗位管理', name: 'SysPost', path: '/system/post', component: 'system/post/index', redirect: '', perms: 'system:post:list', icon: '⚑', sort: 5, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: false },
+        { id: 'm_post_q', parentId: 'm_post', menuType: 'F', title: '岗位查询', name: '', path: '', component: '', redirect: '', perms: 'system:post:list', icon: '', sort: 1, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: false },
+        { id: 'm_dict', parentId: 'm_sys', menuType: 'C', title: '数据字典', name: 'SysDict', path: '/system/dict', component: 'system/dict/index', redirect: '', perms: 'system:dict:list', icon: '▤', sort: 6, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: true },
+        { id: 'm_cfg', parentId: 'm_sys', menuType: 'C', title: '系统参数', name: 'SysConfig', path: '/system/config', component: 'system/config/index', redirect: '', perms: 'system:config:list', icon: '⚙', sort: 7, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: false },
+        { id: 'm_ten_dir', parentId: '0', menuType: 'M', title: '多租户治理', name: '', path: '/tenant', component: '', redirect: '/system/tenant', perms: '', icon: '⊞', sort: 2, visible: true, status: 0, keepAlive: false, isExternal: false, platformOnly: true },
+        { id: 'm_ten', parentId: 'm_ten_dir', menuType: 'C', title: '租户管理', name: 'SysTenant', path: '/system/tenant', component: 'system/tenant/index', redirect: '', perms: 'system:tenant:list', icon: '⊞', sort: 1, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: true },
+        { id: 'm_pkg', parentId: 'm_ten_dir', menuType: 'C', title: '租户套餐', name: 'SysTenantPackage', path: '/system/tenant-package', component: 'system/tenant-package/index', redirect: '', perms: 'system:tenant-package:list', icon: '◫', sort: 2, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: true },
+        { id: 'm_docs_ext', parentId: 'm_sys', menuType: 'C', title: '框架接口文档(外链)', name: '', path: 'https://ateng.dev/docs', component: '', redirect: '', perms: '', icon: '◉', sort: 9, visible: true, status: 0, keepAlive: false, isExternal: true, platformOnly: false },
+      ],
+      roles: {
+        '0': [
+          { id: 'r1', roleName: '超级管理员', roleKey: 'super_admin', dataScope: 1, sort: 1, status: 0, protected: true, menuCheckStrictly: true, deptCheckStrictly: false, menuIds: [], deptIds: [], remark: '平台全局最高权限角色（受保护）', createTime: '2026-11-18 09:00:00' },
+          { id: 'r2', roleName: '平台运维主管', roleKey: 'ops_manager', dataScope: 2, sort: 2, status: 0, protected: false, menuCheckStrictly: true, deptCheckStrictly: false, menuIds: ['m_sys', 'm_user', 'm_user_q', 'm_user_c', 'm_user_u', 'm_dept', 'm_dept_q', 'm_post', 'm_post_q'], deptIds: ['101', '102'], remark: '可查看并管理研发部门及下属后端架构组', createTime: '2026-11-19 10:00:00' },
+          { id: 'r3', roleName: '部门审计员', roleKey: 'dept_auditor', dataScope: 4, sort: 3, status: 0, protected: false, menuCheckStrictly: true, deptCheckStrictly: false, menuIds: ['m_sys', 'm_user', 'm_user_q', 'm_dept', 'm_dept_q'], deptIds: [], remark: '本部门及以下只读审计', createTime: '2026-11-20 15:00:00' },
+        ],
+        '10002': [
+          { id: 'r10', roleName: '星辰租户管理员', roleKey: 'tenant_admin', dataScope: 1, sort: 1, status: 0, protected: false, menuCheckStrictly: true, deptCheckStrictly: false, menuIds: ['m_sys', 'm_user', 'm_user_q', 'm_user_c', 'm_user_u', 'm_user_d', 'm_user_imp', 'm_user_exp', 'm_role', 'm_role_q', 'm_role_c', 'm_role_u', 'm_dept', 'm_dept_q', 'm_dept_c', 'm_post', 'm_post_q'], deptIds: [], remark: '租户全业务管理角色', createTime: '2026-11-20 10:00:00' },
+          { id: 'r11', roleName: '制造部门经理', roleKey: 'mfg_mgr', dataScope: 3, sort: 2, status: 0, protected: false, menuCheckStrictly: true, deptCheckStrictly: false, menuIds: ['m_sys', 'm_user', 'm_user_q', 'm_dept', 'm_dept_q'], deptIds: [], remark: '仅限本部门数据范围', createTime: '2026-11-21 09:00:00' },
+        ],
+      },
+      users: {
+        '0': [
+          { id: '1001', username: 'super_admin', nickname: '平台超级管理员', deptId: '100', postIds: ['p1'], roleIds: ['r1'], phone: '13800138000', email: 'root@ateng.dev', gender: '0', status: 0, protected: true, isSelf: false, pwdUpdateTime: '2026-11-18 10:00:00', remark: '启动引导初始化超管', createTime: '2026-11-18 09:00:00' },
+          { id: '1002', username: 'chenmo', nickname: '陈默（当前登录）', deptId: '101', postIds: ['p2', 'p3'], roleIds: ['r2'], phone: '13912345678', email: 'chenmo@ateng.dev', gender: '0', status: 0, protected: false, isSelf: true, pwdUpdateTime: '2026-11-20 12:00:00', remark: '', createTime: '2026-11-19 10:00:00' },
+          { id: '1003', username: 'linyun', nickname: '林芸', deptId: '103', postIds: ['p3'], roleIds: ['r3'], phone: '13788886666', email: 'linyun@ateng.dev', gender: '1', status: 0, protected: false, isSelf: false, pwdUpdateTime: null, remark: '', createTime: '2026-11-21 14:20:00' },
+          { id: '1004', username: 'zhouhang', nickname: '周航', deptId: '104', postIds: ['p4'], roleIds: ['r3'], phone: '13611112222', email: 'zhouhang@ateng.dev', gender: '0', status: 1, protected: false, isSelf: false, pwdUpdateTime: null, remark: '测试停用账号（关联历史岗位 p4）', createTime: '2026-11-22 16:00:00' },
+        ],
+        '10002': [
+          { id: '2001', username: 'xc_admin', nickname: '林星辰', deptId: '200', postIds: ['p10'], roleIds: ['r10'], phone: '15011119999', email: 'admin@xingchen.cn', gender: '1', status: 0, protected: false, isSelf: false, pwdUpdateTime: '2026-11-20 12:00:00', remark: '', createTime: '2026-11-20 10:00:00' },
+          { id: '2002', username: 'zhangwei', nickname: '张伟', deptId: '201', postIds: ['p11'], roleIds: ['r11'], phone: '15822223333', email: 'zhangwei@xingchen.cn', gender: '0', status: 0, protected: false, isSelf: false, pwdUpdateTime: null, remark: '', createTime: '2026-11-21 09:30:00' },
+        ],
+      },
+    };
+
+    const state = {
+      dark: false,
+      tenantEnabled: false,
+      actorType: 'super_admin', // super_admin | tenant_admin
+      activeTenantId: '0',
+      activeRoute: '/system/user',
+      sidebarCollapsed: false,
+      tabs: [
+        { path: '/system/dept', title: '部门管理', affix: false },
+        { path: '/system/role', title: '角色管理', affix: false },
+        { path: '/system/user', title: '用户管理', affix: true },
+      ],
+      initPasswordConfig: 'Ateng@2026',
+      density: 'default',
+      striped: false,
+      fullscreenTable: false,
+
+      // Dept view
+      deptExpanded: true,
+      deptQuery: { deptName: '', status: '' },
+
+      // Post view
+      postQuery: { postCode: '', postName: '', status: '' },
+      selectedPostIds: new Set(),
+
+      // Menu view
+      menuExpanded: true,
+      menuQuery: { title: '', status: '', platformOnly: '' },
+
+      // Role view
+      roleQuery: { roleName: '', roleKey: '', status: '' },
+      selectedRoleIds: new Set(),
+
+      // User view
+      userSelectedDeptId: '',
+      deptFilterText: '',
+      userQuery: { username: '', phone: '', status: '', collapsed: true },
+      selectedUserIds: new Set(),
+      userCols: { id: true, username: true, nickname: true, dept: true, phone: true, email: true, status: true, createTime: true },
+
+      // Active Modal / Drawer
+      modal: null,
+      feedbackErrors: [],
+      feedbackPage: 1,
+      feedbackMeta: { totalCount: 0, failCount: 0, feedbackToken: '', expired: false },
+      confirmCallback: null,
+    };
+
+    function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function maskPhone(p) { return !p || p.length < 7 ? '--' : p.slice(0, 3) + '****' + p.slice(-4); }
+    function maskEmail(e) { if (!e || !e.includes('@')) return '--'; const [n, d] = e.split('@'); return (n.length <= 1 ? '*' : n[0] + '***') + '@' + d; }
+    function effTenantId() { return !state.tenantEnabled ? '0' : (state.actorType === 'tenant_admin' ? '10002' : state.activeTenantId); }
+    function tenantObj(id) { return TENANTS.find(t => t.id === id) || TENANTS[0]; }
+    function visibleNavMenus() {
+      const eff = effTenantId();
+      return NAV_MENUS.filter(m => !(m.platformOnly && (state.actorType !== 'super_admin' || eff !== '0')));
+    }
+    function deptDescendantIds(tenantId, rootId) {
+      const list = DB.depts[tenantId] || [];
+      const set = new Set([rootId]);
+      let added = true;
+      while (added) {
+        added = false;
+        for (const d of list) {
+          if (set.has(d.parentId) && !set.has(d.id)) { set.add(d.id); added = true; }
+        }
+      }
+      return set;
+    }
+    function flattenTree(list, parentId = '0', depth = 0, out = []) {
+      const children = list.filter(x => x.parentId === parentId).sort((a, b) => a.sort - b.sort);
+      for (const c of children) {
+        out.push({ item: c, depth });
+        flattenTree(list, c.id, depth + 1, out);
+      }
+      return out;
+    }
+    function menuDescendantIds(rootId) {
+      const set = new Set([rootId]);
+      let added = true;
+      while (added) {
+        added = false;
+        for (const m of DB.menus) {
+          if (set.has(m.parentId) && !set.has(m.id)) { set.add(m.id); added = true; }
+        }
+      }
+      return set;
+    }
+    function getScopedMenusForRole() {
+      const eff = effTenantId();
+      if (eff === '0') return DB.menus.filter(m => m.status === 0);
+      const t = tenantObj(eff);
+      const pkgIds = new Set(PACKAGES[t.packageId] || []);
+      return DB.menus.filter(m => m.status === 0 && !m.platformOnly && pkgIds.has(m.id));
+    }
+    function checkPwdStrength(pwd) {
+      const lenOk = pwd.length >= 8 && pwd.length <= 20;
+      const noSpace = pwd.length > 0 && !/\s/.test(pwd);
+      const cats = [/[A-Z]/.test(pwd), /[a-z]/.test(pwd), /\d/.test(pwd), /[^A-Za-z0-9\s]/.test(pwd)].filter(Boolean).length;
+      return { lenOk, noSpace, catsOk: cats >= 3, ok: lenOk && noSpace && cats >= 3 };
+    }
+    function showToast(type, msg) {
+      const stack = document.getElementById('toastStack');
+      const div = document.createElement('div');
+      div.className = 'toast-item ' + type;
+      div.innerHTML = `<span>${esc(msg)}</span><button class="icon-btn" style="width:22px;height:22px;" onclick="this.closest('.toast-item').remove()">✕</button>`;
+      stack.appendChild(div);
+      setTimeout(() => { if (div.parentNode) div.remove(); }, 4200);
+    }
+    function openConfirm(title, html, onOk, okText = '确认执行') {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').innerHTML = html;
+      document.getElementById('confirmOkBtn').textContent = okText;
+      state.confirmCallback = onOk;
+      document.getElementById('confirmBackdrop').classList.add('open');
+    }
+    function closeConfirm(ok) {
+      document.getElementById('confirmBackdrop').classList.remove('open');
+      if (ok && state.confirmCallback) state.confirmCallback();
+      state.confirmCallback = null;
+    }
+    function hidePopovers() { document.querySelectorAll('.popover-menu').forEach(p => p.classList.remove('open')); }
+    function downloadTextFile(filename, content) {
+      const blob = new Blob(['\uFEFF' + content], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // Navigation & Environment Controls
+    function openRoute(path) {
+      hidePopovers();
+      const vis = visibleNavMenus();
+      if (!vis.some(m => m.path === path)) {
+        showToast('warning', '当前视角下该平台专属菜单不可见，已切回【用户管理】');
+        path = '/system/user';
+      }
+      state.activeRoute = path;
+      const m = vis.find(x => x.path === path);
+      if (m && !state.tabs.some(t => t.path === path)) state.tabs.push({ path: m.path, title: m.title, affix: false });
+      render();
+    }
+    function closeTab(path) {
+      const idx = state.tabs.findIndex(t => t.path === path);
+      if (idx < 0 || state.tabs[idx].affix) return;
+      const was = state.activeRoute === path;
+      state.tabs.splice(idx, 1);
+      if (was) state.activeRoute = (state.tabs[idx] || state.tabs[idx - 1] || state.tabs[0]).path;
+      render();
+    }
+    function switchTenant(id) {
+      hidePopovers();
+      if (state.activeTenantId === id) return;
+      state.activeTenantId = id;
+      state.userSelectedDeptId = '';
+      state.selectedUserIds.clear();
+      state.selectedPostIds.clear();
+      state.selectedRoleIds.clear();
+      const vis = visibleNavMenus();
+      state.tabs = state.tabs.filter(t => t.affix || vis.some(m => m.path === t.path));
+      if (!vis.some(m => m.path === state.activeRoute)) state.activeRoute = '/system/user';
+      showToast('warning', `已切换至【${tenantObj(id).name}】，已重置跨租户选中缓存`);
+      render();
+    }
+    function toggleTheme() { state.dark = !state.dark; document.documentElement.classList.toggle('dark', state.dark); render(); }
+    function toggleTenantEnabled() {
+      state.tenantEnabled = !state.tenantEnabled;
+      if (!state.tenantEnabled) { state.activeTenantId = '0'; state.actorType = 'super_admin'; }
+      state.userSelectedDeptId = '';
+      state.selectedUserIds.clear();
+      render();
+    }
+    function cycleActor() {
+      if (!state.tenantEnabled) state.tenantEnabled = true;
+      if (state.actorType === 'super_admin' && state.activeTenantId === '0') {
+        state.activeTenantId = '10002';
+      } else if (state.actorType === 'super_admin') {
+        state.actorType = 'tenant_admin';
+        state.activeTenantId = '10002';
+      } else {
+        state.actorType = 'super_admin';
+        state.activeTenantId = '0';
+      }
+      const vis = visibleNavMenus();
+      state.tabs = state.tabs.filter(t => t.affix || vis.some(m => m.path === t.path));
+      if (!vis.some(m => m.path === state.activeRoute)) state.activeRoute = '/system/user';
+      state.userSelectedDeptId = '';
+      state.selectedUserIds.clear();
+      render();
+    }
+
+    // ==================== DEPT MODULE ====================
+    function openDeptModal(mode, targetId) {
+      const eff = effTenantId();
+      const list = DB.depts[eff] || [];
+      let form;
+      if (mode === 'edit') {
+        const d = list.find(x => x.id === targetId);
+        form = { ...d };
+      } else {
+        form = { id: '', parentId: targetId || (list[0]?.id || '0'), deptName: '', sort: 1, leaderUserId: '', phone: '', email: '', status: 0 };
+      }
+      state.modal = { type: 'dept', mode, form, leaderSearch: '', errors: {} };
+      render();
+    }
+    function saveDeptModal() {
+      const { mode, form } = state.modal;
+      const eff = effTenantId();
+      const list = DB.depts[eff] || [];
+      const errors = {};
+      const name = form.deptName.trim();
+      if (name.length < 2 || name.length > 50) errors.deptName = '部门名称需为 2~50 个字符';
+      if (list.some(d => d.parentId === form.parentId && d.deptName === name && d.id !== form.id)) errors.deptName = '同级下已存在相同部门名称 (102002)';
+      if (form.phone && !/^1\d{10}$/.test(form.phone.trim())) errors.phone = '请输入 11 位合法手机号';
+      if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errors.email = '请输入合法邮箱';
+      if (mode === 'edit') {
+        const desc = deptDescendantIds(eff, form.id);
+        if (desc.has(form.parentId)) errors.parentId = '上级部门不能选择自身或下级部门 (100001)';
+        if (Number(form.status) === 1 && list.some(d => d.parentId === form.id && d.status === 0)) {
+          errors.status = '存在未停用的下级部门，禁止停用 (102005)';
+        }
+      }
+      if (Object.keys(errors).length) { state.modal.errors = errors; render(); return; }
+
+      const parent = list.find(d => d.id === form.parentId);
+      const newAnc = form.parentId === '0' ? '0' : `${parent.ancestors},${parent.id}`;
+      if (mode === 'create') {
+        list.push({ ...form, id: String(Date.now()).slice(-5), deptName: name, ancestors: newAnc, sort: Number(form.sort) || 0, status: Number(form.status), createTime: '2026-11-24 18:05:00' });
+        showToast('success', `已新增部门 ${name}（ancestors=${newAnc}）`);
+      } else {
+        const target = list.find(d => d.id === form.id);
+        const oldPrefix = `${target.ancestors},${target.id}`;
+        const newPrefix = `${newAnc},${target.id}`;
+        let updatedCount = 0;
+        if (target.ancestors !== newAnc) {
+          for (const d of list) {
+            if (d.id !== target.id && (d.ancestors === oldPrefix || d.ancestors.startsWith(oldPrefix + ','))) {
+              d.ancestors = newPrefix + d.ancestors.slice(oldPrefix.length);
+              updatedCount++;
+            }
+          }
+        }
+        Object.assign(target, form, { deptName: name, ancestors: newAnc, sort: Number(form.sort) || 0, status: Number(form.status) });
+        showToast('success', updatedCount > 0 ? `已保存部门并级联更新 ${updatedCount} 个子孙节点 ancestors` : `已保存部门 ${name}`);
+      }
+      state.modal = null;
+      render();
+    }
+    function deleteDept(id) {
+      const eff = effTenantId();
+      const list = DB.depts[eff] || [];
+      const d = list.find(x => x.id === id);
+      if (!d) return;
+      if (list.some(x => x.parentId === id)) { showToast('danger', `【${d.deptName}】存在下级部门，禁止删除 (102005)`); return; }
+      if ((DB.users[eff] || []).some(u => u.deptId === id)) { showToast('danger', `【${d.deptName}】下仍有关联用户，请先调整部门后再删除 (102005)`); return; }
+      openConfirm('确认删除部门', `确认删除部门 <strong>【${esc(d.deptName)}】</strong>？`, () => {
+        DB.depts[eff] = list.filter(x => x.id !== id);
+        showToast('success', `已删除部门 ${d.deptName}`);
+        render();
+      }, '确认删除');
+    }
+    function toggleDeptStatus(id) {
+      const eff = effTenantId();
+      const list = DB.depts[eff] || [];
+      const d = list.find(x => x.id === id);
+      if (!d) return;
+      if (d.status === 0 && list.some(x => x.parentId === id && x.status === 0)) {
+        showToast('danger', `【${d.deptName}】存在未停用的下级部门，请先停用下级部门 (102005)`);
+        return;
+      }
+      const next = d.status === 0 ? 1 : 0;
+      const act = next === 1 ? '停用' : '启用';
+      openConfirm(`确认${act}部门`, `确认要${act}部门 <strong>【${esc(d.deptName)}】</strong> 吗？`, () => {
+        d.status = next;
+        showToast('success', `已${act}部门 ${d.deptName}`);
+        render();
+      });
+    }
+
+    // ==================== POST MODULE ====================
+    function openPostModal(id) {
+      const eff = effTenantId();
+      const p = id ? (DB.posts[eff] || []).find(x => x.id === id) : null;
+      state.modal = { type: 'post', mode: p ? 'edit' : 'create', form: p ? { ...p } : { id: '', postCode: '', postName: '', sort: 1, status: 0, remark: '' }, errors: {} };
+      render();
+    }
+    function savePostModal() {
+      const { mode, form } = state.modal;
+      const eff = effTenantId();
+      const list = DB.posts[eff] || [];
+      const errors = {};
+      const code = form.postCode.trim();
+      const name = form.postName.trim();
+      if (!/^[a-zA-Z0-9_-]{2,64}$/.test(code)) errors.postCode = '编码须为 2~64 位字母/数字/下划线/短横线';
+      if (list.some(x => x.postCode === code && x.id !== form.id)) errors.postCode = '岗位编码已存在 (102002)';
+      if (name.length < 2 || name.length > 50) errors.postName = '岗位名称须为 2~50 个字符';
+      if (Object.keys(errors).length) { state.modal.errors = errors; render(); return; }
+      if (mode === 'create') {
+        list.push({ ...form, id: 'p_' + Date.now(), postCode: code, postName: name, sort: Number(form.sort) || 0, status: Number(form.status), createTime: '2026-11-24 18:05:00' });
+        showToast('success', `已新增岗位 ${name}`);
+      } else {
+        Object.assign(list.find(x => x.id === form.id), form, { postCode: code, postName: name, sort: Number(form.sort) || 0, status: Number(form.status) });
+        showToast('success', `已保存岗位 ${name}`);
+      }
+      state.modal = null; render();
+    }
+    function deletePosts(ids) {
+      const eff = effTenantId();
+      const list = DB.posts[eff] || [];
+      const users = DB.users[eff] || [];
+      for (const id of ids) {
+        const p = list.find(x => x.id === id);
+        if (users.some(u => (u.postIds || []).includes(id))) {
+          showToast('danger', `岗位【${p?.postName}】已分配给用户，请先解除关联后再删除 (102005)`);
+          return;
+        }
+      }
+      openConfirm('确认删除岗位', `确认删除选中的 <strong>${ids.length}</strong> 个岗位？`, () => {
+        DB.posts[eff] = list.filter(x => !ids.includes(x.id));
+        ids.forEach(id => state.selectedPostIds.delete(id));
+        showToast('success', '已删除岗位');
+        render();
+      }, '确认删除');
+    }
+
+    // ==================== MENU MODULE ====================
+    function openMenuDrawer(mode, targetId) {
+      let form;
+      if (mode === 'edit') {
+        form = { ...DB.menus.find(x => x.id === targetId) };
+      } else {
+        const parent = targetId ? DB.menus.find(x => x.id === targetId) : null;
+        const nextType = parent ? (parent.menuType === 'M' ? 'C' : 'F') : 'M';
+        form = { id: '', parentId: parent ? parent.id : '0', menuType: nextType, title: '', name: '', path: '', component: '', redirect: '', perms: '', icon: '⚙', sort: 1, visible: true, status: 0, keepAlive: true, isExternal: false, platformOnly: parent ? parent.platformOnly : false };
+      }
+      state.modal = { type: 'menu', mode, form, errors: {} };
+      render();
+    }
+    function saveMenuDrawer() {
+      const { mode, form } = state.modal;
+      const errors = {};
+      if (!form.title.trim()) errors.title = '请输入菜单或权限名称';
+      if (form.menuType === 'F') {
+        const p = DB.menus.find(x => x.id === form.parentId);
+        if (!p || p.menuType !== 'C') errors.parentId = '按钮权限的上级菜单必须为页面菜单 (C) (100001)';
+        if (!/^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*:[a-z][a-z0-9-*]*$/.test(form.perms.trim())) errors.perms = '必填且须符合三段式 <域>:<资源>:<动作>';
+      } else {
+        if (form.isExternal && form.menuType === 'C') {
+          if (!/^https?:\/\//.test(form.path.trim())) errors.path = '外链地址须以 http:// 或 https:// 开头';
+        } else {
+          if (!form.path.trim()) errors.path = '请输入路由地址';
+          if (form.menuType === 'C' && !form.name.trim()) errors.name = '请输入唯一路由组件名 (PascalCase)';
+          if (form.menuType === 'C' && !form.component.trim()) errors.component = '请输入相对 src/views/ 的组件路径';
+          if (form.menuType === 'C' && form.perms.trim() && !/^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*:[a-z][a-z0-9-*]*$/.test(form.perms.trim())) errors.perms = '权限标识须符合三段式 <域>:<资源>:<动作>';
+        }
+      }
+      if (mode === 'edit') {
+        if (menuDescendantIds(form.id).has(form.parentId)) errors.parentId = '上级菜单不能选自身或子孙 (100001)';
+        if (form.menuType === 'F' && DB.menus.some(m => m.parentId === form.id)) errors.menuType = '存在子菜单时不可降级为按钮 (F)';
+      }
+      if (Object.keys(errors).length) { state.modal.errors = errors; render(); return; }
+
+      const clean = {
+        ...form,
+        title: form.title.trim(), path: form.menuType === 'F' ? '' : form.path.trim(),
+        name: form.menuType === 'C' && !form.isExternal ? form.name.trim() : '',
+        component: form.menuType === 'C' && !form.isExternal ? form.component.trim() : '',
+        perms: form.menuType === 'M' ? '' : form.perms.trim(),
+        sort: Number(form.sort) || 0, status: Number(form.status),
+      };
+      if (mode === 'create') {
+        DB.menus.push({ ...clean, id: 'm_' + Date.now() });
+        showToast('success', `已新增菜单【${clean.title}】并刷新权限缓存`);
+      } else {
+        Object.assign(DB.menus.find(x => x.id === form.id), clean);
+        showToast('success', `已保存菜单【${clean.title}】并全量刷新权限缓存`);
+      }
+      state.modal = null; render();
+    }
+    function deleteMenu(id) {
+      const m = DB.menus.find(x => x.id === id);
+      if (!m) return;
+      if (DB.menus.some(x => x.parentId === id)) { showToast('danger', `【${m.title}】存在子菜单或按钮权限，禁止删除 (102005)`); return; }
+      const usedByRoles = Object.values(DB.roles).flat().filter(r => r.menuIds.includes(id)).length;
+      const usedByPkg = Object.values(PACKAGES).filter(arr => arr.includes(id)).length;
+      if (usedByRoles > 0 || usedByPkg > 0) {
+        showToast('danger', `该菜单已被 ${usedByRoles} 个角色与 ${usedByPkg} 个租户套餐引用，请先解除授权后再删除 (102005)`);
+        return;
+      }
+      openConfirm('确认删除菜单', `确认删除菜单 <strong>【${esc(m.title)}】</strong>？`, () => {
+        DB.menus = DB.menus.filter(x => x.id !== id);
+        showToast('success', `已删除菜单 ${m.title}`);
+        render();
+      }, '确认删除');
+    }
+
+    // ==================== ROLE & @DataScope MODULE ====================
+    function openRoleDrawer(id) {
+      const eff = effTenantId();
+      const r = id ? (DB.roles[eff] || []).find(x => x.id === id) : null;
+      if (r?.protected) return;
+      const scoped = getScopedMenusForRole();
+      const scopedIds = new Set(scoped.map(m => m.id));
+      let checkedSet;
+      if (!r) {
+        checkedSet = new Set();
+      } else if (r.menuCheckStrictly) {
+        // Restore leaf-only checked keys to prevent auto-checking siblings!
+        checkedSet = new Set(r.menuIds.filter(mid => scopedIds.has(mid) && !scoped.some(child => child.parentId === mid)));
+      } else {
+        checkedSet = new Set(r.menuIds.filter(mid => scopedIds.has(mid)));
+      }
+      const form = r ? { ...r } : { id: '', roleName: '', roleKey: '', dataScope: 1, sort: 2, status: 0, menuCheckStrictly: true, deptCheckStrictly: false, remark: '' };
+      state.modal = { type: 'role', mode: r ? 'edit' : 'create', form, checkedMenuIds: checkedSet, treeExpanded: true, errors: {} };
+      render();
+    }
+    function toggleRoleMenuNode(menuId, checked) {
+      const { form, checkedMenuIds } = state.modal;
+      const scoped = getScopedMenusForRole();
+      if (form.menuCheckStrictly) {
+        const desc = (function walk(pid, acc = new Set([pid])) {
+          for (const m of scoped) if (m.parentId === pid && !acc.has(m.id)) { acc.add(m.id); walk(m.id, acc); }
+          return acc;
+        })(menuId);
+        desc.forEach(id => checked ? checkedMenuIds.add(id) : checkedMenuIds.delete(id));
+      } else {
+        checked ? checkedMenuIds.add(menuId) : checkedMenuIds.delete(menuId);
+      }
+      render();
+    }
+    function saveRoleDrawer() {
+      const { mode, form, checkedMenuIds } = state.modal;
+      const eff = effTenantId();
+      const list = DB.roles[eff] || [];
+      const errors = {};
+      const rName = form.roleName.trim();
+      const rKey = form.roleKey.trim();
+      if (rName.length < 2 || rName.length > 30) errors.roleName = '角色名称须为 2~30 个字符';
+      if (!/^[a-zA-Z0-9_-]{2,64}$/.test(rKey)) errors.roleKey = '编码须为 2~64 位字母/数字/下划线/短横线';
+      if (rKey === 'super_admin' || rKey === 'admin') errors.roleKey = '禁止使用保留角色编码 super_admin 或 admin (102004)';
+      if (list.some(r => r.roleKey === rKey && r.id !== form.id)) errors.roleKey = '当前租户下角色编码已存在 (102002)';
+      if (Object.keys(errors).length) { state.modal.errors = errors; render(); return; }
+
+      // Collect checked + ancestor parents when menuCheckStrictly=true
+      const scoped = getScopedMenusForRole();
+      const finalMenus = new Set(checkedMenuIds);
+      if (form.menuCheckStrictly) {
+        const byId = Object.fromEntries(scoped.map(m => [m.id, m]));
+        for (const id of [...checkedMenuIds]) {
+          let cur = byId[id];
+          while (cur && cur.parentId !== '0' && byId[cur.parentId]) {
+            finalMenus.add(cur.parentId);
+            cur = byId[cur.parentId];
+          }
+        }
+      }
+      if (mode === 'create') {
+        list.push({ ...form, id: 'r_' + Date.now(), roleName: rName, roleKey: rKey, menuIds: [...finalMenus], deptIds: [], protected: false, sort: Number(form.sort) || 0, status: Number(form.status), createTime: '2026-11-24 18:10:00' });
+        showToast('success', `已新增角色【${rName}】`);
+      } else {
+        Object.assign(list.find(x => x.id === form.id), form, { roleName: rName, roleKey: rKey, menuIds: [...finalMenus], sort: Number(form.sort) || 0, status: Number(form.status) });
+        showToast('success', `已保存角色【${rName}】，并调用 clearRoleCache("admin", "${eff}", "${rKey}")`);
+      }
+      state.modal = null; render();
+    }
+    function openDataScopeModal(id) {
+      const eff = effTenantId();
+      const r = (DB.roles[eff] || []).find(x => x.id === id);
+      if (!r || r.protected) return;
+      state.modal = { type: 'datascope', roleId: r.id, roleName: r.roleName, roleKey: r.roleKey, dataScope: r.dataScope, deptCheckStrictly: Boolean(r.deptCheckStrictly), deptIds: new Set(r.deptIds || []), treeExpanded: true, errors: {} };
+      render();
+    }
+    function toggleDataScopeDept(deptId, checked) {
+      const eff = effTenantId();
+      if (state.modal.deptCheckStrictly) {
+        deptDescendantIds(eff, deptId).forEach(id => checked ? state.modal.deptIds.add(id) : state.modal.deptIds.delete(id));
+      } else {
+        checked ? state.modal.deptIds.add(deptId) : state.modal.deptIds.delete(deptId);
+      }
+      delete state.modal.errors.deptIds;
+      render();
+    }
+    function saveDataScopeModal() {
+      const m = state.modal;
+      if (Number(m.dataScope) === 2 && m.deptIds.size === 0) {
+        m.errors.deptIds = '选择“自定部门数据权限”时，至少需勾选 1 个部门 (100001)';
+        render(); return;
+      }
+      const eff = effTenantId();
+      const r = (DB.roles[eff] || []).find(x => x.id === m.roleId);
+      r.dataScope = Number(m.dataScope);
+      r.deptCheckStrictly = m.deptCheckStrictly;
+      r.deptIds = r.dataScope === 2 ? [...m.deptIds] : [];
+      state.modal = null;
+      showToast('success', `已更新【${r.roleName}】数据范围，并清理租户 ${eff} 权限缓存`);
+      render();
+    }
+    function deleteRoles(ids) {
+      const eff = effTenantId();
+      const list = DB.roles[eff] || [];
+      const users = DB.users[eff] || [];
+      for (const id of ids) {
+        const r = list.find(x => x.id === id);
+        if (r?.protected) { showToast('danger', '超级管理员角色受系统保护，禁止删除 (102007)'); return; }
+        if (users.some(u => (u.roleIds || []).includes(id))) { showToast('danger', `角色【${r?.roleName}】已分配给用户，请先解除关联后再删除 (102005)`); return; }
+      }
+      openConfirm('确认删除角色', `确认删除选中的 <strong>${ids.length}</strong> 个角色？`, () => {
+        DB.roles[eff] = list.filter(x => !ids.includes(x.id));
+        ids.forEach(id => state.selectedRoleIds.delete(id));
+        showToast('success', '已删除角色并清理角色权限缓存');
+        render();
+      }, '确认删除');
+    }
+
+    // ==================== USER & EXCEL MODULE ====================
+    function openUserDrawer(id) {
+      const eff = effTenantId();
+      const u = id ? (DB.users[eff] || []).find(x => x.id === id) : null;
+      if (u?.protected) { showToast('warning', '内置超级管理员受系统保护，不可编辑敏感归属'); return; }
+      const depts = DB.depts[eff] || [];
+      const form = u
+        ? { ...u, postIds: [...u.postIds], roleIds: [...u.roleIds] }
+        : { id: '', username: '', nickname: '', password: state.initPasswordConfig, deptId: state.userSelectedDeptId || (depts[0]?.id || ''), postIds: [], roleIds: [], phone: '', email: '', gender: '0', status: 0, remark: '' };
+      state.modal = { type: 'user', mode: u ? 'edit' : 'create', form, showPwd: false, drawerLarge: false, errors: {} };
+      render();
+    }
+    function saveUserDrawer() {
+      const { mode, form } = state.modal;
+      const eff = effTenantId();
+      const list = DB.users[eff] || [];
+      const errors = {};
+      const un = form.username.trim();
+      const nn = form.nickname.trim();
+      const ph = form.phone.trim();
+      const em = form.email.trim();
+      if (mode === 'create') {
+        if (!/^[a-zA-Z0-9_]{2,30}$/.test(un)) errors.username = '账号须为 2~30 位字母/数字/下划线';
+        if (list.some(u => u.username === un)) errors.username = '登录账号在当前租户已存在 (102002)';
+        if (!checkPwdStrength(form.password).ok) errors.password = '初始密码须 8~20 位无空白且至少含 3 类字符';
+      }
+      if (nn.length < 2 || nn.length > 30) errors.nickname = '用户昵称须为 2~30 个字符';
+      if (ph && !/^1[3-9]\d{9}$/.test(ph)) errors.phone = '请输入合法 11 位手机号码';
+      if (ph && list.some(u => u.phone === ph && u.id !== form.id)) errors.phone = '手机号在当前租户已被使用 (102002)';
+      if (em && (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em) || em.length > 64)) errors.email = '请输入合法邮箱 (<=64)';
+      if (em && list.some(u => u.email === em && u.id !== form.id)) errors.email = '邮箱在当前租户已被使用 (102002)';
+
+      const t = tenantObj(eff);
+      if (state.tenantEnabled && t.accountCount > 0) {
+        const oldUser = mode === 'edit' ? list.find(u => u.id === form.id) : null;
+        const activeCount = list.filter(u => u.status === 0).length;
+        const willAddActive = (mode === 'create' && Number(form.status) === 0) || (oldUser && oldUser.status === 1 && Number(form.status) === 0);
+        if ((willAddActive && activeCount >= t.accountCount) || (mode === 'create' && list.length >= t.accountCount)) {
+          errors.quota = `当前租户【${t.name}】用户数已达套餐上限 ${t.accountCount}（102006）`;
+        }
+      }
+      if (Object.keys(errors).length) { state.modal.errors = errors; render(); return; }
+
+      if (mode === 'create') {
+        list.push({ ...form, id: String(Date.now()).slice(-6), username: un, nickname: nn, phone: ph, email: em, status: Number(form.status), protected: false, isSelf: false, pwdUpdateTime: null, createTime: '2026-11-24 18:12:00' });
+        showToast('success', `已新增用户 ${un}（pwd_update_time=NULL，首登工作台将提醒改密）`);
+      } else {
+        Object.assign(list.find(x => x.id === form.id), form, { nickname: nn, phone: ph, email: em, status: Number(form.status) });
+        showToast('success', `已保存用户 ${un} 并清理权限缓存`);
+      }
+      state.modal = null; render();
+    }
+    function openResetPwdModal(id) {
+      const eff = effTenantId();
+      const u = (DB.users[eff] || []).find(x => x.id === id);
+      if (!u) return;
+      state.modal = { type: 'reset_pwd', userId: u.id, username: u.username, nickname: u.nickname, password: state.initPasswordConfig, showPwd: true, errors: {} };
+      render();
+    }
+    function confirmResetPwd() {
+      const m = state.modal;
+      if (!checkPwdStrength(m.password).ok) { m.errors.password = '密码须满足 8~20 位无空白且至少含 3 类字符'; render(); return; }
+      const eff = effTenantId();
+      const u = (DB.users[eff] || []).find(x => x.id === m.userId);
+      u.pwdUpdateTime = null;
+      state.modal = null;
+      showToast('success', `已重置【${u.username}】密码，置空 pwd_update_time 并踢出全部在线会话`);
+      render();
+    }
+    function toggleUserStatus(id) {
+      const eff = effTenantId();
+      const u = (DB.users[eff] || []).find(x => x.id === id);
+      if (!u || u.protected || u.isSelf) return;
+      const next = u.status === 0 ? 1 : 0;
+      const act = next === 1 ? '停用' : '启用';
+      openConfirm(`确认${act}用户`, `确认要${act}账号 <strong>【${esc(u.username)}】</strong> 吗？${next === 1 ? '停用后将立即强退其全部在线会话。' : ''}`, () => {
+        u.status = next;
+        showToast('success', `已${act}用户 ${u.username}${next === 1 ? '并踢下线' : ''}`);
+        render();
+      });
+    }
+    function deleteUsers(ids) {
+      const eff = effTenantId();
+      const list = DB.users[eff] || [];
+      for (const id of ids) {
+        const u = list.find(x => x.id === id);
+        if (u?.protected || u?.isSelf) { showToast('danger', '包含受保护超管或当前登录账号自身，禁止删除 (102007)'); return; }
+      }
+      openConfirm('确认删除用户', `确认删除选中的 <strong>${ids.length}</strong> 位用户？`, () => {
+        DB.users[eff] = list.filter(x => !ids.includes(x.id));
+        ids.forEach(id => state.selectedUserIds.delete(id));
+        showToast('success', '已删除用户并清理权限缓存');
+        render();
+      }, '确认删除');
+    }
+
+    // Export & Import / Feedback Flow
+    function openExportMenu(e) {
+      e.stopPropagation(); hidePopovers();
+      const rect = e.currentTarget.getBoundingClientRect();
+      const menu = document.getElementById('exportPopover');
+      const selCount = state.selectedUserIds.size;
+      menu.innerHTML = `
+        <button class="popover-item" type="button" ${selCount === 0 ? 'disabled' : ''} onclick="runUserExport('selected')"><span>导出已选用户 (${selCount} 条)</span></button>
+        <button class="popover-item" type="button" onclick="runUserExport('all')"><span>导出全部筛选结果</span></button>
+      `;
+      menu.style.left = Math.min(rect.left, window.innerWidth - 200) + 'px';
+      menu.style.top = (rect.bottom + 6) + 'px';
+      menu.classList.add('open');
+    }
+    function runUserExport(scope) {
+      hidePopovers();
+      const rows = getFilteredUsers();
+      const target = scope === 'selected' ? rows.filter(u => state.selectedUserIds.has(u.id)) : rows;
+      const depts = Object.fromEntries((DB.depts[effTenantId()] || []).map(d => [d.id, d.deptName]));
+      const header = '用户ID,用户账号,用户昵称,归属部门,手机号码(脱敏),电子邮箱(脱敏),状态,创建时间';
+      const body = target.map(u => `${u.id},${u.username},${u.nickname},${depts[u.deptId] || '--'},${maskPhone(u.phone)},${maskEmail(u.email)},${u.status === 0 ? '正常' : '停用'},${u.createTime}`).join('\n');
+      downloadTextFile(`用户数据_${scope}.csv`, header + '\n' + body);
+      showToast('success', `已流式导出 ${target.length} 条脱敏用户数据（无密码列）`);
+    }
+    function downloadUserTemplate() {
+      const header = '用户账号(*),用户昵称(*),归属部门,岗位编码,角色编码,手机号码,电子邮箱,性别,状态';
+      const sample = 'zhaoliu,赵六,研发中心/后端架构组,dev,ops_manager,13512345678,zhaoliu@ateng.dev,男,正常';
+      downloadTextFile('用户导入模板.csv', header + '\n' + sample);
+      showToast('success', '已下载 9 列标准用户导入模板');
+    }
+    function openImportModal(preset) {
+      state.modal = { type: 'import', fileName: '', fileError: '' };
+      if (preset === 'demo_errors') { runImportScenario('errors'); return; }
+      render();
+    }
+    function handleImportFilePick(e) {
+      const f = e.target.files?.[0];
+      if (!f) return;
+      if (!/\.(xlsx|csv)$/i.test(f.name)) { state.modal.fileError = '仅支持 .xlsx 格式工作簿 (100005)'; render(); return; }
+      if (f.size > 2 * 1024 * 1024) { state.modal.fileError = '导入文件大小不能超过 2MB (100005)'; render(); return; }
+      state.modal.fileName = f.name;
+      state.modal.fileError = '';
+      render();
+    }
+    function runImportScenario(kind) {
+      if (kind === 'over_limit') {
+        state.modal.fileError = '单次同步原子导入上限为 500 行（当前文件解析出 642 行），请拆分后分批导入 (100005)';
+        showToast('danger', '超过 500 行安全限制，已拦截 (100005)');
+        render();
+        return;
+      }
+      if (kind === 'success') {
+        const eff = effTenantId();
+        const t = tenantObj(eff);
+        const list = DB.users[eff] || [];
+        if (state.tenantEnabled && t.accountCount > 0 && list.length + 2 > t.accountCount) {
+          state.modal = null;
+          state.feedbackMeta = { totalCount: 2, failCount: 1, feedbackToken: 'fb_' + Date.now(), expired: false };
+          state.feedbackErrors = [{ rowNum: 2, columnName: '整行', errorMessage: `本次拟导入 2 名用户，将超出当前租户套餐上限（${t.accountCount}），整批已回滚 (102006)`, rawValue: '' }];
+          state.feedbackPage = 1;
+          state.modal = { type: 'feedback' };
+          showToast('danger', '超出租户套餐账号配额，整批回滚 (102006)');
+          render();
+          return;
+        }
+        const deptId = (DB.depts[eff] || [])[0]?.id || '';
+        list.push({ id: String(Date.now()).slice(-6) + '1', username: 'import_u1', nickname: '批量导入一', deptId, postIds: [], roleIds: [], phone: '13100001111', email: 'imp1@ateng.dev', gender: '0', status: 0, protected: false, isSelf: false, pwdUpdateTime: null, remark: 'Excel 原子导入', createTime: '2026-11-24 18:15:00' });
+        list.push({ id: String(Date.now()).slice(-6) + '2', username: 'import_u2', nickname: '批量导入二', deptId, postIds: [], roleIds: [], phone: '13100002222', email: 'imp2@ateng.dev', gender: '1', status: 0, protected: false, isSelf: false, pwdUpdateTime: null, remark: 'Excel 原子导入', createTime: '2026-11-24 18:15:00' });
+        state.modal = null;
+        showToast('success', '整批 2 条记录全部校验通过并原子入库（初始密码已哈希，pwd_update_time=NULL）');
+        render();
+        return;
+      }
+      // Demo errors -> AtengExcelFeedback
+      state.feedbackMeta = { totalCount: 14, failCount: 5, feedbackToken: 'fb_98a1c3e2', expired: false };
+      state.feedbackErrors = [
+        { rowNum: 2, columnName: '用户账号', errorMessage: '用户账号 chenmo 在当前租户下已存在（第2行未入库）', rawValue: 'chenmo' },
+        { rowNum: 4, columnName: '归属部门', errorMessage: '部门名称“研发组”匹配到多个同名分支，请改用“/”级联全路径', rawValue: '研发组' },
+        { rowNum: 5, columnName: '角色编码', errorMessage: '禁止通过导入分配保留角色 super_admin', rawValue: 'super_admin' },
+        { rowNum: 8, columnName: '手机号码', errorMessage: '第 8 行与第 3 行手机号码 13912345678 文件内重复', rawValue: '13912345678' },
+        { rowNum: 12, columnName: '岗位编码', errorMessage: '岗位编码 qa_old 已停用或不存在，无法分配', rawValue: 'qa_old' },
+      ];
+      state.feedbackPage = 1;
+      state.modal = { type: 'feedback' };
+      showToast('danger', '校验失败 5 处，整批 14 条记录已全部回滚（0 条入库）');
+      render();
+    }
+    function downloadAnnotatedExcel() {
+      if (state.feedbackMeta.expired) {
+        showToast('danger', '批注令牌已超过 15 分钟有效期或非本人发起，请重新导入生成 (404)');
+        return;
+      }
+      const rows = state.feedbackErrors.map(e => `第${e.rowNum}行,${e.columnName || '-'},"${e.errorMessage}",${e.rawValue || ''}`).join('\n');
+      downloadTextFile(`用户导入错误批注_${state.feedbackMeta.feedbackToken}.csv`, '行号(1-based),列名,标红批注错误原因,原始单元格值\n' + rows);
+      showToast('success', `已校验 (tenantId, userId) 归属并下载标红批注文件（令牌 ${state.feedbackMeta.feedbackToken}）`);
+    }
+    function copyFeedbackList() {
+      const txt = state.feedbackErrors.map(e => `第${e.rowNum}行 [${e.columnName}] ${e.errorMessage}`).join('\n');
+      navigator.clipboard?.writeText(txt).catch(() => {});
+      showToast('success', '已复制全部错误明细到剪贴板');
+    }
+
+    function getFilteredUsers() {
+      const eff = effTenantId();
+      const allowedDeptIds = state.userSelectedDeptId ? deptDescendantIds(eff, state.userSelectedDeptId) : null;
+      return (DB.users[eff] || []).filter(u => {
+        if (allowedDeptIds && !allowedDeptIds.has(u.deptId)) return false;
+        const kw = state.userQuery.username.trim().toLowerCase();
+        if (kw && !u.username.toLowerCase().includes(kw) && !u.nickname.toLowerCase().includes(kw)) return false;
+        if (state.userQuery.phone && !u.phone.includes(state.userQuery.phone.trim())) return false;
+        if (state.userQuery.status !== '' && String(u.status) !== state.userQuery.status) return false;
+        return true;
+      });
+    }
+
+    // ==================== RENDERERS ====================
+    function renderDeptPage() {
+      const eff = effTenantId();
+      const users = DB.users[eff] || [];
+      const userMap = Object.fromEntries(users.map(u => [u.id, `${u.nickname} (${u.username})`]));
+      const allList = DB.depts[eff] || [];
+      let rows = flattenTree(allList);
+      if (!state.deptExpanded) rows = rows.filter(r => r.depth === 0);
+      if (state.deptQuery.deptName.trim() || state.deptQuery.status !== '') {
+        rows = flattenTree(allList).filter(({ item }) => {
+          if (state.deptQuery.deptName.trim() && !item.deptName.includes(state.deptQuery.deptName.trim())) return false;
+          if (state.deptQuery.status !== '' && String(item.status) !== state.deptQuery.status) return false;
+          return true;
+        });
+      }
+      return `
+        <section class="card query-card">
+          <div class="query-grid">
+            <div class="field-group"><label class="field-label">部门名称</label><input id="dqName" class="input" placeholder="输入部门名称" value="${esc(state.deptQuery.deptName)}" oninput="state.deptQuery.deptName=this.value" onkeydown="if(event.key==='Enter') render()" /></div>
+            <div class="field-group"><label class="field-label">部门状态</label><select class="select" onchange="state.deptQuery.status=this.value; render();"><option value="" ${state.deptQuery.status===''?'selected':''}>全部</option><option value="0" ${state.deptQuery.status==='0'?'selected':''}>正常</option><option value="1" ${state.deptQuery.status==='1'?'selected':''}>停用</option></select></div>
+            <div></div>
+            <div class="query-actions"><button class="btn btn-primary" type="button" onclick="render()">查询</button><button class="btn" type="button" onclick="state.deptQuery={deptName:'',status:''}; render();">重置</button></div>
+          </div>
+        </section>
+        <section class="card table-card">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <button class="btn btn-primary" type="button" onclick="openDeptModal('create', '')">+ 新增部门</button>
+              <button class="btn" type="button" onclick="state.deptExpanded=!state.deptExpanded; render();">${state.deptExpanded ? '折叠为顶级' : '展开全部'}</button>
+            </div>
+            <div class="toolbar-right"><span style="font-size:12px;color:var(--solid-text-secondary);">修改上级将事务内级联重算全部子孙 ancestors 路径</span></div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>部门名称</th><th>ancestors 路径</th><th>排序</th><th>部门负责人</th><th>联系电话(脱敏)</th><th>状态</th><th>创建时间</th><th class="col-sticky-right">操作</th></tr></thead>
+              <tbody>
+                ${rows.map(({ item: d, depth }) => `
+                  <tr>
+                    <td><span style="padding-left:${depth * 20}px;font-weight:${depth === 0 ? 600 : 400};">${depth > 0 ? '└ ' : ''}${esc(d.deptName)}</span></td>
+                    <td class="mono">${esc(d.ancestors)}</td>
+                    <td class="mono">${d.sort}</td>
+                    <td>${esc(userMap[d.leaderUserId] || '--')}</td>
+                    <td class="mono">${maskPhone(d.phone)}</td>
+                    <td><button class="switch ${d.status === 0 ? 'on' : ''}" type="button" onclick="toggleDeptStatus('${d.id}')"></button></td>
+                    <td class="mono">${d.createTime}</td>
+                    <td class="col-sticky-right">
+                      <button class="btn-link" type="button" onclick="openDeptModal('create', '${d.id}')">新增下级</button>
+                      <button class="btn-link" type="button" onclick="openDeptModal('edit', '${d.id}')">编辑</button>
+                      <button class="btn-link danger" type="button" onclick="deleteDept('${d.id}')">删除</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderPostPage() {
+      const eff = effTenantId();
+      const rows = (DB.posts[eff] || []).filter(p => {
+        if (state.postQuery.postCode.trim() && !p.postCode.includes(state.postQuery.postCode.trim())) return false;
+        if (state.postQuery.postName.trim() && !p.postName.includes(state.postQuery.postName.trim())) return false;
+        if (state.postQuery.status !== '' && String(p.status) !== state.postQuery.status) return false;
+        return true;
+      });
+      return `
+        <section class="card query-card">
+          <div class="query-grid">
+            <div class="field-group"><label class="field-label">岗位编码</label><input id="pqCode" class="input mono" placeholder="模糊匹配编码" value="${esc(state.postQuery.postCode)}" oninput="state.postQuery.postCode=this.value" /></div>
+            <div class="field-group"><label class="field-label">岗位名称</label><input id="pqName" class="input" placeholder="模糊匹配名称" value="${esc(state.postQuery.postName)}" oninput="state.postQuery.postName=this.value" /></div>
+            <div class="field-group"><label class="field-label">状态</label><select class="select" onchange="state.postQuery.status=this.value; render();"><option value="" ${state.postQuery.status===''?'selected':''}>全部</option><option value="0" ${state.postQuery.status==='0'?'selected':''}>正常</option><option value="1" ${state.postQuery.status==='1'?'selected':''}>停用</option></select></div>
+            <div class="query-actions"><button class="btn btn-primary" type="button" onclick="render()">查询</button><button class="btn" type="button" onclick="state.postQuery={postCode:'',postName:'',status:''}; render();">重置</button></div>
+          </div>
+        </section>
+        <section class="card table-card">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <button class="btn btn-primary" type="button" onclick="openPostModal(null)">+ 新增岗位</button>
+              <button class="btn" type="button" ${state.selectedPostIds.size === 0 ? 'disabled' : ''} onclick="deletePosts([...state.selectedPostIds])">批量删除 (${state.selectedPostIds.size})</button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th style="width:36px;"></th><th>岗位编码</th><th>岗位名称</th><th>排序</th><th>状态</th><th>备注</th><th>创建时间</th><th class="col-sticky-right">操作</th></tr></thead>
+              <tbody>
+                ${rows.map(p => `
+                  <tr>
+                    <td><input type="checkbox" ${state.selectedPostIds.has(p.id) ? 'checked' : ''} onchange="this.checked?state.selectedPostIds.add('${p.id}'):state.selectedPostIds.delete('${p.id}'); render();" /></td>
+                    <td class="mono">${esc(p.postCode)}</td>
+                    <td>${esc(p.postName)}</td>
+                    <td class="mono">${p.sort}</td>
+                    <td><button class="switch ${p.status === 0 ? 'on' : ''}" type="button" onclick="openConfirm('切换岗位状态','确认切换岗位【${esc(p.postName)}】状态？', ()=>{ const x=DB.posts[effTenantId()].find(k=>k.id==='${p.id}'); x.status=x.status===0?1:0; showToast('success','已更新岗位状态'); render(); })"></button></td>
+                    <td>${esc(p.remark || '--')}</td>
+                    <td class="mono">${p.createTime}</td>
+                    <td class="col-sticky-right">
+                      <button class="btn-link" type="button" onclick="openPostModal('${p.id}')">编辑</button>
+                      <button class="btn-link danger" type="button" onclick="deletePosts(['${p.id}'])">删除</button>
+                    </td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-bar tabular"><span>共 <strong>${rows.length}</strong> 条 · 每页 <strong>10</strong> 条</span><span>提示：被用户关联的岗位（如 qa_old）禁止删除</span></div>
+        </section>
+      `;
+    }
+
+    function renderMenuPage() {
+      let rows = flattenTree(DB.menus);
+      if (!state.menuExpanded) rows = rows.filter(r => r.depth === 0);
+      if (state.menuQuery.title.trim() || state.menuQuery.status !== '' || state.menuQuery.platformOnly !== '') {
+        rows = flattenTree(DB.menus).filter(({ item: m }) => {
+          if (state.menuQuery.title.trim() && !m.title.includes(state.menuQuery.title.trim())) return false;
+          if (state.menuQuery.status !== '' && String(m.status) !== state.menuQuery.status) return false;
+          if (state.menuQuery.platformOnly !== '' && String(m.platformOnly) !== state.menuQuery.platformOnly) return false;
+          return true;
+        });
+      }
+      return `
+        <section class="card query-card">
+          <div class="query-grid">
+            <div class="field-group"><label class="field-label">菜单 / 权限名称</label><input id="mqTitle" class="input" placeholder="输入关键词" value="${esc(state.menuQuery.title)}" oninput="state.menuQuery.title=this.value" /></div>
+            <div class="field-group"><label class="field-label">是否平台专属</label><select class="select" onchange="state.menuQuery.platformOnly=this.value; render();"><option value="" ${state.menuQuery.platformOnly===''?'selected':''}>全部</option><option value="true" ${state.menuQuery.platformOnly==='true'?'selected':''}>仅平台专属 (platform_only=1)</option><option value="false" ${state.menuQuery.platformOnly==='false'?'selected':''}>通用可分发</option></select></div>
+            <div class="field-group"><label class="field-label">状态</label><select class="select" onchange="state.menuQuery.status=this.value; render();"><option value="" ${state.menuQuery.status===''?'selected':''}>全部</option><option value="0" ${state.menuQuery.status==='0'?'selected':''}>正常</option><option value="1" ${state.menuQuery.status==='1'?'selected':''}>停用</option></select></div>
+            <div class="query-actions"><button class="btn btn-primary" type="button" onclick="render()">查询</button><button class="btn" type="button" onclick="state.menuQuery={title:'',status:'',platformOnly:''}; render();">重置</button></div>
+          </div>
+        </section>
+        <section class="card table-card">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <button class="btn btn-primary" type="button" onclick="openMenuDrawer('create', '')">+ 新增菜单</button>
+              <button class="btn" type="button" onclick="state.menuExpanded=!state.menuExpanded; render();">${state.menuExpanded ? '折叠为目录' : '展开全部'}</button>
+            </div>
+            <div class="toolbar-right"><span class="tag tag-info">平台专属模块（租户 0 可见，禁止勾选进租户套餐）</span></div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th>菜单名称</th><th>类型</th><th>排序</th><th>权限标识 (perms)</th><th>路由 / 组件</th><th>平台专属</th><th>可见 / 状态</th><th class="col-sticky-right">操作</th></tr></thead>
+              <tbody>
+                ${rows.map(({ item: m, depth }) => {
+                  const typeTag = m.menuType === 'M' ? '<span class="tag tag-primary">M 目录</span>' : (m.menuType === 'C' ? '<span class="tag tag-success">C 菜单</span>' : '<span class="tag tag-info">F 按钮</span>');
+                  return `
+                    <tr>
+                      <td><span style="padding-left:${depth * 18}px;">${m.icon ? m.icon + ' ' : ''}${esc(m.title)}</span></td>
+                      <td>${typeTag}</td>
+                      <td class="mono">${m.sort}</td>
+                      <td class="mono">${esc(m.perms || '--')}</td>
+                      <td class="mono">${m.menuType === 'F' ? '--' : esc(m.path + (m.component ? ' -> ' + m.component : (m.isExternal ? ' (外链)' : '')))}</td>
+                      <td>${m.platformOnly ? '<span class="tag tag-warning">平台专属</span>' : '<span class="tag tag-info">通用</span>'}</td>
+                      <td>${m.menuType !== 'F' ? (m.visible ? '显示' : '隐藏') + ' / ' : ''}${m.status === 0 ? '<span class="tag tag-success">正常</span>' : '<span class="tag tag-danger">停用</span>'}</td>
+                      <td class="col-sticky-right">
+                        ${m.menuType !== 'F' ? `<button class="btn-link" type="button" onclick="openMenuDrawer('create', '${m.id}')">新增下级</button>` : ''}
+                        <button class="btn-link" type="button" onclick="openMenuDrawer('edit', '${m.id}')">编辑</button>
+                        <button class="btn-link danger" type="button" onclick="deleteMenu('${m.id}')">删除</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `;
+    }
+
+    function renderRolePage() {
+      const eff = effTenantId();
+      const rows = (DB.roles[eff] || []).filter(r => {
+        if (state.roleQuery.roleName.trim() && !r.roleName.includes(state.roleQuery.roleName.trim())) return false;
+        if (state.roleQuery.roleKey.trim() && !r.roleKey.includes(state.roleQuery.roleKey.trim())) return false;
+        if (state.roleQuery.status !== '' && String(r.status) !== state.roleQuery.status) return false;
+        return true;
+      });
+      const dsLabel = code => (DATA_SCOPES.find(x => x.code === code)?.label || '').split(' ')[0];
+      return `
+        <section class="card query-card">
+          <div class="query-grid">
+            <div class="field-group"><label class="field-label">角色名称</label><input id="rqName" class="input" placeholder="输入角色名称" value="${esc(state.roleQuery.roleName)}" oninput="state.roleQuery.roleName=this.value" /></div>
+            <div class="field-group"><label class="field-label">角色编码</label><input id="rqKey" class="input mono" placeholder="输入角色编码" value="${esc(state.roleQuery.roleKey)}" oninput="state.roleQuery.roleKey=this.value" /></div>
+            <div class="field-group"><label class="field-label">状态</label><select class="select" onchange="state.roleQuery.status=this.value; render();"><option value="" ${state.roleQuery.status===''?'selected':''}>全部</option><option value="0" ${state.roleQuery.status==='0'?'selected':''}>正常</option><option value="1" ${state.roleQuery.status==='1'?'selected':''}>停用</option></select></div>
+            <div class="query-actions"><button class="btn btn-primary" type="button" onclick="render()">查询</button><button class="btn" type="button" onclick="state.roleQuery={roleName:'',roleKey:'',status:''}; render();">重置</button></div>
+          </div>
+        </section>
+        <section class="card table-card">
+          <div class="table-toolbar">
+            <div class="toolbar-left">
+              <button class="btn btn-primary" type="button" onclick="openRoleDrawer(null)">+ 新增角色</button>
+              <button class="btn" type="button" ${state.selectedRoleIds.size === 0 ? 'disabled' : ''} onclick="deleteRoles([...state.selectedRoleIds])">批量删除 (${state.selectedRoleIds.size})</button>
+            </div>
+            <div class="toolbar-right"><span style="font-size:12px;color:var(--solid-text-secondary);">保留编码禁止 super_admin / admin；菜单树按当前租户套餐裁剪</span></div>
+          </div>
+          <div class="table-scroll">
+            <table class="data-table">
+              <thead><tr><th style="width:36px;"></th><th>角色名称</th><th>角色编码</th><th>@DataScope 数据范围</th><th>排序</th><th>状态</th><th>创建时间</th><th class="col-sticky-right">操作</th></tr></thead>
+              <tbody>
+                ${rows.map(r => {
+                  const locked = Boolean(r.protected);
+                  const tip = '平台内置超级管理员角色受系统保护，不可编辑、停用或删除';
+                  return `
+                    <tr>
+                      <td><input type="checkbox" ${locked ? 'disabled title="' + tip + '"' : ''} ${state.selectedRoleIds.has(r.id) ? 'checked' : ''} onchange="this.checked?state.selectedRoleIds.add('${r.id}'):state.selectedRoleIds.delete('${r.id}'); render();" /></td>
+                      <td>${esc(r.roleName)}</td>
+                      <td class="mono">${esc(r.roleKey)} ${locked ? '<span class="tag tag-primary">平台内置</span>' : ''}</td>
+                      <td><span class="tag ${r.dataScope === 2 ? 'tag-warning' : 'tag-info'}">${dsLabel(r.dataScope)}${r.dataScope === 2 ? ' (' + r.deptIds.length + '部门)' : ''}</span></td>
+                      <td class="mono">${r.sort}</td>
+                      <td><button class="switch ${r.status === 0 ? 'on' : ''}" type="button" ${locked ? 'disabled title="' + tip + '"' : ''} onclick="openConfirm('切换角色状态','确认切换角色【${esc(r.roleName)}】状态？', ()=>{ const x=DB.roles[effTenantId()].find(k=>k.id==='${r.id}'); x.status=x.status===0?1:0; showToast('success','已更新角色状态并清理缓存'); render(); })"></button></td>
+                      <td class="mono">${r.createTime}</td>
+                      <td class="col-sticky-right">
+                        <button class="btn-link" type="button" ${locked ? 'disabled title="' + tip + '"' : ''} onclick="openRoleDrawer('${r.id}')">编辑</button>
+                        <button class="btn-link" type="button" ${locked ? 'disabled title="' + tip + '"' : ''} onclick="openDataScopeModal('${r.id}')">数据权限</button>
+                        <button class="btn-link danger" type="button" ${locked ? 'disabled title="' + tip + '"' : ''} onclick="deleteRoles(['${r.id}'])">删除</button>
+                      </td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-bar tabular"><span>共 <strong>${rows.length}</strong> 条 · 每页 <strong>10</strong> 条</span></div>
+        </section>
+      `;
+    }
+
+    function renderUserPage() {
+      const eff = effTenantId();
+      const depts = DB.depts[eff] || [];
+      const deptMap = Object.fromEntries(depts.map(d => [d.id, d.deptName]));
+      const deptRows = flattenTree(depts).filter(({ item }) => !state.deptFilterText.trim() || item.deptName.includes(state.deptFilterText.trim()));
+      const rows = getFilteredUsers();
+      const selectable = rows.filter(u => !u.protected && !u.isSelf);
+      const allSel = selectable.length > 0 && selectable.every(u => state.selectedUserIds.has(u.id));
+      const densityCls = state.density === 'large' ? 'density-large' : (state.density === 'small' ? 'density-small' : '');
+
+      return `
+        <div class="split-wrap">
+          <aside class="card dept-panel">
+            <div style="font-size:13px;font-weight:600;">组织部门树</div>
+            <input id="uDeptSearch" class="input" placeholder="过滤部门" value="${esc(state.deptFilterText)}" oninput="state.deptFilterText=this.value; render();" />
+            <div style="overflow:auto;flex:1;">
+              <div class="dept-node ${state.userSelectedDeptId === '' ? 'active' : ''}" onclick="state.userSelectedDeptId=''; render();"><span>全部部门</span></div>
+              ${deptRows.map(({ item: d, depth }) => `
+                <div class="dept-node ${state.userSelectedDeptId === d.id ? 'active' : ''}" style="padding-left:${8 + depth * 14}px;" onclick="state.userSelectedDeptId='${d.id}'; render();">
+                  <span>${esc(d.deptName)}</span>
+                </div>
+              `).join('')}
+            </div>
+          </aside>
+
+          <section class="table-panel">
+            <div class="card query-card">
+              <div class="query-grid">
+                <div class="field-group"><label class="field-label">账号 / 昵称</label><input id="uqUser" class="input" placeholder="输入账号或昵称" value="${esc(state.userQuery.username)}" oninput="state.userQuery.username=this.value" onkeydown="if(event.key==='Enter') render()" /></div>
+                <div class="field-group"><label class="field-label">手机号码</label><input id="uqPhone" class="input mono" placeholder="模糊匹配手机号" value="${esc(state.userQuery.phone)}" oninput="state.userQuery.phone=this.value" /></div>
+                <div class="field-group"><label class="field-label">账号状态</label><select class="select" onchange="state.userQuery.status=this.value; render();"><option value="" ${state.userQuery.status===''?'selected':''}>全部</option><option value="0" ${state.userQuery.status==='0'?'selected':''}>正常</option><option value="1" ${state.userQuery.status==='1'?'selected':''}>停用</option></select></div>
+                <div class="query-actions">
+                  <button class="btn btn-primary" type="button" onclick="render()">查询</button>
+                  <button class="btn" type="button" onclick="state.userQuery={username:'',phone:'',status:'',collapsed:state.userQuery.collapsed}; state.userSelectedDeptId=''; render();">重置</button>
+                  <button class="btn-link" type="button" onclick="state.userQuery.collapsed=!state.userQuery.collapsed; render();">${state.userQuery.collapsed ? '展开 ▾' : '收起 ▴'}</button>
+                </div>
+              </div>
+              ${!state.userQuery.collapsed ? `<div class="query-grid" style="margin-top:10px;"><div class="field-group"><label class="field-label">创建时间起止</label><input class="input mono" placeholder="2026-11-01 ~ 2026-11-24" /></div></div>` : ''}
+            </div>
+
+            <div class="card table-card ${state.fullscreenTable ? 'fullscreen' : ''}">
+              <div class="table-toolbar">
+                <div class="toolbar-left">
+                  <button class="btn btn-primary" type="button" onclick="openUserDrawer(null)">+ 新增用户</button>
+                  <button class="btn" type="button" ${state.selectedUserIds.size === 0 ? 'disabled' : ''} onclick="deleteUsers([...state.selectedUserIds])">批量删除 (${state.selectedUserIds.size})</button>
+                  <button class="btn" type="button" onclick="openImportModal()">导入</button>
+                  <button class="btn" type="button" onclick="openExportMenu(event)">导出 ▾</button>
+                  ${state.userSelectedDeptId ? `<span class="tag tag-primary">部门：${esc(deptMap[state.userSelectedDeptId])}（含下级）<button class="tab-close" type="button" onclick="state.userSelectedDeptId=''; render();">✕</button></span>` : ''}
+                </div>
+                <div class="toolbar-right">
+                  <button class="icon-btn" type="button" title="刷新" onclick="render()">↻</button>
+                  <button class="icon-btn" type="button" title="切换密度 (${state.density})" onclick="const d=['default','small','large']; state.density=d[(d.indexOf(state.density)+1)%3]; render();">≣</button>
+                  <button class="icon-btn" type="button" title="斑马纹" onclick="state.striped=!state.striped; render();">▤</button>
+                  <button class="icon-btn" type="button" title="表格全屏" onclick="state.fullscreenTable=!state.fullscreenTable; render();">⛶</button>
+                </div>
+              </div>
+
+              <div class="table-scroll">
+                <table class="data-table ${densityCls} ${state.striped ? 'striped' : ''}">
+                  <thead>
+                    <tr>
+                      <th style="width:36px;"><input type="checkbox" ${allSel ? 'checked' : ''} onchange="const s=${JSON.stringify(selectable.map(x=>x.id)).replace(/"/g,'&quot;')}; this.checked?s.forEach(i=>state.selectedUserIds.add(i)):s.forEach(i=>state.selectedUserIds.delete(i)); render();" /></th>
+                      <th>用户ID</th><th>用户账号</th><th>用户昵称</th><th>归属部门</th><th>手机号码(脱敏)</th><th>电子邮箱(脱敏)</th><th>状态</th><th>创建时间</th><th class="col-sticky-right">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows.length === 0 ? `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--solid-text-secondary);">未找到符合条件的用户 <button class="btn-link" onclick="state.userQuery={username:'',phone:'',status:'',collapsed:true}; state.userSelectedDeptId=''; render();">清空筛选条件</button></td></tr>` : rows.map(u => {
+                      const guard = u.protected ? '内置超级管理员不可停用或删除' : (u.isSelf ? '当前登录账号不可停用或删除' : '');
+                      const locked = Boolean(u.protected || u.isSelf);
+                      return `
+                        <tr>
+                          <td><input type="checkbox" ${locked ? 'disabled title="' + guard + '"' : ''} ${state.selectedUserIds.has(u.id) ? 'checked' : ''} onchange="this.checked?state.selectedUserIds.add('${u.id}'):state.selectedUserIds.delete('${u.id}'); render();" /></td>
+                          <td class="mono">${esc(u.id)}</td>
+                          <td class="mono">${esc(u.username)} ${u.protected ? '<span class="tag tag-primary">内置</span>' : ''} ${u.isSelf ? '<span class="tag tag-info">自己</span>' : ''}</td>
+                          <td>${esc(u.nickname)}</td>
+                          <td>${esc(deptMap[u.deptId] || '--')}</td>
+                          <td class="mono">${maskPhone(u.phone)}</td>
+                          <td class="mono">${maskEmail(u.email)}</td>
+                          <td><button class="switch ${u.status === 0 ? 'on' : ''}" type="button" ${locked ? 'disabled title="' + guard + '"' : ''} onclick="toggleUserStatus('${u.id}')"></button></td>
+                          <td class="mono">${u.createTime}</td>
+                          <td class="col-sticky-right">
+                            <button class="btn-link" type="button" ${u.protected ? 'disabled title="' + guard + '"' : ''} onclick="openUserDrawer('${u.id}')">编辑</button>
+                            <button class="btn-link" type="button" ${u.protected ? 'disabled title="' + guard + '"' : ''} onclick="openResetPwdModal('${u.id}')">重置密码</button>
+                            <button class="btn-link danger" type="button" ${locked ? 'disabled title="' + guard + '"' : ''} onclick="deleteUsers(['${u.id}'])">删除</button>
+                          </td>
+                        </tr>
+                      `;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div class="pagination-bar tabular">
+                <span>共 <strong>${rows.length}</strong> 条 · 每页 <strong>10</strong> 条${state.tenantEnabled && tenantObj(eff).accountCount > 0 ? ` · 当前租户配额：${(DB.users[eff] || []).length} / ${tenantObj(eff).accountCount}` : ''}</span>
+              </div>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderModal() {
+      const m = state.modal;
+      if (!m) return '';
+      const eff = effTenantId();
+
+      if (m.type === 'dept') {
+        const list = DB.depts[eff] || [];
+        const desc = m.mode === 'edit' ? deptDescendantIds(eff, m.form.id) : new Set();
+        const users = (DB.users[eff] || []).filter(u => u.status === 0 && (!m.leaderSearch.trim() || u.nickname.includes(m.leaderSearch) || u.username.includes(m.leaderSearch)));
+        return `
+          <div class="modal-backdrop open"><div class="dialog-panel w-640" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>${m.mode === 'edit' ? '编辑部门' : '新增部门'}</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="form-grid-2">
+                <div class="field-group">
+                  <label class="field-label">上级部门 *</label>
+                  <select class="select ${m.errors.parentId ? 'is-error' : ''}" onchange="state.modal.form.parentId=this.value; delete state.modal.errors.parentId;">
+                    <option value="0" ${m.form.parentId === '0' ? 'selected' : ''}>顶级部门 (parentId=0)</option>
+                    ${flattenTree(list).map(({ item: d, depth }) => `<option value="${d.id}" ${m.form.parentId === d.id ? 'selected' : ''} ${desc.has(d.id) || d.status === 1 ? 'disabled' : ''}>${'— '.repeat(depth)}${esc(d.deptName)}${desc.has(d.id) ? ' (禁选自身/子孙)' : (d.status === 1 ? ' (已停用)' : '')}</option>`).join('')}
+                  </select>
+                  ${m.errors.parentId ? `<div class="field-error">${esc(m.errors.parentId)}</div>` : ''}
+                </div>
+                <div class="field-group">
+                  <label class="field-label">部门名称 *</label>
+                  <input class="input ${m.errors.deptName ? 'is-error' : ''}" value="${esc(m.form.deptName)}" oninput="state.modal.form.deptName=this.value" />
+                  ${m.errors.deptName ? `<div class="field-error">${esc(m.errors.deptName)}</div>` : ''}
+                </div>
+                <div class="field-group">
+                  <label class="field-label">部门负责人 (user/options 检索)</label>
+                  <input id="deptLeaderFilter" class="input" placeholder="输入姓名筛选负责人" value="${esc(m.leaderSearch)}" oninput="state.modal.leaderSearch=this.value; render();" style="margin-bottom:4px;" />
+                  <select class="select" onchange="state.modal.form.leaderUserId=this.value;">
+                    <option value="">暂不指定</option>
+                    ${users.map(u => `<option value="${u.id}" ${m.form.leaderUserId === u.id ? 'selected' : ''}>${esc(u.nickname)} (${esc(u.username)})</option>`).join('')}
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label class="field-label">显示排序 *</label>
+                  <input class="input mono" type="number" value="${m.form.sort}" oninput="state.modal.form.sort=this.value" />
+                </div>
+                <div class="field-group">
+                  <label class="field-label">联系电话（真明文）</label>
+                  <input class="input mono ${m.errors.phone ? 'is-error' : ''}" value="${esc(m.form.phone)}" oninput="state.modal.form.phone=this.value" />
+                  ${m.errors.phone ? `<div class="field-error">${esc(m.errors.phone)}</div>` : ''}
+                </div>
+                <div class="field-group">
+                  <label class="field-label">电子邮箱（真明文）</label>
+                  <input class="input mono ${m.errors.email ? 'is-error' : ''}" value="${esc(m.form.email)}" oninput="state.modal.form.email=this.value" />
+                  ${m.errors.email ? `<div class="field-error">${esc(m.errors.email)}</div>` : ''}
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">部门状态</label>
+                <div style="display:flex;gap:16px;"><label><input type="radio" name="dSt" value="0" ${Number(m.form.status) === 0 ? 'checked' : ''} onchange="state.modal.form.status=0" /> 正常</label><label><input type="radio" name="dSt" value="1" ${Number(m.form.status) === 1 ? 'checked' : ''} onchange="state.modal.form.status=1" /> 停用</label></div>
+                ${m.errors.status ? `<div class="field-error">${esc(m.errors.status)}</div>` : ''}
+              </div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="saveDeptModal()">保存部门</button></div>
+          </div></div>
+        `;
+      }
+
+      if (m.type === 'post') {
+        return `
+          <div class="modal-backdrop open"><div class="dialog-panel w-480" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>${m.mode === 'edit' ? '编辑岗位' : '新增岗位'}</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="field-group"><label class="field-label">岗位编码 *</label><input class="input mono ${m.errors.postCode ? 'is-error' : ''}" value="${esc(m.form.postCode)}" oninput="state.modal.form.postCode=this.value" />${m.errors.postCode ? `<div class="field-error">${esc(m.errors.postCode)}</div>` : ''}</div>
+              <div class="field-group"><label class="field-label">岗位名称 *</label><input class="input ${m.errors.postName ? 'is-error' : ''}" value="${esc(m.form.postName)}" oninput="state.modal.form.postName=this.value" />${m.errors.postName ? `<div class="field-error">${esc(m.errors.postName)}</div>` : ''}</div>
+              <div class="form-grid-2">
+                <div class="field-group"><label class="field-label">显示排序</label><input class="input mono" type="number" value="${m.form.sort}" oninput="state.modal.form.sort=this.value" /></div>
+                <div class="field-group"><label class="field-label">状态</label><select class="select" onchange="state.modal.form.status=Number(this.value)"><option value="0" ${m.form.status===0?'selected':''}>正常</option><option value="1" ${m.form.status===1?'selected':''}>停用</option></select></div>
+              </div>
+              <div class="field-group"><label class="field-label">备注</label><textarea class="textarea" oninput="state.modal.form.remark=this.value">${esc(m.form.remark)}</textarea></div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="savePostModal()">保存岗位</button></div>
+          </div></div>
+        `;
+      }
+
+      if (m.type === 'menu') {
+        const mt = m.form.menuType;
+        const desc = m.mode === 'edit' ? menuDescendantIds(m.form.id) : new Set();
+        const validParents = flattenTree(DB.menus).filter(({ item }) => mt === 'F' ? item.menuType === 'C' : item.menuType === 'M');
+        return `
+          <div class="modal-backdrop drawer-backdrop open"><div class="drawer-panel" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>${m.mode === 'edit' ? '编辑菜单' : '新增菜单'}</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="field-group">
+                <label class="field-label">菜单类型 *</label>
+                <div class="segmented">
+                  ${[['M', '目录 (M)'], ['C', '页面菜单 (C)'], ['F', '按钮权限 (F)']].map(([t, l]) => `<button type="button" class="${mt === t ? 'active' : ''}" onclick="state.modal.form.menuType='${t}'; state.modal.errors={}; render();">${l}</button>`).join('')}
+                </div>
+                ${m.errors.menuType ? `<div class="field-error">${esc(m.errors.menuType)}</div>` : ''}
+              </div>
+              <div class="field-group">
+                <label class="field-label">上级菜单 *${mt === 'F' ? '（仅限 C 页面菜单）' : ''}</label>
+                <select class="select ${m.errors.parentId ? 'is-error' : ''}" onchange="state.modal.form.parentId=this.value;">
+                  ${mt !== 'F' ? `<option value="0" ${m.form.parentId === '0' ? 'selected' : ''}>根目录 (0)</option>` : ''}
+                  ${validParents.map(({ item: p, depth }) => `<option value="${p.id}" ${m.form.parentId === p.id ? 'selected' : ''} ${desc.has(p.id) ? 'disabled' : ''}>${'— '.repeat(depth)}${esc(p.title)} [${p.menuType}]</option>`).join('')}
+                </select>
+                ${m.errors.parentId ? `<div class="field-error">${esc(m.errors.parentId)}</div>` : ''}
+              </div>
+              <div class="form-grid-2">
+                <div class="field-group"><label class="field-label">${mt === 'F' ? '权限名称 *' : '菜单名称 *'}</label><input class="input ${m.errors.title ? 'is-error' : ''}" value="${esc(m.form.title)}" oninput="state.modal.form.title=this.value" />${m.errors.title ? `<div class="field-error">${esc(m.errors.title)}</div>` : ''}</div>
+                <div class="field-group"><label class="field-label">显示排序 *</label><input class="input mono" type="number" value="${m.form.sort}" oninput="state.modal.form.sort=this.value" /></div>
+              </div>
+              ${mt !== 'F' ? `
+                <div class="field-group">
+                  <label class="field-label">菜单图标 (AtengIconSelect)</label>
+                  <div class="icon-grid">${ICONS.map(ic => `<button type="button" class="icon-cell ${m.form.icon === ic ? 'active' : ''}" onclick="state.modal.form.icon='${ic}'; render();">${ic}</button>`).join('')}</div>
+                </div>
+              ` : ''}
+              ${mt === 'C' ? `
+                <div class="field-group"><label><input type="checkbox" ${m.form.isExternal ? 'checked' : ''} onchange="state.modal.form.isExternal=this.checked; render();" /> 是否外链（开启后新标签页打开且隐藏组件/缓存配置）</label></div>
+              ` : ''}
+              ${mt !== 'F' ? `
+                <div class="field-group"><label class="field-label">${mt === 'C' && m.form.isExternal ? '外链 URL *' : '路由地址 (path) *'}</label><input class="input mono ${m.errors.path ? 'is-error' : ''}" placeholder="${mt === 'C' && m.form.isExternal ? 'https://...' : '/system/...'}" value="${esc(m.form.path)}" oninput="state.modal.form.path=this.value" />${m.errors.path ? `<div class="field-error">${esc(m.errors.path)}</div>` : ''}</div>
+              ` : ''}
+              ${mt === 'C' && !m.form.isExternal ? `
+                <div class="form-grid-2">
+                  <div class="field-group"><label class="field-label">路由名称 (KeepAlive) *</label><input class="input mono ${m.errors.name ? 'is-error' : ''}" placeholder="如 SysUser" value="${esc(m.form.name)}" oninput="state.modal.form.name=this.value" />${m.errors.name ? `<div class="field-error">${esc(m.errors.name)}</div>` : ''}</div>
+                  <div class="field-group"><label class="field-label">组件路径 *</label><input class="input mono ${m.errors.component ? 'is-error' : ''}" placeholder="system/user/index" value="${esc(m.form.component)}" oninput="state.modal.form.component=this.value" />${m.errors.component ? `<div class="field-error">${esc(m.errors.component)}</div>` : ''}</div>
+                </div>
+              ` : ''}
+              ${mt === 'M' ? `<div class="field-group"><label class="field-label">重定向地址 (可选)</label><input class="input mono" value="${esc(m.form.redirect)}" oninput="state.modal.form.redirect=this.value" /></div>` : ''}
+              ${mt !== 'M' ? `
+                <div class="field-group"><label class="field-label">权限标识 (perms)${mt === 'F' ? ' *' : ''}</label><input class="input mono ${m.errors.perms ? 'is-error' : ''}" placeholder="格式：<域>:<资源>:<动作>" value="${esc(m.form.perms)}" oninput="state.modal.form.perms=this.value" />${m.errors.perms ? `<div class="field-error">${esc(m.errors.perms)}</div>` : ''}</div>
+              ` : ''}
+              <div class="form-grid-2">
+                ${mt !== 'F' ? `<label><input type="checkbox" ${m.form.visible ? 'checked' : ''} onchange="state.modal.form.visible=this.checked" /> 侧栏显示 (visible)</label>` : ''}
+                ${mt === 'C' && !m.form.isExternal ? `<label><input type="checkbox" ${m.form.keepAlive ? 'checked' : ''} onchange="state.modal.form.keepAlive=this.checked" /> 开启页面缓存 (keepAlive)</label>` : ''}
+                <label><input type="checkbox" ${m.form.platformOnly ? 'checked' : ''} onchange="state.modal.form.platformOnly=this.checked" /> 平台专属 (platform_only)</label>
+                <label><input type="checkbox" ${m.form.status === 0 ? 'checked' : ''} onchange="state.modal.form.status=this.checked?0:1" /> 菜单启用 (status=0)</label>
+              </div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="saveMenuDrawer()">保存菜单</button></div>
+          </div></div>
+        `;
+      }
+
+      if (m.type === 'role') {
+        const scoped = getScopedMenusForRole();
+        const treeRows = m.treeExpanded ? flattenTree(scoped) : flattenTree(scoped).filter(x => x.depth === 0);
+        return `
+          <div class="modal-backdrop drawer-backdrop open"><div class="drawer-panel size-large" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>${m.mode === 'edit' ? '编辑角色' : '新增角色'}</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="form-grid-2">
+                <div class="field-group"><label class="field-label">角色名称 *</label><input class="input ${m.errors.roleName ? 'is-error' : ''}" value="${esc(m.form.roleName)}" oninput="state.modal.form.roleName=this.value" />${m.errors.roleName ? `<div class="field-error">${esc(m.errors.roleName)}</div>` : ''}</div>
+                <div class="field-group"><label class="field-label">角色编码 *（禁 super_admin / admin）</label><input class="input mono ${m.errors.roleKey ? 'is-error' : ''}" value="${esc(m.form.roleKey)}" oninput="state.modal.form.roleKey=this.value" />${m.errors.roleKey ? `<div class="field-error">${esc(m.errors.roleKey)}</div>` : ''}</div>
+                <div class="field-group"><label class="field-label">显示排序</label><input class="input mono" type="number" value="${m.form.sort}" oninput="state.modal.form.sort=this.value" /></div>
+                <div class="field-group"><label class="field-label">角色状态</label><select class="select" onchange="state.modal.form.status=Number(this.value)"><option value="0" ${m.form.status===0?'selected':''}>正常</option><option value="1" ${m.form.status===1?'selected':''}>停用</option></select></div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">菜单权限分配${eff !== '0' ? '（已按当前租户套餐自动裁剪，排除平台专属菜单）' : ''}</label>
+                <div class="tree-tools">
+                  <div style="display:flex;gap:8px;">
+                    <button class="btn btn-sm" type="button" onclick="state.modal.treeExpanded=!state.modal.treeExpanded; render();">${m.treeExpanded ? '折叠' : '展开全部'}</button>
+                    <button class="btn btn-sm" type="button" onclick="getScopedMenusForRole().forEach(x=>state.modal.checkedMenuIds.add(x.id)); render();">全选</button>
+                    <button class="btn btn-sm" type="button" onclick="state.modal.checkedMenuIds.clear(); render();">全不选</button>
+                  </div>
+                  <label><input type="checkbox" ${m.form.menuCheckStrictly ? 'checked' : ''} onchange="state.modal.form.menuCheckStrictly=this.checked" /> 父子联动 (menu_check_strictly)</label>
+                </div>
+                <div class="tree-box">
+                  ${treeRows.map(({ item: node, depth }) => `
+                    <label class="tree-row" style="padding-left:${6 + depth * 18}px;">
+                      <input type="checkbox" ${m.checkedMenuIds.has(node.id) ? 'checked' : ''} onchange="toggleRoleMenuNode('${node.id}', this.checked)" />
+                      <span>${esc(node.title)}</span>
+                      <span class="tag tag-info">${node.menuType}</span>
+                      ${node.perms ? `<span class="mono" style="font-size:11px;color:var(--solid-text-secondary);">${esc(node.perms)}</span>` : ''}
+                    </label>
+                  `).join('')}
+                </div>
+              </div>
+              <div class="field-group"><label class="field-label">备注</label><textarea class="textarea" oninput="state.modal.form.remark=this.value">${esc(m.form.remark)}</textarea></div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="saveRoleDrawer()">保存角色</button></div>
+          </div></div>
+        `;
+      }
+
+      if (m.type === 'datascope') {
+        const depts = DB.depts[eff] || [];
+        const deptTree = m.treeExpanded ? flattenTree(depts) : flattenTree(depts).filter(x => x.depth === 0);
+        return `
+          <div class="modal-backdrop open"><div class="dialog-panel" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>分配 @DataScope 数据权限</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="form-grid-2">
+                <div class="field-group"><label class="field-label">角色名称</label><input class="input" value="${esc(m.roleName)}" disabled /></div>
+                <div class="field-group"><label class="field-label">角色编码</label><input class="input mono" value="${esc(m.roleKey)}" disabled /></div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">数据范围 (DataScopeType) *</label>
+                <select class="select" onchange="state.modal.dataScope=Number(this.value); delete state.modal.errors.deptIds; render();">
+                  ${DATA_SCOPES.map(ds => `<option value="${ds.code}" ${m.dataScope === ds.code ? 'selected' : ''}>${esc(ds.label)}</option>`).join('')}
+                </select>
+              </div>
+              ${Number(m.dataScope) === 2 ? `
+                <div class="field-group">
+                  <label class="field-label">自定部门权限树 *（至少勾选 1 个部门）</label>
+                  <div class="tree-tools">
+                    <div style="display:flex;gap:8px;">
+                      <button class="btn btn-sm" type="button" onclick="state.modal.treeExpanded=!state.modal.treeExpanded; render();">${m.treeExpanded ? '折叠' : '展开'}</button>
+                      <button class="btn btn-sm" type="button" onclick="(DB.depts[effTenantId()]||[]).forEach(d=>state.modal.deptIds.add(d.id)); delete state.modal.errors.deptIds; render();">全选</button>
+                      <button class="btn btn-sm" type="button" onclick="state.modal.deptIds.clear(); render();">全不选</button>
+                    </div>
+                    <label><input type="checkbox" ${m.deptCheckStrictly ? 'checked' : ''} onchange="state.modal.deptCheckStrictly=this.checked" /> 父子联动</label>
+                  </div>
+                  ${m.errors.deptIds ? `<div class="field-error">${esc(m.errors.deptIds)}</div>` : ''}
+                  <div class="tree-box">
+                    ${deptTree.map(({ item: d, depth }) => `
+                      <label class="tree-row" style="padding-left:${6 + depth * 18}px;">
+                        <input type="checkbox" ${m.deptIds.has(d.id) ? 'checked' : ''} onchange="toggleDataScopeDept('${d.id}', this.checked)" />
+                        <span>${esc(d.deptName)}</span>
+                      </label>
+                    `).join('')}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="saveDataScopeModal()">保存数据权限</button></div>
+          </div></div>
+        `;
+      }
+
+      if (m.type === 'user') {
+        const depts = DB.depts[eff] || [];
+        const posts = DB.posts[eff] || [];
+        const roles = (DB.roles[eff] || []).filter(r => !r.protected);
+        return `
+          <div class="modal-backdrop drawer-backdrop open"><div class="drawer-panel ${m.drawerLarge ? 'size-large' : ''}" role="dialog" aria-modal="true">
+            <div class="panel-header">
+              <span>${m.mode === 'edit' ? '编辑用户 · ' + esc(m.form.username) : '新增用户'}</span>
+              <div style="display:flex;gap:8px;"><button class="btn btn-sm" type="button" onclick="state.modal.drawerLarge=!state.modal.drawerLarge; render();">切换宽窄</button><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            </div>
+            <div class="panel-body">
+              ${m.errors.quota ? `<div class="alert-box alert-danger"><span>${esc(m.errors.quota)}</span></div>` : ''}
+              <div class="form-grid-2">
+                <div class="field-group"><label class="field-label">用户账号 *${m.mode === 'edit' ? '（只读）' : ''}</label><input class="input mono ${m.errors.username ? 'is-error' : ''}" ${m.mode === 'edit' ? 'disabled' : ''} value="${esc(m.form.username)}" oninput="state.modal.form.username=this.value" />${m.errors.username ? `<div class="field-error">${esc(m.errors.username)}</div>` : ''}</div>
+                <div class="field-group"><label class="field-label">用户昵称 *</label><input class="input ${m.errors.nickname ? 'is-error' : ''}" value="${esc(m.form.nickname)}" oninput="state.modal.form.nickname=this.value" />${m.errors.nickname ? `<div class="field-error">${esc(m.errors.nickname)}</div>` : ''}</div>
+              </div>
+              ${m.mode === 'create' ? `
+                <div class="field-group">
+                  <label class="field-label"><span>初始密码 *（预填 sys.user.initPassword）</span><button class="btn-link" type="button" onclick="state.modal.showPwd=!state.modal.showPwd; render();">${m.showPwd ? '隐藏' : '显示'}</button></label>
+                  <input class="input mono ${m.errors.password ? 'is-error' : ''}" type="${m.showPwd ? 'text' : 'password'}" value="${esc(m.form.password)}" oninput="state.modal.form.password=this.value" />
+                  ${m.errors.password ? `<div class="field-error">${esc(m.errors.password)}</div>` : ''}
+                </div>
+              ` : ''}
+              <div class="form-grid-2">
+                <div class="field-group">
+                  <label class="field-label">归属部门</label>
+                  <select class="select" onchange="state.modal.form.deptId=this.value">
+                    ${flattenTree(depts).map(({ item: d, depth }) => `<option value="${d.id}" ${m.form.deptId === d.id ? 'selected' : ''} ${d.status === 1 ? 'disabled' : ''}>${'— '.repeat(depth)}${esc(d.deptName)}${d.status === 1 ? ' (已停用)' : ''}</option>`).join('')}
+                  </select>
+                </div>
+                <div class="field-group">
+                  <label class="field-label">性别 (sys_user_gender)</label>
+                  <select class="select" onchange="state.modal.form.gender=this.value"><option value="0" ${m.form.gender==='0'?'selected':''}>男</option><option value="1" ${m.form.gender==='1'?'selected':''}>女</option><option value="2" ${m.form.gender==='2'?'selected':''}>未知</option></select>
+                </div>
+                <div class="field-group"><label class="field-label">手机号码（编辑真明文）</label><input class="input mono ${m.errors.phone ? 'is-error' : ''}" value="${esc(m.form.phone)}" oninput="state.modal.form.phone=this.value" />${m.errors.phone ? `<div class="field-error">${esc(m.errors.phone)}</div>` : ''}</div>
+                <div class="field-group"><label class="field-label">电子邮箱（编辑真明文）</label><input class="input mono ${m.errors.email ? 'is-error' : ''}" value="${esc(m.form.email)}" oninput="state.modal.form.email=this.value" />${m.errors.email ? `<div class="field-error">${esc(m.errors.email)}</div>` : ''}</div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">所属岗位（停用岗位禁止新选）</label>
+                <div class="multi-chips">
+                  ${posts.map(p => {
+                    const checked = m.form.postIds.includes(p.id);
+                    const disabled = p.status === 1 && !checked;
+                    return `<label class="chip-check ${disabled ? 'disabled' : ''}"><input type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} onchange="const arr=state.modal.form.postIds; if(this.checked) arr.push('${p.id}'); else state.modal.form.postIds=arr.filter(x=>x!=='${p.id}');" /> ${esc(p.postName)}</label>`;
+                  }).join('')}
+                </div>
+              </div>
+              <div class="field-group">
+                <label class="field-label">分配角色（隐藏 super_admin）</label>
+                <div class="multi-chips">
+                  ${roles.map(r => {
+                    const checked = m.form.roleIds.includes(r.id);
+                    return `<label class="chip-check"><input type="checkbox" ${checked ? 'checked' : ''} onchange="const arr=state.modal.form.roleIds; if(this.checked) arr.push('${r.id}'); else state.modal.form.roleIds=arr.filter(x=>x!=='${r.id}');" /> ${esc(r.roleName)} <span class="mono" style="opacity:0.7;">(${esc(r.roleKey)})</span></label>`;
+                  }).join('')}
+                </div>
+              </div>
+              <div class="field-group"><label class="field-label">备注</label><textarea class="textarea" oninput="state.modal.form.remark=this.value">${esc(m.form.remark)}</textarea></div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="saveUserDrawer()">保存用户</button></div>
+          </div></div>
+        `;
+      }
+
+      if (m.type === 'reset_pwd') {
+        return `
+          <div class="modal-backdrop open"><div class="dialog-panel w-480" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>重置用户密码</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="alert-box alert-warning"><span>正在重置账号 <strong>${esc(m.username)}</strong>（${esc(m.nickname)}）密码。确认后将置空 <span class="mono">pwd_update_time</span> 并强制踢出其全部在线会话。</span></div>
+              <div class="field-group">
+                <label class="field-label">新密码 *（预填 sys.user.initPassword，8~20 位 3 类字符）</label>
+                <input class="input mono ${m.errors.password ? 'is-error' : ''}" value="${esc(m.password)}" oninput="state.modal.password=this.value" />
+                ${m.errors.password ? `<div class="field-error">${esc(m.errors.password)}</div>` : ''}
+              </div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">取消</button><button class="btn btn-primary" type="button" onclick="confirmResetPwd()">确认重置密码</button></div>
+          </div></div>
+        `;
+      }
+
+      if (m.type === 'import') {
+        return `
+          <div class="modal-backdrop open"><div class="dialog-panel w-640" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>批量导入用户（Fesod 整批原子校验）</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="alert-box alert-info">
+                <span>纯新增原子导入：最多 <strong>500 行 / 2MB</strong>；任一行校验失败则整批回滚零入库，并生成 15 分钟有效标红批注工作簿。</span>
+                <button class="btn btn-sm" type="button" onclick="downloadUserTemplate()">下载导入模板</button>
+              </div>
+              ${m.fileError ? `<div class="alert-box alert-danger"><span>${esc(m.fileError)}</span></div>` : ''}
+              <div style="border:1px dashed var(--solid-border);border-radius:var(--solid-radius-md);padding:24px;text-align:center;background:var(--solid-bg-canvas);">
+                <input id="excelFileInput" type="file" accept=".xlsx,.csv" class="hidden" onchange="handleImportFilePick(event)" />
+                <div style="font-weight:600;margin-bottom:6px;">${m.fileName ? '已选择文件：' + esc(m.fileName) : '点击选择本地 .xlsx 工作簿'}</div>
+                <div style="font-size:12px;color:var(--solid-text-secondary);margin-bottom:12px;">表头含：用户账号(*) / 用户昵称(*) / 归属部门 / 岗位编码 / 角色编码 / 手机 / 邮箱 / 性别 / 状态</div>
+                <button class="btn" type="button" onclick="document.getElementById('excelFileInput').click()">选择 .xlsx 文件</button>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:8px;padding-top:4px;">
+                <span style="font-size:12px;color:var(--solid-text-secondary);">原型快速验证场景（无需真实 Excel 即可演练全部边界）：</span>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                  <button class="btn btn-sm btn-primary" type="button" onclick="runImportScenario('errors')">模拟含 5 处错误 -> 弹出 AtengExcelFeedback</button>
+                  <button class="btn btn-sm" type="button" onclick="runImportScenario('over_limit')">模拟超 500 行限制</button>
+                  <button class="btn btn-sm" type="button" onclick="runImportScenario('success')">模拟全批校验通过原子入库</button>
+                </div>
+              </div>
+            </div>
+            <div class="panel-footer"><button class="btn" type="button" onclick="state.modal=null; render();">关闭</button></div>
+          </div></div>
+        `;
+      }
+
+      if (m.type === 'feedback') {
+        const meta = state.feedbackMeta;
+        return `
+          <div class="modal-backdrop open"><div class="dialog-panel w-720" role="dialog" aria-modal="true">
+            <div class="panel-header"><span>导入校验失败（AtengExcelFeedback · 720px）</span><button class="icon-btn" type="button" onclick="state.modal=null; render();">✕</button></div>
+            <div class="panel-body">
+              <div class="alert-box alert-danger">
+                <span>共解析 <strong class="mono">${meta.totalCount}</strong> 行，发现 <strong class="mono">${meta.failCount}</strong> 处错误，<strong>整批 0 条入库</strong>。请修正后重新导入。</span>
+                <label style="font-size:12px;color:var(--solid-text-secondary);white-space:nowrap;"><input type="checkbox" ${meta.expired ? 'checked' : ''} onchange="state.feedbackMeta.expired=this.checked" /> 模拟令牌过期</label>
+              </div>
+              <div class="table-scroll">
+                <table class="data-table">
+                  <thead><tr><th style="width:90px;">行号 (1-based)</th><th style="width:130px;">列名 / 字段</th><th>错误原因</th></tr></thead>
+                  <tbody>
+                    ${state.feedbackErrors.map(e => `
+                      <tr>
+                        <td class="mono">第 ${e.rowNum} 行</td>
+                        <td><span class="tag tag-info">${esc(e.columnName || '-')}</span></td>
+                        <td style="white-space:normal;">${esc(e.errorMessage)}</td>
+                      </tr>
+                    `).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div style="font-size:12px;color:var(--solid-text-secondary);">注：表格遵循 AtengExcelFeedback 3 列精简视图（不暴露后端 rowData），导出 CSV 附带原始提交值；批注下载链接校验操作人及租户归属（TTL 15 分钟）。</div>
+            </div>
+            <div class="panel-footer" style="justify-content:space-between;">
+              <div style="display:flex;gap:8px;">
+                <button class="btn" type="button" onclick="copyFeedbackList()">复制错误清单</button>
+                <button class="btn" type="button" onclick="downloadTextFile('导入错误清单.csv', '行号,列名,错误原因,提交原始值\\n' + state.feedbackErrors.map(e=>e.rowNum+','+(e.columnName||'-')+',\"'+e.errorMessage+'\",'+(e.rawValue||'')).join('\\n'))">导出错误清单 (CSV)</button>
+              </div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-primary" type="button" onclick="downloadAnnotatedExcel()">下载标红批注文件 (.xlsx)</button>
+                <button class="btn" type="button" onclick="state.modal=null; render();">关闭</button>
+              </div>
+            </div>
+          </div></div>
+        `;
+      }
+      return '';
+    }
+
+    function render() {
+      const activeId = document.activeElement?.id;
+      const selStart = document.activeElement?.selectionStart;
+      const selEnd = document.activeElement?.selectionEnd;
+
+      const visMenus = visibleNavMenus();
+      const curMenu = NAV_MENUS.find(m => m.path === state.activeRoute) || NAV_MENUS[4];
+      const eff = tenantObj(effTenantId());
+      const tenantCtrl = !state.tenantEnabled ? '' : (state.actorType === 'super_admin'
+        ? `<button class="tenant-pill ${eff.id !== '0' ? 'switched' : ''}" type="button" onclick="hidePopovers(); const r=this.getBoundingClientRect(); const p=document.getElementById('tenantPopover'); p.innerHTML=TENANTS.map(t=>'<button class=\\'popover-item\\' onclick=\\'switchTenant(\\''+t.id+'\\')\\'><span>'+t.name+' ('+t.id+')</span><span>'+(t.id===state.activeTenantId?'✓':'')+'</span></button>').join(''); p.style.left=Math.min(r.left,window.innerWidth-230)+'px'; p.style.top=(r.bottom+6)+'px'; p.classList.add('open'); event.stopPropagation();"><span>租户: ${esc(eff.name)}</span><span class="mono">(${eff.id})</span><span>▾</span></button>`
+        : `<span class="tenant-pill readonly">租户: ${esc(eff.name)}</span>`);
+      const bannerHtml = (state.tenantEnabled && state.actorType === 'super_admin' && state.activeTenantId !== '0')
+        ? `<div class="tenant-banner"><span>当前正以平台超管身份查看工作租户：<strong>${esc(eff.name)}</strong>（<span class="mono">X-Tenant-Id: ${eff.id}</span>，平台专属【菜单管理】已隔离隐藏）</span><button class="btn btn-sm" type="button" onclick="switchTenant('0')">切回平台默认租户 (0)</button></div>`
+        : '';
+
+      let bodyHtml = '';
+      if (state.activeRoute === '/system/dept') bodyHtml = renderDeptPage();
+      else if (state.activeRoute === '/system/post') bodyHtml = renderPostPage();
+      else if (state.activeRoute === '/system/menu') bodyHtml = renderMenuPage();
+      else if (state.activeRoute === '/system/role') bodyHtml = renderRolePage();
+      else bodyHtml = renderUserPage();
+
+      document.getElementById('app').innerHTML = `
+        <aside class="sidebar ${state.sidebarCollapsed ? 'collapsed' : ''}">
+          <div class="brand-bar"><span class="brand-logo">S</span><span class="brand-text"><span class="brand-name">ateng-solid</span><span class="brand-sub">Admin</span></span></div>
+          <div class="menu-scroll">
+            <div class="menu-group-label">组织权限</div>
+            ${visMenus.map(m => `<button class="menu-item ${m.path === state.activeRoute ? 'active' : ''}" type="button" onclick="openRoute('${m.path}')" title="${esc(m.title)}"><span>${m.icon}</span><span class="menu-item-label">${esc(m.title)}</span></button>`).join('')}
+          </div>
+        </aside>
+        <div class="main-column">
+          <header class="topbar">
+            <div class="topbar-left">
+              <button class="icon-btn" type="button" onclick="state.sidebarCollapsed=!state.sidebarCollapsed; render();">☰</button>
+              <nav class="breadcrumb"><span>组织权限</span><span>/</span><span class="current">${esc(curMenu.title)}</span></nav>
+            </div>
+            <div class="topbar-right">
+              ${tenantCtrl}
+              <button class="icon-btn" type="button" onclick="toggleTheme()">${state.dark ? '☀' : '☾'}</button>
+              <span class="user-trigger"><span class="avatar-circle">${state.actorType === 'super_admin' ? '超' : '星'}</span><span>${state.actorType === 'super_admin' ? '陈默' : '林星辰'}</span></span>
+            </div>
+          </header>
+          <div class="tabs-bar">
+            <div class="tabs-list">
+              ${state.tabs.map(t => `<div class="tab-chip ${t.path === state.activeRoute ? 'active' : ''}" onclick="openRoute('${t.path}')"><span>${esc(t.title)}</span>${t.affix ? '' : `<button class="tab-close" type="button" onclick="event.stopPropagation(); closeTab('${t.path}')">✕</button>`}</div>`).join('')}
+            </div>
+          </div>
+          ${bannerHtml}
+          <main class="workspace">${bodyHtml}</main>
+        </div>
+      `;
+
+      document.getElementById('modalRoot').innerHTML = renderModal();
+
+      // Sim bar highlight
+      ['dept', 'post', 'menu', 'role', 'user'].forEach(k => document.getElementById('sim-' + k)?.classList.remove('on'));
+      const activeKey = state.activeRoute.split('/').pop();
+      document.getElementById('sim-' + activeKey)?.classList.add('on');
+      const bt = document.getElementById('sim-theme'); bt.textContent = state.dark ? 'Dark' : 'Light'; bt.classList.toggle('on', state.dark);
+      const bten = document.getElementById('sim-tenant'); bten.textContent = state.tenantEnabled ? '多租户: 开' : '多租户: 关'; bten.classList.toggle('on', state.tenantEnabled);
+      const ba = document.getElementById('sim-actor'); ba.textContent = state.actorType === 'super_admin' ? `超管 (${state.activeTenantId})` : '租户管理员 (10002)'; ba.classList.toggle('on', state.actorType === 'tenant_admin' || state.activeTenantId !== '0');
+
+      if (activeId) {
+        const el = document.getElementById(activeId);
+        if (el && typeof el.focus === 'function') {
+          el.focus();
+          if (typeof selStart === 'number' && typeof el.setSelectionRange === 'function') {
+            try { el.setSelectionRange(selStart, selEnd); } catch {}
+          }
+        }
+      }
+    }
+
+    document.addEventListener('click', () => hidePopovers());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        hidePopovers();
+        if (state.fullscreenTable) { state.fullscreenTable = false; render(); }
+        if (document.getElementById('confirmBackdrop').classList.contains('open')) closeConfirm(false);
+        else if (state.modal) { state.modal = null; render(); }
+      }
+    });
+
+    render();
+  </script>
+</body>
+</html>

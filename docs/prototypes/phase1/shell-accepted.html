@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ateng-solid 第一阶段定稿基础壳原型（方案 A · 经典精密左栏）</title>
+  <style>
+    /* ============================================================
+     * Precision Slate & Cobalt Design Tokens (Light / Dark)
+     * ============================================================ */
+    :root {
+      --solid-bg-canvas: #F6F7F9;
+      --solid-bg-surface: #FFFFFF;
+      --solid-bg-elevated: #FFFFFF;
+      --solid-bg-subtle: #EEF1F5;
+
+      --solid-text-primary: #0F172A;
+      --solid-text-regular: #334155;
+      --solid-text-secondary: #475569;
+      --solid-text-muted: #64748B;
+
+      --solid-primary: #1D4ED8;
+      --solid-primary-hover: #1E40AF;
+      --solid-primary-soft: #EFF6FF;
+      --solid-primary-border: #BFDBFE;
+
+      --solid-border: rgba(15, 23, 42, 0.10);
+      --solid-border-light: rgba(15, 23, 42, 0.06);
+
+      --solid-success: #047857;
+      --solid-success-soft: #ECFDF5;
+      --solid-warning: #B45309;
+      --solid-warning-soft: #FFFBEB;
+      --solid-warning-border: #FDE68A;
+      --solid-danger: #DC2626;
+      --solid-danger-soft: #FEF2F2;
+      --solid-info: #475569;
+      --solid-info-soft: #F1F5F9;
+
+      --solid-radius-sm: 4px;
+      --solid-radius-md: 6px;
+      --solid-radius-lg: 8px;
+      --solid-radius-pill: 9999px;
+
+      --solid-shadow-popover: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+      --solid-focus-ring: 0 0 0 2px var(--solid-bg-surface), 0 0 0 4px var(--solid-primary);
+
+      --solid-font-sans: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --solid-font-mono: 'JetBrains Mono', 'Cascadia Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    html.dark {
+      --solid-bg-canvas: #0B0F17;
+      --solid-bg-surface: #111827;
+      --solid-bg-elevated: #182234;
+      --solid-bg-subtle: #1E293B;
+
+      --solid-text-primary: #F8FAFC;
+      --solid-text-regular: #CBD5E1;
+      --solid-text-secondary: #94A3B8;
+      --solid-text-muted: #64748B;
+
+      --solid-primary: #3B82F6;
+      --solid-primary-hover: #60A5FA;
+      --solid-primary-soft: rgba(59, 130, 246, 0.15);
+      --solid-primary-border: rgba(59, 130, 246, 0.35);
+
+      --solid-border: rgba(226, 232, 240, 0.12);
+      --solid-border-light: rgba(226, 232, 240, 0.07);
+
+      --solid-success: #10B981;
+      --solid-success-soft: rgba(16, 185, 129, 0.14);
+      --solid-warning: #F59E0B;
+      --solid-warning-soft: rgba(245, 158, 11, 0.14);
+      --solid-warning-border: rgba(245, 158, 11, 0.32);
+      --solid-danger: #F87171;
+      --solid-danger-soft: rgba(248, 113, 113, 0.14);
+      --solid-info: #94A3B8;
+      --solid-info-soft: #1E293B;
+
+      --solid-shadow-popover: 0 16px 36px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(226, 232, 240, 0.14);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      font-family: var(--solid-font-sans); font-size: 14px; line-height: 1.5;
+      background: var(--solid-bg-canvas); color: var(--solid-text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select { font-family: inherit; }
+    :focus-visible { outline: none; box-shadow: var(--solid-focus-ring); }
+    .mono { font-family: var(--solid-font-mono); font-variant-numeric: tabular-nums; }
+    .tabular { font-variant-numeric: tabular-nums; }
+
+    /* Variant A Shell */
+    .app-shell { display: flex; height: 100vh; width: 100vw; overflow: hidden; background: var(--solid-bg-canvas); }
+    .sidebar {
+      width: 228px; flex-shrink: 0; background: var(--solid-bg-surface);
+      border-right: 1px solid var(--solid-border); display: flex; flex-direction: column;
+      transition: width 0.2s ease;
+    }
+    .sidebar.collapsed { width: 60px; }
+    .sidebar.hidden { display: none; }
+
+    .brand-bar {
+      height: 48px; padding: 0 14px; display: flex; align-items: center; gap: 10px;
+      border-bottom: 1px solid var(--solid-border-light); flex-shrink: 0; overflow: hidden;
+    }
+    .brand-logo {
+      width: 28px; height: 28px; border-radius: var(--solid-radius-md);
+      background: var(--solid-primary); color: #fff;
+      display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0;
+    }
+    .brand-name { font-weight: 600; font-size: 14px; white-space: nowrap; }
+    .brand-sub { font-size: 11px; color: var(--solid-text-secondary); margin-left: 2px; }
+    .sidebar.collapsed .brand-text { display: none; }
+
+    .menu-scroll { flex: 1; overflow-y: auto; padding: 10px 8px; }
+    .menu-group-label { font-size: 12px; font-weight: 600; color: var(--solid-text-muted); padding: 8px 10px 4px; }
+    .sidebar.collapsed .menu-group-label { display: none; }
+    .menu-item {
+      width: 100%; border: none; background: transparent;
+      display: flex; align-items: center; gap: 9px;
+      padding: 8px 10px; border-radius: var(--solid-radius-md);
+      color: var(--solid-text-regular); font-size: 13px;
+      cursor: pointer; text-align: left; margin-bottom: 2px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .menu-item:hover { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .menu-item.active { background: var(--solid-primary-soft); color: var(--solid-primary); font-weight: 600; }
+    .sidebar.collapsed .menu-item { justify-content: center; padding: 9px; }
+    .sidebar.collapsed .menu-item-label { display: none; }
+
+    .main-column { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+    .topbar {
+      height: 48px; background: var(--solid-bg-surface); border-bottom: 1px solid var(--solid-border);
+      padding: 0 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0;
+    }
+    .topbar.hidden { display: none; }
+    .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .icon-btn {
+      width: 32px; height: 32px; border-radius: var(--solid-radius-md);
+      border: 1px solid transparent; background: transparent; color: var(--solid-text-regular);
+      display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;
+    }
+    .icon-btn:hover { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .breadcrumb { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--solid-text-secondary); white-space: nowrap; }
+    .breadcrumb .current { color: var(--solid-text-primary); font-weight: 600; }
+
+    .tenant-pill {
+      display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px;
+      border-radius: var(--solid-radius-md); border: 1px solid var(--solid-border);
+      background: var(--solid-bg-subtle); color: var(--solid-text-primary); font-size: 12px; cursor: pointer;
+    }
+    .tenant-pill.switched { background: var(--solid-warning-soft); border-color: var(--solid-warning-border); color: var(--solid-warning); font-weight: 600; }
+    .tenant-pill.readonly { cursor: default; }
+
+    .user-trigger {
+      display: inline-flex; align-items: center; gap: 8px; padding: 3px 8px 3px 4px;
+      border-radius: var(--solid-radius-md); border: 1px solid transparent;
+      background: transparent; color: var(--solid-text-primary); cursor: pointer; font-size: 13px;
+    }
+    .user-trigger:hover { background: var(--solid-bg-subtle); }
+    .avatar-circle {
+      width: 26px; height: 26px; border-radius: var(--solid-radius-pill);
+      background: var(--solid-primary-soft); color: var(--solid-primary);
+      border: 1px solid var(--solid-primary-border);
+      display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600;
+    }
+
+    .tenant-banner {
+      background: var(--solid-warning-soft); border-bottom: 1px solid var(--solid-warning-border);
+      color: var(--solid-warning); padding: 6px 16px; font-size: 12px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0;
+    }
+
+    .tabs-bar {
+      height: 36px; background: var(--solid-bg-surface); border-bottom: 1px solid var(--solid-border);
+      padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-shrink: 0;
+    }
+    .tabs-list { display: flex; align-items: center; gap: 4px; overflow-x: auto; flex: 1; min-width: 0; scrollbar-width: none; }
+    .tabs-list::-webkit-scrollbar { display: none; }
+    .tab-chip {
+      height: 26px; padding: 0 10px; border-radius: var(--solid-radius-sm); border: 1px solid transparent;
+      background: transparent; color: var(--solid-text-secondary); font-size: 12px;
+      display: inline-flex; align-items: center; gap: 6px; cursor: pointer; white-space: nowrap; flex-shrink: 0;
+    }
+    .tab-chip:hover { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .tab-chip.active { background: var(--solid-primary-soft); border-color: var(--solid-primary-border); color: var(--solid-primary); font-weight: 600; }
+    .tab-close {
+      width: 14px; height: 14px; border-radius: 3px; border: none; background: transparent;
+      color: inherit; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; padding: 0; opacity: 0.7;
+    }
+    .tab-close:hover { background: rgba(15, 23, 42, 0.12); opacity: 1; }
+    .tabs-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+    .workspace { flex: 1; overflow: auto; padding: 14px 16px 76px; display: flex; flex-direction: column; gap: 12px; }
+    .card { background: var(--solid-bg-surface); border: 1px solid var(--solid-border); border-radius: var(--solid-radius-lg); }
+
+    .btn {
+      height: 32px; padding: 0 12px; border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border); background: var(--solid-bg-surface);
+      color: var(--solid-text-regular); font-size: 13px; font-weight: 500;
+      display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; white-space: nowrap;
+    }
+    .btn:hover:not(:disabled) { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .btn-sm { height: 26px; padding: 0 9px; font-size: 12px; }
+    .btn-primary { background: var(--solid-primary); border-color: var(--solid-primary); color: #FFFFFF; }
+    .btn-primary:hover:not(:disabled) { background: var(--solid-primary-hover); border-color: var(--solid-primary-hover); color: #FFFFFF; }
+    .btn-link { border: none; background: transparent; color: var(--solid-primary); padding: 2px 6px; font-size: 13px; font-weight: 500; cursor: pointer; border-radius: var(--solid-radius-sm); }
+    .btn-link:hover:not(:disabled) { background: var(--solid-primary-soft); }
+    .btn-link.danger { color: var(--solid-danger); }
+    .btn-link.danger:hover:not(:disabled) { background: var(--solid-danger-soft); }
+    .btn-link:disabled { color: var(--solid-text-muted); cursor: not-allowed; opacity: 0.6; }
+
+    .input, .select {
+      height: 32px; padding: 0 10px; border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border); background: var(--solid-bg-surface);
+      color: var(--solid-text-primary); font-size: 13px; width: 100%;
+    }
+    .tag { display: inline-flex; align-items: center; gap: 4px; height: 22px; padding: 0 8px; border-radius: var(--solid-radius-sm); font-size: 12px; font-weight: 500; }
+    .tag-primary { background: var(--solid-primary-soft); color: var(--solid-primary); }
+    .tag-info { background: var(--solid-info-soft); color: var(--solid-info); }
+
+    .switch { width: 34px; height: 18px; border-radius: var(--solid-radius-pill); background: var(--solid-text-muted); border: none; position: relative; cursor: pointer; vertical-align: middle; }
+    .switch.on { background: var(--solid-primary); }
+    .switch:disabled { opacity: 0.45; cursor: not-allowed; }
+    .switch::after { content: ''; position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 50%; background: #fff; transition: transform 0.15s; }
+    .switch.on::after { transform: translateX(16px); }
+
+    .split-wrap { display: flex; gap: 12px; min-height: 0; flex: 1; }
+    .dept-panel { width: 220px; flex-shrink: 0; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .dept-node { display: flex; align-items: center; padding: 6px 8px; border-radius: var(--solid-radius-sm); font-size: 13px; color: var(--solid-text-regular); cursor: pointer; }
+    .dept-node:hover { background: var(--solid-bg-subtle); }
+    .dept-node.active { background: var(--solid-primary-soft); color: var(--solid-primary); font-weight: 600; }
+    .dept-indent-1 { padding-left: 22px; }
+
+    .table-panel { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+    .query-card { padding: 12px 14px; }
+    .query-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; gap: 10px 14px; align-items: end; }
+    .field-group { display: flex; flex-direction: column; gap: 4px; }
+    .field-label { font-size: 12px; font-weight: 500; color: var(--solid-text-secondary); }
+    .query-actions { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .query-extra.hidden { display: none; }
+
+    .table-card { padding: 12px 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; min-height: 0; }
+    .table-card.fullscreen { position: fixed; inset: 12px; z-index: 900; box-shadow: var(--solid-shadow-popover); }
+    .table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .toolbar-left, .toolbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+    .table-scroll { overflow: auto; border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); }
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    table.data-table th { background: var(--solid-bg-subtle); color: var(--solid-text-secondary); font-weight: 600; text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--solid-border); white-space: nowrap; }
+    table.data-table td { padding: 9px 12px; border-bottom: 1px solid var(--solid-border-light); color: var(--solid-text-regular); white-space: nowrap; }
+    table.data-table.density-large th, table.data-table.density-large td { padding: 12px 12px; }
+    table.data-table.density-small th, table.data-table.density-small td { padding: 5px 10px; font-size: 12px; }
+    table.data-table.striped tbody tr:nth-child(even) { background: var(--solid-bg-canvas); }
+    table.data-table tbody tr:hover { background: var(--solid-primary-soft); }
+    .col-sticky-right { position: sticky; right: 0; background: var(--solid-bg-surface); border-left: 1px solid var(--solid-border-light); }
+    th.col-sticky-right { background: var(--solid-bg-subtle); }
+    .pagination-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; color: var(--solid-text-secondary); padding-top: 2px; }
+    .dash-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .quick-card { padding: 14px 16px; cursor: pointer; display: flex; flex-direction: column; gap: 6px; }
+    .quick-card:hover { border-color: var(--solid-primary); background: var(--solid-primary-soft); }
+
+    .popover-menu { position: fixed; z-index: 1200; min-width: 170px; background: var(--solid-bg-elevated); border: 1px solid var(--solid-border); border-radius: var(--solid-radius-md); box-shadow: var(--solid-shadow-popover); padding: 5px; display: none; flex-direction: column; gap: 2px; }
+    .popover-menu.open { display: flex; }
+    .popover-item { border: none; background: transparent; padding: 7px 10px; border-radius: var(--solid-radius-sm); font-size: 13px; color: var(--solid-text-regular); text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .popover-item:hover:not(:disabled) { background: var(--solid-bg-subtle); color: var(--solid-text-primary); }
+    .popover-item:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); z-index: 1000; display: none; align-items: center; justify-content: center; }
+    .modal-backdrop.open { display: flex; }
+    .drawer-backdrop { justify-content: flex-end; }
+    .drawer-panel { width: 500px; max-width: 100vw; height: 100vh; background: var(--solid-bg-surface); border-left: 1px solid var(--solid-border); display: flex; flex-direction: column; box-shadow: var(--solid-shadow-popover); }
+    .drawer-panel.size-large { width: 720px; }
+    .dialog-panel { width: 480px; max-width: calc(100vw - 32px); background: var(--solid-bg-surface); border: 1px solid var(--solid-border); border-radius: var(--solid-radius-lg); box-shadow: var(--solid-shadow-popover); display: flex; flex-direction: column; }
+    .panel-header { padding: 14px 18px; border-bottom: 1px solid var(--solid-border); display: flex; align-items: center; justify-content: space-between; font-size: 15px; font-weight: 600; }
+    .panel-body { padding: 16px 18px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .panel-footer { padding: 12px 18px; border-top: 1px solid var(--solid-border); display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    .form-error { font-size: 12px; color: var(--solid-danger); margin-top: 2px; display: none; }
+    .form-error.show { display: block; }
+
+    .toast-stack { position: fixed; top: 16px; right: 16px; z-index: 1500; display: flex; flex-direction: column; gap: 8px; max-width: 420px; }
+    .toast-item { background: var(--solid-bg-elevated); border: 1px solid var(--solid-border); border-left: 3px solid var(--solid-primary); border-radius: var(--solid-radius-md); box-shadow: var(--solid-shadow-popover); padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+    .toast-item.danger { border-left-color: var(--solid-danger); }
+    .toast-item.warning { border-left-color: var(--solid-warning); }
+    .toast-item.success { border-left-color: var(--solid-success); }
+
+    /* Simulation Controls Pill */
+    .sim-bar {
+      position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
+      z-index: 1400; background: #0F172A; color: #F8FAFC;
+      border: 1px solid rgba(255, 255, 255, 0.16); border-radius: var(--solid-radius-pill);
+      padding: 6px 12px; display: flex; align-items: center; gap: 8px;
+      box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.45); font-size: 12px; white-space: nowrap;
+    }
+    .sim-toggle { border: 1px solid rgba(255, 255, 255, 0.2); background: rgba(255, 255, 255, 0.08); color: #F8FAFC; padding: 3px 9px; border-radius: var(--solid-radius-pill); cursor: pointer; font-size: 12px; }
+    .sim-toggle.on { border-color: #60A5FA; background: rgba(37, 99, 235, 0.35); }
+
+    @media (max-width: 1120px) {
+      .query-grid, .dash-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dept-panel { width: 185px; }
+    }
+    @media (max-width: 768px) {
+      .split-wrap { flex-direction: column; }
+      .dept-panel { width: 100%; }
+      .query-grid, .dash-grid { grid-template-columns: 1fr; }
+      .drawer-panel, .drawer-panel.size-large { width: 100vw; }
+    }
+  </style>
+</head>
+<body>
+  <div id="app" class="app-shell"></div>
+
+  <div id="tabContextMenu" class="popover-menu" role="menu"></div>
+  <div id="tenantPopover" class="popover-menu" role="menu"></div>
+  <div id="columnPopover" class="popover-menu" role="menu" onclick="event.stopPropagation()"></div>
+
+  <div id="userDrawerBackdrop" class="modal-backdrop drawer-backdrop">
+    <div id="userDrawerPanel" class="drawer-panel">
+      <div class="panel-header">
+        <span id="drawerTitle">编辑用户</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <button class="btn btn-sm" type="button" onclick="toggleDrawerSize()">切换宽窄 (500/720px)</button>
+          <button class="icon-btn" type="button" aria-label="关闭" onclick="closeUserDrawer()">✕</button>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="field-group">
+          <label class="field-label">用户账号 *</label>
+          <input id="editUsername" class="input mono" type="text" />
+          <div id="errUsername" class="form-error">请输入 2~20 位合法账号</div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">用户昵称 *</label>
+          <input id="editNickname" class="input" type="text" />
+          <div id="errNickname" class="form-error">昵称不能为空</div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">手机号码（编辑态回显真明文）</label>
+          <input id="editPhone" class="input mono" type="text" />
+          <div id="errPhone" class="form-error">请输入 11 位有效手机号码</div>
+        </div>
+        <div class="field-group">
+          <label class="field-label">电子邮箱（编辑态回显真明文）</label>
+          <input id="editEmail" class="input mono" type="text" />
+        </div>
+        <div class="field-group">
+          <label class="field-label">归属部门</label>
+          <select id="editDept" class="select">
+            <option value="研发中心">研发中心</option>
+            <option value="产品运营部">产品运营部</option>
+            <option value="财务合规部">财务合规部</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-footer">
+        <button class="btn" type="button" onclick="closeUserDrawer()">取消</button>
+        <button id="saveUserBtn" class="btn btn-primary" type="button" onclick="saveUserDrawer()">保存用户</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmBackdrop" class="modal-backdrop">
+    <div class="dialog-panel">
+      <div class="panel-header">
+        <span id="confirmTitle">确认操作</span>
+        <button class="icon-btn" type="button" aria-label="关闭" onclick="closeConfirm(false)">✕</button>
+      </div>
+      <div class="panel-body"><p id="confirmMessage" style="margin:0;color:var(--solid-text-regular);"></p></div>
+      <div class="panel-footer">
+        <button class="btn" type="button" onclick="closeConfirm(false)">取消</button>
+        <button class="btn btn-primary" type="button" onclick="closeConfirm(true)">确认执行</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toastStack" class="toast-stack"></div>
+
+  <div class="sim-bar">
+    <span style="opacity:0.8;">定稿壳 · 方案 A</span>
+    <span style="width:1px;height:14px;background:rgba(255,255,255,0.2);"></span>
+    <button id="btnTheme" class="sim-toggle" type="button" onclick="toggleTheme()">Light</button>
+    <button id="btnTenantEnabled" class="sim-toggle" type="button" onclick="toggleTenantEnabled()">多租户: 关</button>
+    <button id="btnActor" class="sim-toggle" type="button" onclick="toggleActor()">超管 (0)</button>
+  </div>
+
+  <script>
+    const TENANTS = [
+      { id: '0', code: '000000', name: '平台默认租户' },
+      { id: '10002', code: '100002', name: '星辰智能科技' },
+      { id: '10003', code: '100003', name: '云港物流集团' },
+    ];
+
+    const MENUS = [
+      { path: '/dashboard', title: '工作台', domainLabel: '首页', icon: '⌂', affix: true },
+      { path: '/system/user', title: '用户管理', domainLabel: '组织权限', icon: '👤' },
+      { path: '/system/role', title: '角色管理', domainLabel: '组织权限', icon: '🛡' },
+      { path: '/system/dept', title: '部门管理', domainLabel: '组织权限', icon: '⎇' },
+      { path: '/system/post', title: '岗位管理', domainLabel: '组织权限', icon: '⚑' },
+      { path: '/system/menu', title: '菜单管理', domainLabel: '组织权限', icon: '☰', platformOnly: true },
+      { path: '/system/dict', title: '数据字典', domainLabel: '基础配置', icon: '▤', platformOnly: true },
+      { path: '/system/config', title: '系统参数', domainLabel: '基础配置', icon: '⚙' },
+      { path: '/system/tenant', title: '租户管理', domainLabel: '多租户治理', icon: '⊞', tenantFeature: true, platformOnly: true },
+      { path: '/system/tenant-package', title: '租户套餐', domainLabel: '多租户治理', icon: '◫', tenantFeature: true, platformOnly: true },
+      { path: '/system/oper-log', title: '操作日志', domainLabel: '审计安全', icon: '☷' },
+      { path: '/system/login-log', title: '登录日志', domainLabel: '审计安全', icon: '☷' },
+      { path: '/system/online', title: '在线会话', domainLabel: '审计安全', icon: '◉' },
+    ];
+
+    const USERS_DATA = {
+      '0': [
+        { id: '1859201948102000001', username: 'super_admin', nickname: '平台超级管理员', dept: '研发中心', phone: '13800138000', email: 'root@ateng.dev', status: true, protected: true, createTime: '2026-11-20 09:00:00' },
+        { id: '1859201948102000002', username: 'chenmo', nickname: '陈默（当前登录）', dept: '研发中心', phone: '13912345678', email: 'chenmo@ateng.dev', status: true, isSelf: true, createTime: '2026-11-21 10:15:30' },
+        { id: '1859201948102000003', username: 'linyun', nickname: '林芸', dept: '产品运营部', phone: '13788886666', email: 'linyun@ateng.dev', status: true, createTime: '2026-11-22 14:22:10' },
+        { id: '1859201948102000004', username: 'zhouhang', nickname: '周航', dept: '财务合规部', phone: '13611112222', email: 'zhouhang@ateng.dev', status: false, createTime: '2026-11-23 16:08:45' },
+      ],
+      '10002': [
+        { id: '1859201948103000101', username: 'xc_admin', nickname: '星辰租户管理员', dept: '研发中心', phone: '15011119999', email: 'admin@xingchen.cn', status: true, createTime: '2026-11-22 11:00:00' },
+        { id: '1859201948103000102', username: 'zhangwei', nickname: '张伟', dept: '产品运营部', phone: '15822223333', email: 'zhangwei@xingchen.cn', status: true, createTime: '2026-11-23 09:30:12' },
+      ],
+      '10003': [
+        { id: '1859201948104000201', username: 'yg_admin', nickname: '云港管理员', dept: '研发中心', phone: '18600007777', email: 'admin@yungang.cn', status: true, createTime: '2026-11-21 08:40:00' },
+      ],
+    };
+
+    const state = {
+      dark: false,
+      sidebarCollapsed: false,
+      maximized: false,
+      tenantEnabled: false,
+      actorType: 'super_admin',
+      activeTenantId: '0',
+      activeRoute: '/system/user',
+      tabs: [
+        { path: '/dashboard', title: '工作台', affix: true },
+        { path: '/system/user', title: '用户管理', affix: false },
+      ],
+      selectedDept: '全部',
+      queryUsername: '',
+      queryStatus: '',
+      queryPhone: '',
+      queryCollapsed: true,
+      density: 'default',
+      striped: false,
+      fullscreenTable: false,
+      visibleCols: { id: true, username: true, nickname: true, dept: true, phone: true, email: true, status: true, createTime: true },
+      selectedIds: new Set(),
+      editingUserId: null,
+      drawerLarge: false,
+      confirmCallback: null,
+      refreshing: false,
+    };
+
+    function maskPhone(p) { return !p || p.length < 7 ? (p || '--') : p.slice(0, 3) + '****' + p.slice(-4); }
+    function maskEmail(e) { if (!e || !e.includes('@')) return e || '--'; const [n, d] = e.split('@'); return (n.length <= 1 ? '*' : n[0] + '***') + '@' + d; }
+    function getEffectiveTenantId() { return !state.tenantEnabled ? '0' : (state.actorType === 'tenant_admin' ? '10002' : state.activeTenantId); }
+    function getTenantObj(id) { return TENANTS.find(t => t.id === id) || TENANTS[0]; }
+    function getVisibleMenus() {
+      const eff = getEffectiveTenantId();
+      return MENUS.filter(m => {
+        if (m.tenantFeature && !state.tenantEnabled) return false;
+        if (m.platformOnly && (state.actorType !== 'super_admin' || eff !== '0')) return false;
+        return true;
+      });
+    }
+
+    function openRoute(path) {
+      const menu = getVisibleMenus().find(m => m.path === path) || MENUS[0];
+      state.activeRoute = menu.path;
+      if (!state.tabs.some(t => t.path === menu.path)) state.tabs.push({ path: menu.path, title: menu.title, affix: Boolean(menu.affix) });
+      render();
+    }
+    function closeTab(path) {
+      const idx = state.tabs.findIndex(t => t.path === path);
+      if (idx < 0 || state.tabs[idx].affix) return;
+      const wasActive = state.activeRoute === path;
+      state.tabs.splice(idx, 1);
+      if (wasActive) state.activeRoute = (state.tabs[idx] || state.tabs[idx - 1] || state.tabs[0]).path;
+      render();
+    }
+    function runTabCommand(cmd, path) {
+      hideAllPopovers();
+      const idx = state.tabs.findIndex(t => t.path === path);
+      if (idx < 0) return;
+      if (cmd === 'refresh') { triggerTableRefresh(); showToast('success', '已组件级刷新页签【' + state.tabs[idx].title + '】'); return; }
+      if (cmd === 'close') { closeTab(path); return; }
+      if (cmd === 'closeOthers') { state.tabs = state.tabs.filter(t => t.affix || t.path === path); state.activeRoute = path; }
+      else if (cmd === 'closeLeft') { state.tabs = state.tabs.filter((t, i) => t.affix || i >= idx); if (!state.tabs.some(t => t.path === state.activeRoute)) state.activeRoute = path; }
+      else if (cmd === 'closeRight') { state.tabs = state.tabs.filter((t, i) => t.affix || i <= idx); if (!state.tabs.some(t => t.path === state.activeRoute)) state.activeRoute = path; }
+      else if (cmd === 'closeAll') { state.tabs = state.tabs.filter(t => t.affix); state.activeRoute = state.tabs[0].path; }
+      render();
+    }
+
+    function switchTenant(tenantId) {
+      hideAllPopovers();
+      if (state.activeTenantId === tenantId) return;
+      state.activeTenantId = tenantId;
+      state.selectedIds.clear();
+      state.selectedDept = '全部';
+      const visible = getVisibleMenus();
+      const stillValid = visible.some(m => m.path === state.activeRoute);
+      state.tabs = state.tabs.filter(t => t.affix);
+      if (stillValid && state.activeRoute !== '/dashboard') {
+        const cur = visible.find(m => m.path === state.activeRoute);
+        state.tabs.push({ path: cur.path, title: cur.title, affix: false });
+      } else {
+        state.activeRoute = '/dashboard';
+      }
+      showToast('warning', `已切换至【${getTenantObj(tenantId).name}】，已关闭非固定页签并清空缓存`);
+      render();
+    }
+
+    function toggleTheme() { state.dark = !state.dark; document.documentElement.classList.toggle('dark', state.dark); render(); }
+    function toggleTenantEnabled() {
+      state.tenantEnabled = !state.tenantEnabled;
+      if (!state.tenantEnabled) { state.activeTenantId = '0'; state.actorType = 'super_admin'; if (state.activeRoute.includes('/tenant')) openRoute('/dashboard'); }
+      render();
+    }
+    function toggleActor() {
+      if (!state.tenantEnabled) state.tenantEnabled = true;
+      state.actorType = state.actorType === 'super_admin' ? 'tenant_admin' : 'super_admin';
+      state.activeTenantId = state.actorType === 'tenant_admin' ? '10002' : '0';
+      state.tabs = state.tabs.filter(t => t.affix || getVisibleMenus().some(m => m.path === t.path));
+      if (!getVisibleMenus().some(m => m.path === state.activeRoute)) state.activeRoute = '/dashboard';
+      state.selectedIds.clear();
+      render();
+    }
+
+    function simulateHttpError(code) {
+      if (code === 429) showToast('warning', '操作过于频繁，请稍后再试（错误码 429）');
+      if (code === 500) {
+        const trc = 'trc-' + Math.random().toString(36).slice(2, 10);
+        showToast('danger', `系统内部处理异常，请稍后重试（500 · traceId: ${trc}）`, trc);
+      }
+    }
+
+    function getFilteredUsers() {
+      return (USERS_DATA[getEffectiveTenantId()] || []).filter(u => {
+        if (state.selectedDept !== '全部' && u.dept !== state.selectedDept) return false;
+        if (state.queryUsername && !u.username.includes(state.queryUsername.trim()) && !u.nickname.includes(state.queryUsername.trim())) return false;
+        if (state.queryPhone && !u.phone.includes(state.queryPhone.trim())) return false;
+        if (state.queryStatus !== '' && String(u.status) !== state.queryStatus) return false;
+        return true;
+      });
+    }
+    function triggerTableRefresh() { state.refreshing = true; render(); setTimeout(() => { state.refreshing = false; render(); }, 240); }
+    function resetUserQuery() { state.queryUsername = ''; state.queryStatus = ''; state.queryPhone = ''; state.selectedDept = '全部'; triggerTableRefresh(); }
+    function openConfirm(title, message, onOk) {
+      document.getElementById('confirmTitle').textContent = title;
+      document.getElementById('confirmMessage').textContent = message;
+      state.confirmCallback = onOk;
+      document.getElementById('confirmBackdrop').classList.add('open');
+    }
+    function closeConfirm(ok) {
+      document.getElementById('confirmBackdrop').classList.remove('open');
+      if (ok && state.confirmCallback) state.confirmCallback();
+      state.confirmCallback = null;
+    }
+    function toggleUserStatus(userId) {
+      const u = (USERS_DATA[getEffectiveTenantId()] || []).find(x => x.id === userId);
+      if (!u || u.protected || u.isSelf) return;
+      const act = u.status ? '停用' : '启用';
+      openConfirm(`确认${act}用户`, `确认要${act}账号【${u.username}】吗？`, () => { u.status = !u.status; showToast('success', `已${act}用户 ${u.username}`); render(); });
+    }
+    function openUserDrawer(userId) {
+      const u = userId ? (USERS_DATA[getEffectiveTenantId()] || []).find(x => x.id === userId) : null;
+      state.editingUserId = userId || null;
+      document.getElementById('drawerTitle').textContent = u ? `编辑用户 · ${u.username}` : '新增用户';
+      document.getElementById('editUsername').value = u ? u.username : '';
+      document.getElementById('editUsername').disabled = Boolean(u);
+      document.getElementById('editNickname').value = u ? u.nickname : '';
+      document.getElementById('editPhone').value = u ? u.phone : '';
+      document.getElementById('editEmail').value = u ? u.email : '';
+      document.getElementById('editDept').value = u ? u.dept : '研发中心';
+      ['errUsername', 'errNickname', 'errPhone'].forEach(id => document.getElementById(id).classList.remove('show'));
+      document.getElementById('userDrawerBackdrop').classList.add('open');
+    }
+    function closeUserDrawer() { document.getElementById('userDrawerBackdrop').classList.remove('open'); }
+    function toggleDrawerSize() { state.drawerLarge = !state.drawerLarge; document.getElementById('userDrawerPanel').classList.toggle('size-large', state.drawerLarge); }
+    function saveUserDrawer() {
+      ['errUsername', 'errNickname', 'errPhone'].forEach(id => document.getElementById(id).classList.remove('show'));
+      const username = document.getElementById('editUsername').value.trim();
+      const nickname = document.getElementById('editNickname').value.trim();
+      const phone = document.getElementById('editPhone').value.trim();
+      const email = document.getElementById('editEmail').value.trim();
+      const dept = document.getElementById('editDept').value;
+      let ok = true;
+      if (username.length < 2) { document.getElementById('errUsername').classList.add('show'); ok = false; }
+      if (!nickname) { document.getElementById('errNickname').classList.add('show'); ok = false; }
+      if (phone && !/^1\d{10}$/.test(phone)) { document.getElementById('errPhone').classList.add('show'); ok = false; }
+      if (!ok) return;
+      const btn = document.getElementById('saveUserBtn');
+      btn.disabled = true; btn.textContent = '保存中...';
+      setTimeout(() => {
+        const rows = USERS_DATA[getEffectiveTenantId()] || [];
+        if (state.editingUserId) {
+          const u = rows.find(x => x.id === state.editingUserId);
+          if (u) { u.nickname = nickname; u.phone = phone; u.email = email; u.dept = dept; }
+          showToast('success', `已保存用户 ${username}`);
+        } else {
+          rows.push({ id: '1859201948109' + String(Math.floor(100000 + Math.random() * 899999)), username, nickname, dept, phone, email, status: true, createTime: '2026-11-24 17:04:00' });
+          showToast('success', `已新增用户 ${username}`);
+        }
+        btn.disabled = false; btn.textContent = '保存用户';
+        closeUserDrawer();
+        render();
+      }, 240);
+    }
+
+    function hideAllPopovers() { document.querySelectorAll('.popover-menu').forEach(el => el.classList.remove('open')); }
+    function openTabContextMenu(e, path) {
+      e.preventDefault(); hideAllPopovers();
+      const idx = state.tabs.findIndex(t => t.path === path);
+      const tab = state.tabs[idx];
+      const menu = document.getElementById('tabContextMenu');
+      menu.innerHTML = `
+        <button class="popover-item" onclick="runTabCommand('refresh', '${path}')"><span>刷新当前页</span></button>
+        <button class="popover-item" ${tab.affix ? 'disabled' : ''} onclick="runTabCommand('close', '${path}')"><span>关闭当前</span></button>
+        <button class="popover-item" ${!state.tabs.some(t => !t.affix && t.path !== path) ? 'disabled' : ''} onclick="runTabCommand('closeOthers', '${path}')"><span>关闭其他</span></button>
+        <button class="popover-item" ${!state.tabs.some((t, i) => i < idx && !t.affix) ? 'disabled' : ''} onclick="runTabCommand('closeLeft', '${path}')"><span>关闭左侧</span></button>
+        <button class="popover-item" ${!state.tabs.some((t, i) => i > idx && !t.affix) ? 'disabled' : ''} onclick="runTabCommand('closeRight', '${path}')"><span>关闭右侧</span></button>
+        <button class="popover-item" ${!state.tabs.some(t => !t.affix) ? 'disabled' : ''} onclick="runTabCommand('closeAll', '${path}')"><span>关闭全部</span></button>
+      `;
+      menu.style.left = Math.min(e.clientX, window.innerWidth - 185) + 'px';
+      menu.style.top = Math.min(e.clientY, window.innerHeight - 230) + 'px';
+      menu.classList.add('open');
+    }
+    function openTenantMenu(e) {
+      e.stopPropagation();
+      if (!state.tenantEnabled || state.actorType !== 'super_admin') return;
+      const rect = e.currentTarget.getBoundingClientRect();
+      const menu = document.getElementById('tenantPopover');
+      menu.innerHTML = TENANTS.map(t => `<button class="popover-item" onclick="switchTenant('${t.id}')"><span>${t.name} <span class="mono" style="font-size:11px;opacity:0.7;">(${t.id})</span></span><span>${t.id === state.activeTenantId ? '✓' : ''}</span></button>`).join('');
+      menu.style.left = Math.min(rect.left, window.innerWidth - 230) + 'px';
+      menu.style.top = (rect.bottom + 6) + 'px';
+      menu.classList.add('open');
+    }
+    function openColumnMenu(e) {
+      e.stopPropagation();
+      const rect = e.currentTarget.getBoundingClientRect();
+      const cols = [['id','用户ID'],['username','用户账号'],['nickname','用户昵称'],['dept','归属部门'],['phone','手机号码'],['email','电子邮箱'],['status','状态'],['createTime','创建时间']];
+      const menu = document.getElementById('columnPopover');
+      menu.innerHTML = cols.map(([k, l]) => `<label class="popover-item"><span>${l}</span><input type="checkbox" ${state.visibleCols[k]?'checked':''} onchange="state.visibleCols['${k}']=this.checked; render();" /></label>`).join('');
+      menu.style.left = Math.min(rect.left - 80, window.innerWidth - 190) + 'px';
+      menu.style.top = (rect.bottom + 6) + 'px';
+      menu.classList.add('open');
+    }
+    function showToast(type, message, traceId) {
+      const stack = document.getElementById('toastStack');
+      const item = document.createElement('div');
+      item.className = 'toast-item ' + type;
+      item.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;"><span>${message}</span><button class="icon-btn" style="width:22px;height:22px;" onclick="this.closest('.toast-item').remove()">✕</button></div>`
+        + (traceId ? `<div><button class="btn btn-sm" onclick="navigator.clipboard?.writeText('${traceId}'); showToast('success','已复制 traceId')">复制 traceId</button></div>` : '');
+      stack.appendChild(item);
+      setTimeout(() => { if (item.parentNode) item.remove(); }, 4200);
+    }
+
+    function renderWorkspace() {
+      const route = state.activeRoute;
+      const curMenu = MENUS.find(m => m.path === route) || MENUS[0];
+      if (route === '/dashboard') {
+        const eff = getTenantObj(getEffectiveTenantId());
+        const visibleMenus = getVisibleMenus().filter(m => m.path !== '/dashboard');
+        return `
+          <div class="card" style="padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;">
+            <div>
+              <div style="font-size:18px;font-weight:600;">你好，${state.actorType === 'super_admin' ? '平台超级管理员' : '星辰租户管理员'}</div>
+              <div style="font-size:13px;color:var(--solid-text-secondary);margin-top:4px;">当前工作租户：<strong>${eff.name}</strong>（<span class="mono">${eff.id}</span>） · 多租户模式：<strong>${state.tenantEnabled ? '已开启' : '单租户默认态'}</strong></div>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <button class="btn" type="button" onclick="openRoute('/system/user')">进入用户管理</button>
+              <button class="btn btn-primary" type="button" onclick="showToast('success','跳转至个人中心')">个人中心</button>
+            </div>
+          </div>
+          <div class="dash-grid">
+            ${visibleMenus.map(m => `<div class="card quick-card" onclick="openRoute('${m.path}')"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-weight:600;">${m.icon} ${m.title}</span>${m.platformOnly?'<span class="tag tag-info">平台专属</span>':''}</div><div class="mono" style="font-size:12px;color:var(--solid-text-secondary);">${m.path}</div></div>`).join('')}
+          </div>
+        `;
+      }
+      if (route !== '/system/user') {
+        return `<div class="card" style="padding:20px;display:flex;flex-direction:column;gap:10px;"><div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:16px;font-weight:600;">${curMenu.title}</span><span class="tag tag-primary mono">${curMenu.path}</span></div><p style="margin:0;color:var(--solid-text-secondary);">定稿壳占位页面：该业务模块细节将在对应域 PRD 工单中展开。</p><div><button class="btn btn-primary" type="button" onclick="openRoute('/system/user')">返回【用户管理】示例</button></div></div>`;
+      }
+
+      const rows = getFilteredUsers();
+      const densityCls = state.density === 'large' ? 'density-large' : (state.density === 'small' ? 'density-small' : '');
+      const depts = ['全部', '研发中心', '产品运营部', '财务合规部'];
+      const allSel = rows.some(u => !u.protected && !u.isSelf) && rows.filter(u => !u.protected && !u.isSelf).every(u => state.selectedIds.has(u.id));
+      return `
+        <div class="split-wrap">
+          <aside class="card dept-panel">
+            <div style="font-size:13px;font-weight:600;">组织部门树</div>
+            <div>${depts.map((d, i) => `<div class="dept-node ${i ? 'dept-indent-1' : ''} ${state.selectedDept === d ? 'active' : ''}" onclick="state.selectedDept='${d}'; render();"><span>${d === '全部' ? '总部（全部部门）' : d}</span></div>`).join('')}</div>
+          </aside>
+          <section class="table-panel">
+            <div class="card query-card">
+              <div class="query-grid">
+                <div class="field-group"><label class="field-label">账号 / 昵称</label><input class="input" placeholder="输入账号或昵称回车检索" value="${state.queryUsername}" oninput="state.queryUsername=this.value" onkeydown="if(event.key==='Enter' && !event.isComposing) triggerTableRefresh()" /></div>
+                <div class="field-group"><label class="field-label">账号状态</label><select class="select" onchange="state.queryStatus=this.value; triggerTableRefresh()"><option value="" ${state.queryStatus===''?'selected':''}>全部状态</option><option value="true" ${state.queryStatus==='true'?'selected':''}>正常</option><option value="false" ${state.queryStatus==='false'?'selected':''}>停用</option></select></div>
+                <div class="field-group"><label class="field-label">手机号码</label><input class="input mono" placeholder="模糊匹配手机号" value="${state.queryPhone}" oninput="state.queryPhone=this.value" /></div>
+                <div class="query-actions">
+                  <button class="btn btn-primary" type="button" onclick="triggerTableRefresh()">查询</button>
+                  <button class="btn" type="button" onclick="resetUserQuery()">重置</button>
+                  <button class="btn-link" type="button" onclick="state.queryCollapsed=!state.queryCollapsed; render();">${state.queryCollapsed ? '展开 ▾' : '收起 ▴'}</button>
+                </div>
+              </div>
+              <div class="query-grid query-extra ${state.queryCollapsed ? 'hidden' : ''}" style="margin-top:10px;">
+                <div class="field-group"><label class="field-label">创建时间起止</label><input class="input mono" placeholder="2026-11-01 ~ 2026-11-24" /></div>
+                <div class="field-group"><label class="field-label">所属角色</label><select class="select"><option>全部角色</option><option>super_admin</option><option>ops</option></select></div>
+              </div>
+            </div>
+
+            <div class="card table-card ${state.fullscreenTable ? 'fullscreen' : ''}">
+              <div class="table-toolbar">
+                <div class="toolbar-left">
+                  <button class="btn btn-primary" type="button" onclick="openUserDrawer(null)">+ 新增用户</button>
+                  <button class="btn" type="button" ${state.selectedIds.size === 0 ? 'disabled' : ''} onclick="openConfirm('批量删除确认','确认删除已选中的 ' + state.selectedIds.size + ' 位用户吗？', ()=>{ state.selectedIds.clear(); showToast('success','已批量删除所选用户'); render(); })">批量删除 (${state.selectedIds.size})</button>
+                </div>
+                <div class="toolbar-right">
+                  <button class="btn btn-sm" type="button" onclick="simulateHttpError(429)">模拟 429</button>
+                  <button class="btn btn-sm" type="button" onclick="simulateHttpError(500)">模拟 500</button>
+                  <button class="icon-btn" type="button" title="刷新表格" onclick="triggerTableRefresh()">↻</button>
+                  <button class="icon-btn" type="button" title="切换密度 (${state.density})" onclick="const d=['default','small','large']; state.density=d[(d.indexOf(state.density)+1)%3]; render();">≣</button>
+                  <button class="icon-btn" type="button" title="斑马纹" onclick="state.striped=!state.striped; render();">▤</button>
+                  <button class="icon-btn" type="button" title="列显隐设置" onclick="openColumnMenu(event)">⚙</button>
+                  <button class="icon-btn" type="button" title="表格全屏" onclick="state.fullscreenTable=!state.fullscreenTable; render();">⛶</button>
+                </div>
+              </div>
+              <div class="table-scroll" style="opacity:${state.refreshing ? 0.55 : 1};transition:opacity 0.15s;">
+                <table class="data-table ${densityCls} ${state.striped ? 'striped' : ''}">
+                  <thead>
+                    <tr>
+                      <th style="width:36px;"><input type="checkbox" ${allSel?'checked':''} onchange="const sel=${JSON.stringify(rows.filter(u=>!u.protected&&!u.isSelf).map(u=>u.id)).replace(/"/g,'&quot;')}; if(this.checked) sel.forEach(id=>state.selectedIds.add(id)); else sel.forEach(id=>state.selectedIds.delete(id)); render();" /></th>
+                      ${state.visibleCols.id ? '<th>用户ID</th>' : ''}
+                      ${state.visibleCols.username ? '<th>用户账号</th>' : ''}
+                      ${state.visibleCols.nickname ? '<th>用户昵称</th>' : ''}
+                      ${state.visibleCols.dept ? '<th>归属部门</th>' : ''}
+                      ${state.visibleCols.phone ? '<th>手机号码 (脱敏)</th>' : ''}
+                      ${state.visibleCols.email ? '<th>电子邮箱 (脱敏)</th>' : ''}
+                      ${state.visibleCols.status ? '<th>状态</th>' : ''}
+                      ${state.visibleCols.createTime ? '<th>创建时间</th>' : ''}
+                      <th class="col-sticky-right">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${rows.length === 0 ? `<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--solid-text-secondary);">未找到符合条件的用户 <button class="btn-link" onclick="resetUserQuery()">清空筛选条件</button></td></tr>` : rows.map(u => {
+                      const guard = u.protected ? '内置超级管理员不可停用或删除' : (u.isSelf ? '当前登录账号不可停用或删除' : '');
+                      const locked = Boolean(u.protected || u.isSelf);
+                      return `<tr>
+                        <td><input type="checkbox" ${locked ? 'disabled' : ''} ${state.selectedIds.has(u.id) ? 'checked' : ''} onchange="if(this.checked) state.selectedIds.add('${u.id}'); else state.selectedIds.delete('${u.id}'); render();" /></td>
+                        ${state.visibleCols.id ? `<td class="mono">${u.id}</td>` : ''}
+                        ${state.visibleCols.username ? `<td class="mono">${u.username} ${u.protected ? '<span class="tag tag-primary">内置</span>' : ''}</td>` : ''}
+                        ${state.visibleCols.nickname ? `<td>${u.nickname}</td>` : ''}
+                        ${state.visibleCols.dept ? `<td>${u.dept}</td>` : ''}
+                        ${state.visibleCols.phone ? `<td class="mono">${maskPhone(u.phone)}</td>` : ''}
+                        ${state.visibleCols.email ? `<td class="mono">${maskEmail(u.email)}</td>` : ''}
+                        ${state.visibleCols.status ? `<td><button class="switch ${u.status ? 'on' : ''}" type="button" ${locked ? `disabled title="${guard}"` : ''} onclick="toggleUserStatus('${u.id}')"></button></td>` : ''}
+                        ${state.visibleCols.createTime ? `<td class="mono">${u.createTime}</td>` : ''}
+                        <td class="col-sticky-right">
+                          <button class="btn-link" type="button" onclick="openUserDrawer('${u.id}')">编辑</button>
+                          <button class="btn-link" type="button" onclick="openConfirm('重置密码','将【${u.username}】重置为默认初始口令？', ()=>showToast('success','已重置密码'))">重置密码</button>
+                          <button class="btn-link danger" type="button" ${locked ? `disabled title="${guard}"` : ''} onclick="openConfirm('删除用户','确认删除【${u.username}】吗？', ()=>showToast('success','已删除用户'))">删除</button>
+                        </td>
+                      </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+              <div class="pagination-bar tabular">
+                <span>共 <strong>${rows.length}</strong> 条记录 · 每页 <strong>10</strong> 条 [10 / 20 / 50 / 100]</span>
+                <div style="display:flex;gap:4px;"><button class="btn btn-sm" disabled>上一页</button><button class="btn btn-sm btn-primary">1</button><button class="btn btn-sm" disabled>下一页</button></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function render() {
+      const visibleMenus = getVisibleMenus();
+      const curMenu = MENUS.find(m => m.path === state.activeRoute) || MENUS[0];
+      const groups = [];
+      visibleMenus.forEach(m => { if (!groups.includes(m.domainLabel)) groups.push(m.domainLabel); });
+      const eff = getTenantObj(getEffectiveTenantId());
+      const tenantCtrl = !state.tenantEnabled ? '' : (state.actorType === 'super_admin'
+        ? `<button class="tenant-pill ${eff.id !== '0' ? 'switched' : ''}" onclick="openTenantMenu(event)"><span>租户: ${eff.name}</span><span class="mono" style="opacity:0.75;">(${eff.id})</span><span>▾</span></button>`
+        : `<span class="tenant-pill readonly">租户: ${eff.name}</span>`);
+      const bannerHtml = (state.tenantEnabled && state.actorType === 'super_admin' && state.activeTenantId !== '0')
+        ? `<div class="tenant-banner"><span>当前正以平台超管身份查看工作租户：<strong>${eff.name}</strong>（<span class="mono">X-Tenant-Id: ${eff.id}</span>，平台专属菜单已自动隔离隐藏）</span><button class="btn btn-sm" type="button" onclick="switchTenant('0')">切回平台默认租户 (0)</button></div>`
+        : '';
+
+      document.getElementById('app').innerHTML = `
+        <aside class="sidebar ${state.sidebarCollapsed ? 'collapsed' : ''} ${state.maximized ? 'hidden' : ''}">
+          <div class="brand-bar"><span class="brand-logo">S</span><span class="brand-text"><span class="brand-name">ateng-solid</span><span class="brand-sub">Admin</span></span></div>
+          <div class="menu-scroll">
+            ${groups.map(g => `<div class="menu-group-label">${g}</div>${visibleMenus.filter(m => m.domainLabel === g).map(m => `<button class="menu-item ${m.path === state.activeRoute ? 'active' : ''}" type="button" onclick="openRoute('${m.path}')" title="${m.title}"><span>${m.icon}</span><span class="menu-item-label">${m.title}</span></button>`).join('')}`).join('')}
+          </div>
+        </aside>
+        <div class="main-column">
+          <header class="topbar ${state.maximized ? 'hidden' : ''}">
+            <div class="topbar-left">
+              <button class="icon-btn" type="button" title="折叠/展开侧栏" onclick="state.sidebarCollapsed=!state.sidebarCollapsed; render();">☰</button>
+              <nav class="breadcrumb"><span>${curMenu.domainLabel}</span><span>/</span><span class="current">${curMenu.title}</span></nav>
+            </div>
+            <div class="topbar-right">
+              ${tenantCtrl}
+              <button class="icon-btn" type="button" title="切换亮/暗色" onclick="toggleTheme()">${state.dark ? '☀' : '☾'}</button>
+              <button class="user-trigger" type="button" onclick="showToast('success','个人中心 / 修改密码 / 退出登录')"><span class="avatar-circle">${state.actorType === 'super_admin' ? '超' : '星'}</span><span>${state.actorType === 'super_admin' ? '陈默' : '星辰管理'}</span></button>
+            </div>
+          </header>
+          <div class="tabs-bar">
+            <div class="tabs-list">
+              ${state.tabs.map(t => `<div class="tab-chip ${t.path === state.activeRoute ? 'active' : ''}" onclick="openRoute('${t.path}')" oncontextmenu="openTabContextMenu(event, '${t.path}')"><span>${t.title}</span>${t.affix ? '' : `<button class="tab-close" type="button" onclick="event.stopPropagation(); closeTab('${t.path}')">✕</button>`}</div>`).join('')}
+            </div>
+            <div class="tabs-actions">
+              <button class="icon-btn" type="button" title="刷新当前页" onclick="runTabCommand('refresh', '${state.activeRoute}')">↻</button>
+              <button class="icon-btn" type="button" title="最大化工作区" onclick="state.maximized=!state.maximized; render();">${state.maximized ? '⤡' : '⤢'}</button>
+            </div>
+          </div>
+          ${bannerHtml}
+          <main class="workspace">${renderWorkspace()}</main>
+        </div>
+      `;
+
+      const btnTheme = document.getElementById('btnTheme'); btnTheme.textContent = state.dark ? 'Dark' : 'Light'; btnTheme.classList.toggle('on', state.dark);
+      const btnTen = document.getElementById('btnTenantEnabled'); btnTen.textContent = state.tenantEnabled ? '多租户: 开' : '多租户: 关'; btnTen.classList.toggle('on', state.tenantEnabled);
+      const btnActor = document.getElementById('btnActor'); btnActor.textContent = state.actorType === 'super_admin' ? `超管 (${state.activeTenantId})` : '租户管理员 (10002)'; btnActor.classList.toggle('on', state.actorType === 'tenant_admin');
+    }
+
+    document.addEventListener('click', () => hideAllPopovers());
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        hideAllPopovers();
+        if (state.fullscreenTable) { state.fullscreenTable = false; render(); }
+      }
+    });
+    render();
+  </script>
+</body>
+</html>
