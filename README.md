@@ -12,7 +12,7 @@
 
 | 子工程目录 | 仓库链接 | 职责描述 | 技术基线 | 状态 |
 | :--- | :--- | :--- | :--- | :--- |
-| [`ateng-solid-server`](./ateng-solid-server) | [atengk/ateng-solid-server](https://github.com/atengk/ateng-solid-server) | 后端统一核心服务（5 模块 Cloud-Ready 单体） | Java 21 / Spring Boot 3.3 (`ateng-boot:1.2.0`) / Maven | 首期落地 |
+| [`ateng-solid-server`](./ateng-solid-server) | [atengk/ateng-solid-server](https://github.com/atengk/ateng-solid-server) | 后端统一核心服务（5 模块 Cloud-Ready 单体） | Java 21 / Spring Boot 3.3 / `ateng-boot` / Maven（精确版本见 [pom.xml](./ateng-solid-server/pom.xml)） | 首期落地 |
 | [`ateng-solid-admin-web`](./ateng-solid-admin-web) | [atengk/ateng-solid-admin-web](https://github.com/atengk/ateng-solid-admin-web) | 管理后台 Web 前端工程 | Node 22+ / pnpm 11+ / Vue 3.5 / Vite / TS / `ateng-ui` / TailwindCSS | 首期落地 |
 | [`ateng-solid-mp`](./ateng-solid-mp) | - | 移动端小程序工程 | 规划中 | 待初始化 |
 | [`ateng-solid-app`](./ateng-solid-app) | - | 移动端跨平台 App (iOS / Android) | 规划中 | 待初始化 |
@@ -41,7 +41,7 @@
 ### 3.1 环境基线
 - **Java / Maven**：OpenJDK 21 LTS（启用虚拟线程）+ Apache Maven 3.9+
 - **Node.js / pnpm**：Node.js v22+ + pnpm 11+
-- **中间件（连接云端或测试实例）**：MySQL 8.x + Redis 7.x（本地凭据隔离于未跟踪的 `application-local.yml` / `.env.local`；单测保持 H2 / 内存离线自洽）
+- **中间件（连接云端或测试实例）**：MySQL 8.4 LTS + Redis 8.x + S3 兼容对象存储（本地凭据隔离于未跟踪的 `application-local.yml` / `.env.local`；单测保持 H2 / 内存离线自洽）
 
 ### 3.2 工作区治理脚本（`scripts/workspace.sh`）
 全工作区统一维护单一 POSIX Bash 脚本 [`scripts/workspace.sh`](./scripts/workspace.sh)（Windows 下通过 Git Bash 直接执行）：

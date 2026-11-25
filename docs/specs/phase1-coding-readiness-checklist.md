@@ -85,38 +85,40 @@
 
 ---
 
-## 4. `Spec 1 ~ Spec 4` 编码开工准入检查表
+## 4. `Spec 1 ~ Spec 4` 编码开工与交付状态检查表
+
+> **进展说明**：`Wave 1 ~ Wave 5`（`#20` ~ `#36`）全部编码、离线单元测试/集成测试与 1:1 逆向文档已完成；上游底座正式发版锁版（`B14~B17`、`U5~U12`）及第 5 节双模云端实机全链路冒烟测试按计划保留 `- [ ]`（工单 `#37` 维持 `OPEN` 待执行）。
 
 ### Spec 1：工程骨架、公共原语、配置基线与前端设计令牌
-- [ ] **高危配置前置收敛（必改）**：在 `ateng-solid-bootstrap/src/main/resources/application.yml` 显式配置 `ateng.boot.satoken.super-admin-roles: ["super_admin"]`（覆盖底座默认 `["admin", "super_admin"]`）与 `spring.servlet.multipart.max-file-size: 5MB` / `max-request-size: 10MB`（防默认 `1MB` 提前 413 截断 `2MB` 上传）；
-- [ ] 在 `application.yml` 补全 `permission-cache.tenant-scoped: true`、`tenant.{allow-super-admin-switch, platform-tenant-ids}`、`data-permission.failure-strategy: DENY_ALL`（`#1173`）、`async.pools.password-hash`（`mode: platform`）、默认 S3 兼容对象存储（`storage.type: s3` + `s3.path-style: true` + `guard` 与 `local` 回退安全配置）及 3 个按域内聚的 `@ConfigurationProperties`（`SolidTenantProperties`/`SolidAuthProperties`/`SolidSystemProperties`），并在 `bootstrap/pom.xml` 补齐 `flyway-mysql` 与 `software.amazon.awssdk:{s3,apache-client}`（`runtime`）；
-- [ ] 模块原语归属落地：`ateng-solid-common` 落地 `CommonBizResultCode`、`CommonStatusEnum`、`LogStatusEnum`、`PasswordPolicyValidator`、`DomainEventPublisher`/`SpringDomainEventPublisher`/`LoginAuditEvent` 与 `AuthGrantHandler` SPI；`ateng-solid-system-api` 落地 `SystemResultCode`、`DataScopeType`、`MenuTypeEnum`、`ConfigTypeEnum`、`VisibleStatusEnum` 及 4 个 `Remote*Service`（15 方法）；`ateng-solid-auth` 落地 `AuthResultCode`；`SuperAdminBootstrapper` 归属 `ateng-solid-system`；
-- [ ] `ateng-solid-bootstrap` 将 `ArchitectureGuardTest` 升级为 9 条 ArchUnit 硬守卫（离线 `mvn clean test` 通过）；
-- [ ] `ateng-solid-admin-web` 彻底移除 `theme-pro.css`，按 6 段导入序落地 `src/styles/tokens.css`（Light `#1D4ED8` / Dark `#3B82F6` 静态色阶映射至 `--el-*` 与 Tailwind v4 `@theme`，禁用 Preflight，`initTheme` 不传 `themeColor` + `index.html` 防 FOUC）；落地 `src/utils/{http,dict,icon}.ts`（三单例 + 全错误码分流 + `lowerCamelCase`/`snake_case` 双轨 `DictManager`）与 `tests/setup.ts` 离线隔离基线，且 `main.ts` 在 `app.use(router)` 前完成 `createAtengVue` 全量挂载。
+- [x] **高危配置前置收敛（必改）**：在 `ateng-solid-bootstrap/src/main/resources/application.yml` 显式配置 `ateng.boot.satoken.super-admin-roles: ["super_admin"]`（覆盖底座默认 `["admin", "super_admin"]`）与 `spring.servlet.multipart.max-file-size: 5MB` / `max-request-size: 10MB`（防默认 `1MB` 提前 413 截断 `2MB` 上传）；
+- [x] 在 `application.yml` 补全 `permission-cache.tenant-scoped: true`、`tenant.{allow-super-admin-switch, platform-tenant-ids}`、`data-permission.failure-strategy: DENY_ALL`（`#1173`）、`async.pools.password-hash`（`mode: platform`）、默认 S3 兼容对象存储（`storage.type: s3` + `s3.path-style: true` + `guard` 与 `local` 回退安全配置）及 3 个按域内聚的 `@ConfigurationProperties`（`SolidTenantProperties`/`SolidAuthProperties`/`SolidSystemProperties`），并在 `bootstrap/pom.xml` 补齐 `flyway-mysql` 与 `software.amazon.awssdk:{s3,apache-client}`（`runtime`）；
+- [x] 模块原语归属落地：`ateng-solid-common` 落地 `CommonBizResultCode`、`CommonStatusEnum`、`LogStatusEnum`、`PasswordPolicyValidator`、`DomainEventPublisher`/`SpringDomainEventPublisher`/`LoginAuditEvent` 与 `AuthGrantHandler` SPI；`ateng-solid-system-api` 落地 `SystemResultCode`、`DataScopeType`、`MenuTypeEnum`、`ConfigTypeEnum`、`VisibleStatusEnum` 及 4 个 `Remote*Service`（15 方法）；`ateng-solid-auth` 落地 `AuthResultCode`；`SuperAdminBootstrapper` 归属 `ateng-solid-system`；
+- [x] `ateng-solid-bootstrap` 将 `ArchitectureGuardTest` 升级为 9 条 ArchUnit 硬守卫（离线 `mvn clean test` 通过）；
+- [x] `ateng-solid-admin-web` 彻底移除 `theme-pro.css`，按 6 段导入序落地 `src/styles/tokens.css`（Light `#1D4ED8` / Dark `#3B82F6` 静态色阶映射至 `--el-*` 与 Tailwind v4 `@theme`，禁用 Preflight，`initTheme` 不传 `themeColor` + `index.html` 防 FOUC）；落地 `src/utils/{http,dict,icon}.ts`（三单例 + 全错误码分流 + `lowerCamelCase`/`snake_case` 双轨 `DictManager`）与 `tests/setup.ts` 离线隔离基线，且 `main.ts` 在 `app.use(router)` 前完成 `createAtengVue` 全量挂载。
 
 ### Spec 2：认证会话、工作台、个人中心、在线会话与布局壳
-- [ ] 登录链路严格执行“图形验证码（`CaptchaTemplate.verify` ➔ `101001`）➔ 租户解析（`101005`）➔ 防爆破锁定（先查 `isIpLocked`/`getIpLockTime`，再查 `isLocked`/`getDisableTime`，抛出 `LoginLockedException` 经 `GlobalExceptionCustomizer` 在 `Result.data` 返回 `LoginLockDetailVO { lockType, remainSeconds }`）➔ 账密防枚举统一计数（`101002`/`101003`/`101004`）”；
-- [ ] 登录接口返回 `AdminLoginVO`（含 `tenantId`/`tenantName`）；`/admin/auth/captcha` 返回 `expireSeconds`；`/admin/auth/info` 返回 `passwordNeedsChange`（由 `pwd_update_time IS NULL` 计算）；`AuthService` 无事务包装，成败与登出均发布 `LoginAuditEvent`；
-- [ ] 个人中心拆出 `GET /admin/auth/profile`、`PUT /admin/auth/profile` 与 `POST /admin/auth/profile/avatar`；修改密码 `PUT /admin/auth/password` 成功后写入 `pwd_update_time` 并全端下线；
-- [ ] 在线会话 `/admin/auth/online/page` 仅下发 `tokenMask`（前 6 后 4 + `****`）与无状态 `AES-256-GCM + AAD` 签密句柄 `sessionId`（`OpaqueSessionHandleCodec`），强退 `DELETE /admin/auth/online/{sessionId}` 损坏/跨租户报 `400`、自身会话报 `101007`、已过期幂等返 `200`；
-- [ ] 多租户开启时激活 `TenantAvailabilityInterceptor`（`order = 10`）+ `TenantAuthDTO` 零漂移缓存（60s Redis + 读时比对实时时间 + 写后驱逐）：普通租户停用/过期自动 `logout` 并抛 `101005`，超管切换失效租户由 `TenantHeaderSwitchValidator` 抛 `100002`（不注销 `"0"` 会话）；
-- [ ] 前端落地定稿 **方案 A 轻量自建 `AdminLayout`**（`AdminSidebar` `228px/60px` + `AdminHeader` `48px` + `AtengTabsNav` `36px` [`:emit-close-on-batch="false"` + `@batch-close` + `:menu-icons`] + `TenantObserveBanner` `36px` + `<KeepAlive>` + `provide(ATENG_PRO_LAYOUT_KEY)`）与 4 个 Pinia Setup Store（`useAuthStore` 共享 `useAuth` `WeakMap` 零漂移）；
-- [ ] `/login`（`AtengCaptcha` `:refresh` Prop、`101004` `err.cause.data` `IP`/`ACCOUNT` 倒计时、CapsLock 提示、`redirect` 白名单）、`/dashboard`、`/profile`（`AtengUpload` `:http-request` 桥接）、`/403`（零菜单退出兜底）、`/404` 通过 `pnpm 四合一` 与 Vitest 三层离线单测。
+- [x] 登录链路严格执行“图形验证码（`CaptchaTemplate.verify` ➔ `101001`）➔ 租户解析（`101005`）➔ 防爆破锁定（先查 `isIpLocked`/`getIpLockTime`，再查 `isLocked`/`getDisableTime`，抛出 `LoginLockedException` 经 `GlobalExceptionCustomizer` 在 `Result.data` 返回 `LoginLockDetailVO { lockType, remainSeconds }`）➔ 账密防枚举统一计数（`101002`/`101003`/`101004`）”；
+- [x] 登录接口返回 `AdminLoginVO`（含 `tenantId`/`tenantName`）；`/admin/auth/captcha` 返回 `expireSeconds`；`/admin/auth/info` 返回 `passwordNeedsChange`（由 `pwd_update_time IS NULL` 计算）；`AuthService` 无事务包装，成败与登出均发布 `LoginAuditEvent`；
+- [x] 个人中心拆出 `GET /admin/auth/profile`、`PUT /admin/auth/profile` 与 `POST /admin/auth/profile/avatar`；修改密码 `PUT /admin/auth/password` 成功后写入 `pwd_update_time` 并全端下线；
+- [x] 在线会话 `/admin/auth/online/page` 仅下发 `tokenMask`（前 6 后 4 + `****`）与无状态 `AES-256-GCM + AAD` 签密句柄 `sessionId`（`OpaqueSessionHandleCodec`），强退 `DELETE /admin/auth/online/{sessionId}` 损坏/跨租户报 `400`、自身会话报 `101007`、已过期幂等返 `200`；
+- [x] 多租户开启时激活 `TenantAvailabilityInterceptor`（`order = 10`）+ `TenantAuthDTO` 零漂移缓存（60s Redis + 读时比对实时时间 + 写后驱逐）：普通租户停用/过期自动 `logout` 并抛 `101005`，超管切换失效租户由 `TenantHeaderSwitchValidator` 抛 `100002`（不注销 `"0"` 会话）；
+- [x] 前端落地定稿 **方案 A 轻量自建 `AdminLayout`**（`AdminSidebar` `228px/60px` + `AdminHeader` `48px` + `AtengTabsNav` `36px` [`:emit-close-on-batch="false"` + `@batch-close` + `:menu-icons`] + `TenantObserveBanner` `36px` + `<KeepAlive>` + `provide(ATENG_PRO_LAYOUT_KEY)`）与 4 个 Pinia Setup Store（`useAuthStore` 共享 `useAuth` `WeakMap` 零漂移）；
+- [x] `/login`（`AtengCaptcha` `:refresh` Prop、`101004` `err.cause.data` `IP`/`ACCOUNT` 倒计时、CapsLock 提示、`redirect` 白名单）、`/dashboard`、`/profile`（`AtengUpload` `:http-request` 桥接）、`/403`（零菜单退出兜底）、`/404` 通过 `pnpm 四合一` 与 Vitest 三层离线单测。
 
 ### Spec 3：组织架构、RBAC、`@DataScope` 与可开关 SaaS 多租户
 - [ ] **增量底座联调与正式合入锁版检查**：
   - `B14`（`#1171`）、`B16`（`#1173`）、`B17`（`#1174`）与 `U6~U8`（`#370~#372`）、`U9~U12`（`#373~#376`）均已在底座 `dev` 关单，本地已分别通过 `1.2.1-SNAPSHOT` 与 `yalc` 接入可直接开展开发与自测；**正式向 `dev`/`main` 提交合入前**须待底座发布递进正式版并还原锁版；
-- [ ] Flyway `V1.0.0__system_init_schema.sql`（17 表全量 `utf8mb4_0900_ai_ci` + 表简名前缀索引 + 显式 `NOT NULL DEFAULT 0` + 加密列宽 `phone 128`/`email 255`）与 `V1.0.1__system_init_seed.sql`（`< 100,000` 确定性 ID 号段、58 条菜单含 42 `F` 按钮）通过 MySQL 8.4 LTS 与 H2 (`MODE=MySQL`) 双模校验；`SysUser`/`SysDept` 联系字段经 `ContactFieldCrypto` 收口确定性加密与归一化；
-- [ ] 实现 `SolidDataPermissionHandler` SPI（内部查询包 `runWithoutPermission`、`DEPT_AND_CHILD` 预解析 `sys_dept.ancestors` 禁写 `FIND_IN_SET` + `1000` 部门上限抛 `100003`、无部门兜底 `1 = 0`、`sys_user` `userColumn = "id"`）与 `TenantHeaderSwitchValidator` SPI；
-- [ ] 角色/用户/菜单/租户权限缓存与会话强退副作用一律经 `TransactionUtil.executeAfterCommit` 后置触发（3 参 `PermissionCacheService.clearUserCache`/`clearRoleCache` 与 `clearAll`）；角色菜单回显遵循“联动态仅传叶子 ID”；
-- [ ] 租户套餐严格过滤 `platform_only = 1`、实现 `shrink-preview` 与原子裁剪 `sys_role_menu`；新建租户事务外预哈希后执行 4 步原子初始化；配额并发校验采用 `PessimisticLockUtil.forUpdate` 行锁；停用/删除租户提交后分页清退全员会话；
-- [ ] 用户导入实现 9 列模板下载（`import/template`）、单次 `byte[]` 双读 + `#1174` 按次 `maxSyncRows=500` 重载、三段式解耦流水线（无事务校验 ➔ `Semaphore(2)` + 平台池 `password-hash` 并行哈希 ➔ 短事务批插，前端超时 `120s`）、剥离 `ExcelErrorRow.rowData` 及 Redis 双 Key 15 分钟归属隔离批注下载（`import/feedback/{feedbackToken}`）。
+- [x] Flyway `V1.0.0__system_init_schema.sql`（17 表全量 `utf8mb4_0900_ai_ci` + 表简名前缀索引 + 显式 `NOT NULL DEFAULT 0` + 加密列宽 `phone 128`/`email 255`）与 `V1.0.1__system_init_seed.sql`（`< 100,000` 确定性 ID 号段、58 条菜单含 42 `F` 按钮）通过 MySQL 8.4 LTS 与 H2 (`MODE=MySQL`) 双模校验；`SysUser`/`SysDept` 联系字段经 `ContactFieldCrypto` 收口确定性加密与归一化；
+- [x] 实现 `SolidDataPermissionHandler` SPI（内部查询包 `runWithoutPermission`、`DEPT_AND_CHILD` 预解析 `sys_dept.ancestors` 禁写 `FIND_IN_SET` + `1000` 部门上限抛 `100003`、无部门兜底 `1 = 0`、`sys_user` `userColumn = "id"`）与 `TenantHeaderSwitchValidator` SPI；
+- [x] 角色/用户/菜单/租户权限缓存与会话强退副作用一律经 `TransactionUtil.executeAfterCommit` 后置触发（3 参 `PermissionCacheService.clearUserCache`/`clearRoleCache` 与 `clearAll`）；角色菜单回显遵循“联动态仅传叶子 ID”；
+- [x] 租户套餐严格过滤 `platform_only = 1`、实现 `shrink-preview` 与原子裁剪 `sys_role_menu`；新建租户事务外预哈希后执行 4 步原子初始化；配额并发校验采用 `PessimisticLockUtil.forUpdate` 行锁；停用/删除租户提交后分页清退全员会话；
+- [x] 用户导入实现 9 列模板下载（`import/template`）、单次 `byte[]` 双读 + `#1174` 按次 `maxSyncRows=500` 重载、三段式解耦流水线（无事务校验 ➔ `Semaphore(2)` + 平台池 `password-hash` 并行哈希 ➔ 短事务批插，前端超时 `120s`）、剥离 `ExcelErrorRow.rowData` 及 Redis 双 Key 15 分钟归属隔离批注下载（`import/feedback/{feedbackToken}`）。
 
 ### Spec 4：静态枚举、动态字典、系统参数、头像直链与只读审计日志
 - [ ] **增量底座联调与正式合入锁版检查**：默认走 `storage.type=s3`（RustFS/MinIO，需 `software.amazon.awssdk:{s3,apache-client}`）+ `guard.enabled=true` + `strict-magic-check=true`；本地磁盘回退模式保留 `B15`（`#1172`）`local.whitelist-presigned-download=true` + `upload-endpoint-enabled=false` + 固定 `secret-key`；**正式提交合入前**须待 `ateng-boot` 发布正式版并还原锁版；
-- [ ] `SysEnumController` 接管 `/admin/system/enums/**` 并配置 `@SaCheckLogin`；前端枚举适配层将 `OptionItem` 映射为 `DictItem` 并把 `'default'` 归一化为 `''`；
-- [ ] `/system/dict` 平台专属双面板管理支持 `dictType` 编辑锁定与 `isDefault` 同类型事务互斥（`30m` 缓存写后驱逐）；`sys_config` 对内置 `Y` 禁止删改键名、`sys.user.initPassword` 强制强口令校验，并支持多租户读取自动回退平台租户 `0` 全局默认值；
-- [ ] `@OperateLog` 统一使用 `type = OperateTypeEnum.XXX`；`SolidOperateLogStorageProvider` 在异步线程中基于 `model.tenantId` + `model.userId` 主键查库补全真实 `userName`（禁调 `LoginHelper.getLoginUser()`）并落库 `description`/`browser`/`os`；登录日志消费领域事件并复用 `UserAgentUtil.parse`；两日志模块保持严格只读。
+- [x] `SysEnumController` 接管 `/admin/system/enums/**` 并配置 `@SaCheckLogin`；前端枚举适配层将 `OptionItem` 映射为 `DictItem` 并把 `'default'` 归一化为 `''`；
+- [x] `/system/dict` 平台专属双面板管理支持 `dictType` 编辑锁定与 `isDefault` 同类型事务互斥（`30m` 缓存写后驱逐）；`sys_config` 对内置 `Y` 禁止删改键名、`sys.user.initPassword` 强制强口令校验，并支持多租户读取自动回退平台租户 `0` 全局默认值；
+- [x] `@OperateLog` 统一使用 `type = OperateTypeEnum.XXX`；`SolidOperateLogStorageProvider` 在异步线程中基于 `model.tenantId` + `model.userId` 主键查库补全真实 `userName`（禁调 `LoginHelper.getLoginUser()`）并落库 `description`/`browser`/`os`；登录日志消费领域事件并复用 `UserAgentUtil.parse`；两日志模块保持严格只读。
 
 ---
 

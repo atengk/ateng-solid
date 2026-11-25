@@ -9,7 +9,7 @@
 - **[Root 根工作区](./AGENTS.md)**（`ateng-solid`）：
   聚合工作区总控中心。维护全端跨端契约唯一真源（[`docs/agents/contracts.md`](./docs/agents/contracts.md)）、底层缺口即停工与联调 SOP（[`docs/agents/foundation-first-gate.md`](./docs/agents/foundation-first-gate.md)）、编码与注释规范（[`docs/agents/coding-standards.md`](./docs/agents/coding-standards.md)）、文档 1:1 保真规范（[`docs/agents/documentation-specification.md`](./docs/agents/documentation-specification.md)）、系统级 ADR（[`docs/adr/`](./docs/adr/README.md)）、首期架构蓝图与底层待增强清单（[`docs/specs/`](./docs/specs/README.md)）及统一运维脚本 [`scripts/workspace.sh`](./scripts/workspace.sh)。
 - **[Server 后端核心服务](./ateng-solid-server/CONTEXT-MAP.md)**（`atengk/ateng-solid-server`，首期落地）：
-  Spring Boot 3.3 + `ateng-boot`（1.2.0+）**同源双装配**后端工程：首期稳固 `common` ➔ `system-api` ➔ `{system, auth}` ➔ `bootstrap` 5 模块单体，面向后续 `ateng-cloud`（`1.0.0+`）并存微服务启动壳保留零重构扩展边界，对外以对称路径 `/admin/**` 暴露管理端契约。
+  Spring Boot 3.3 + `ateng-boot` **同源双装配**后端工程（实际基线见 [pom.xml](./ateng-solid-server/pom.xml)）：首期稳固 `common` ➔ `system-api` ➔ `{system, auth}` ➔ `bootstrap` 5 模块单体，面向后续 `ateng-cloud` 并存微服务启动壳保留零重构扩展边界，对外以对称路径 `/admin/**` 暴露管理端契约。
 - **[Admin Web PC 管理后台](./ateng-solid-admin-web/CONTEXT.md)**（`atengk/ateng-solid-admin-web`，首期落地）：
   Vue 3.5 + Vite + TypeScript Strict + `@atengk/core`/`@atengk/vue`/`@atengk/element-plus` + TailwindCSS（禁用 Preflight）单页后台应用，手写强类型 `src/api/*` 契约层直接对齐后端。
 - **远期多端扩展工程（规划中）**：
@@ -30,7 +30,7 @@ flowchart LR
     subgraph Foundation["基础设施底座 (上游硬门禁纳管)"]
         BOOT["ateng-boot (1.2.1+ 待发版)<br/>(Spring Boot 3.3)"]
         CLOUD["ateng-cloud (1.0.1+ 待发版)<br/>(并存态微服务装配底座)"]
-        UI["ateng-ui (1.0.1+ 待发版)<br/>(@atengk/core, vue, element-plus)"]
+        UI["ateng-ui (1.1.1+ 待发版)<br/>(@atengk/core, vue, element-plus)"]
     end
 
     subgraph Repos["首期独立业务仓"]
