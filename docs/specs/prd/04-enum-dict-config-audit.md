@@ -30,7 +30,7 @@
 | 底座组件 / 工具 | 实测约束与本域落地规范 | 调研锚点 |
 | :--- | :--- | :--- |
 | **`EnumDictionaryRegistry`** | 配置 `ateng.boot.web.enum.endpoint-enabled=false` 关闭底座默认 `/api/system/enums`，由 `SysEnumController` 注入 `EnumDictionaryRegistry` 挂载 `/admin/system/enums` 并实施 `@SaCheckLogin` 管控（默认 `LOWER_CAMEL_CASE` 剥离 `Enum` 后缀） | `boot-1.2.0-constraints.md` §4.2 / `B5` |
-| **`@OperateLog` & `OperateLogModel`** | 注解属性名为 **`type`**（非 `operateType`）；切面默认把 `userName` 设为 `UserContextHolder.get()`（即 `userId`），`OperateLogStorageProvider` 落库前须从 `LoginHelper.getLoginUser()` 补全真实账号/昵称；`AuditParamSanitizer` 自动将敏感键替换为 `"[EXCLUDED]"` | `boot-1.2.0-constraints.md` `F7` / §4.1 |
+| **`@OperateLog` & `OperateLogModel`** | 注解属性名为 **`type`**（非 `operateType`）；切面在请求线程同步填充 `userId`/`tenantId`/`browser`/`os`/`description` 后投递异步线程执行 `OperateLogStorageProvider#store`（异步线程不可调 `LoginHelper.getLoginUser()`，须用 `model.tenantId` + `model.userId` 主键查库补全真实 `userName`）；`AuditParamSanitizer` 自动将敏感键替换为 `"[EXCLUDED]"` | `boot-1.2.0-constraints.md` `F7` / §4.1 |
 | **`UserAgentUtil`** | 纯 JDK 零依赖有界扫描；登录日志由认证事件消费者直接调用 `UserAgentUtil.parse(rawUa)` 提取 `browser` 与 `os` 写入 `sys_login_log` | `boot-1.2.0-constraints.md` §4.1 / `B11` |
 | **`DictManager` & `AtengDictTag`** | `DictManager` 采用内存 `Map` + `inFlight` 请求去重；`AtengDictTag` `tagType` 仅接受 `'primary'|'success'|'warning'|'danger'|'info'|''|undefined`（转换层将任何 `'default'` 归一化为 `''`）；未匹配值降级渲染原值中性标签 | `ui-1.1.0-capabilities.md` §2.9 / `D11` |
 
@@ -99,8 +99,9 @@
 1. **分工铁律**：
    - **YAML 配置**（`application.yml`）：承载应用启动装配期、底层基础设施及匿名未认证阶段配置（如 `ateng.solid.tenant.enabled`、`ateng.solid.auth.captcha-enabled`、防爆破阈值、存储 Guard、Jackson/Flyway 参数）；
    - **`sys_config` 参数表**：承载需在运行时由租户/运营人员在界面动态调整且可按租户差异化的业务默认参数。
-2. **第一阶段种子内置核心参数**：
+2. **第一阶段种子内置核心参数与多租户兜底规则**：
    - **`sys.user.initPassword`**（名称：`用户管理-初始默认密码`、默认值：`'Ateng@2026'`、`configType = 'Y'`）：由新建用户、重置密码、用户 Excel 导入与新建租户初始化管理员统一通过 `GET /admin/system/config/key/sys.user.initPassword`（或服务端直读）消费；
+   - **多租户平台兜底回退**：开启多租户时，按 `configKey` 读取参数优先查当前生效租户（带 `30m` 缓存）；若普通租户尚未覆盖该键，自动回退读取平台默认租户 `0` 的全局值（租户新建同名键后即刻覆盖生效）；
    - **强校验防呆**：当管理员在 `/system/config` 修改 `configKey === 'sys.user.initPassword'` 的 `configValue` 时，前后端**强制同步校验新值符合全站口令复杂度规则**（`8~20` 位无空白且至少包含大小写字母、数字、特殊字符中的 3 类），防止保存弱口令引发下游新建/重置用户失败。
 
 ---

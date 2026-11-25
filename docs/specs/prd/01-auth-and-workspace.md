@@ -37,7 +37,7 @@
 | **`LoginFailureLockService`** | `checkLocked` 抛出 `403`（`DisableServiceException` 或 IP 熔断），为统一向前端返回 `101004` 与剩余秒数，登录入口前置调 `isLocked(...)` + `getDisableTime(...)` 自抛 `101004`（带剩余分钟/秒）；均传 `(tenantId, "admin", username, clientIp)` 作用域重载；IP 熔断亦转译提示 | `boot-1.2.0-constraints.md` `F2` / `B4` |
 | **`PasswordUtil`** | 采用 PBKDF2-SHA256（310,000 次迭代，输出约 88 字符，DDL `VARCHAR(128)`）；**底座不提供密码复杂度校验**，本域由 `ateng-solid` 统一实施“8~20 位 + 无空白 + 至少 3 类字符”强校验 | `boot-1.2.0-constraints.md` §4.3 |
 | **`LoginHelper` 在线会话** | 列表复用 `searchOnlineUserPage("admin", query, page, size)`（最大扫描上限 `2000`，单页 `size <= 100`，支持 `tenantId` 与 `loginIp` CIDR 匹配）；强退前置校验自身会话抛 `101007`，随后调 `kickoutByTokenForTenant("admin", realToken, expectedTenantId)` 防止跨租户越权 | `boot-1.2.0-constraints.md` §1.5 / `B12` |
-| **`ateng-boot-storage`** | 头像上传显式开启 `guard.enabled=true`、`strict-magic-check=true`、固定 `local.secret-key`；本地模式预签名头像 URL 的无 Cookie 直链放行依赖 **`B15` (`ateng-boot#1172`)** 在 `Spec 4` 发版锁版后闭环 | `foundation-enhancements-checklist.md` `B15` / `F8` |
+| **`ateng-boot-storage`** | 默认启用 `storage.type=s3`（RustFS/MinIO，`s3.path-style=true`）并保留 `local` 模式 `B15`（`ateng-boot#1172` 已在 `dev` 关单）最小安全配置作回退；全程开启 `guard.enabled=true`、`strict-magic-check=true`，库表仅存相对对象键并动态签发 2h `inline` 预签名 URL | `foundation-enhancements-checklist.md` `B15` / `system-engines-and-testing-spec.md` §3.1 |
 | **`AtengCaptcha` (`@atengk/element-plus`)** | `type="image"` 的刷新绑定属性为 **Prop `:refresh="loadCaptcha"`**（非 `@refresh` 事件） | `ui-1.1.0-capabilities.md` `D10` |
 | **`AtengUpload` & `AtengDescriptions`** | 上传透传 `:http-request` 对接 `@atengk/core` `http`（自动携带 `satoken-admin` / `X-Tenant-Id`）；详情页展示使用 `formatMaskPhone`/`formatMaskEmail` 脱敏，`copyable` 复制内存真明文 | `ui-1.1.0-capabilities.md` §2.7 / §2.10 / `U4` |
 
@@ -88,9 +88,9 @@
    - 若 `tenantEnabled = false`，固定解析为平台默认租户（`tenantId = 0L`、`tenantCode = "000000"`）；
    - 若 `tenantEnabled = true`，按 `tenantCode` 查询 `sys_tenant`：不存在、已停用（`status != 0`）或已超过 `expireTime` 时，统一抛出 `AuthResultCode(101005, "所属租户不存在、已停用或已过期")`（**此步不计入账号密码防爆破次数**）。
 3. **防爆破锁定前置检查**：
-   - 调用 `LoginFailureLockService.isLocked(tenantIdStr, "admin", username, clientIp)`：
-     - 若 IP 已被熔断锁定（30 次/30 分钟），抛出 `AuthResultCode(101004, "当前网络连续失败次数过多，IP 已被临时锁定，请稍后再试")`（可附带剩余秒数）；
-     - 若当前账号作用域已锁定（5 次/15 分钟），读取 `remainSec = LoginFailureLockService.getDisableTime(tenantIdStr, "admin", username)`，抛出 `AuthResultCode(101004, "连续登录失败次数过多，账号已锁定，请在 X 分 Y 秒后重试")` 并在 `extra` 或结构化消息中携带剩余秒数供前端倒计时。
+   - 先调用 `LoginFailureLockService.isIpLocked(clientIp)` + `getIpLockTime(clientIp)`，再调用 `isLocked(tenantIdStr, "admin", username)` + `getDisableTime(tenantIdStr, "admin", username)`：
+     - 若 IP 已被熔断锁定（30 次/30 分钟），抛出 `LoginLockedException("IP", remainSec)`，经 `GlobalExceptionCustomizer` 返回 `Result<LoginLockDetailVO>`（`code = 101004`、`data = { lockType: "IP", remainSeconds }`）；
+     - 若当前账号作用域已锁定（5 次/15 分钟），抛出 `LoginLockedException("ACCOUNT", remainSec)`，返回 `Result<LoginLockDetailVO>`（`code = 101004`、`msg = "连续登录失败次数过多，账号已锁定，请在 X 分 Y 秒后重试"`、`data = { lockType: "ACCOUNT", remainSeconds }`）；前端从 `(err.cause as Result<LoginLockDetailVO>)?.data` 读取结构化字段驱动精确倒计时，零正则解析。
 4. **账号与口令校验（防枚举统一计数）**：
    - 在 `TenantContextHolder.runWithTenant(tenantId, ...)` 下按 `username` 查询用户：
      - **用户不存在** 或 **`PasswordUtil.matches(password, user.password)` 为 `false`**：

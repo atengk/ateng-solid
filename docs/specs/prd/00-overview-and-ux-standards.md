@@ -50,7 +50,7 @@
   5. `关闭右侧`（右侧无可关页签时禁用）
   6. `关闭全部`（仅保留全部 `affix` 页签并激活首个固定页签）
 - **激活回退规则**：关闭**当前正在查看**的页签后，优先激活其**右侧相邻页签**；若右侧无页签，则激活其**左侧相邻页签**。
-- **工程实现提醒**：`@atengk/element-plus` `AtengTabsNav` 单标签 `close` 仅派发 `tabClose`，批量关闭命令同时派发 `tabClose` 与 `update:tabs`；上层容器需统一收口至 `useTabsNav`（`cachedViews`）维护单一数据源，避免状态双触发。
+- **工程实现提醒**：`@atengk/element-plus` `AtengTabsNav`（后 `#376`）接入时固定传入 `:emit-close-on-batch="false"` 与 `@batch-close` 聚合事件，并通过 `:menu-icons` 替换为线性 SVG 图标；全部单关/批关统一收口至 `useTabsNav`（`cachedViews`）单一数据源，消除状态多次跳变。
 
 ### 2.3 超管切换工作租户（`X-Tenant-Id`）强隔离联动
 当 `tenantEnabled = true` 且平台租户 `"0"` 的 `super_admin` 在顶栏选择目标租户 `T` 时：
@@ -109,17 +109,18 @@
 | :--- | :--- | :--- |
 | **`200`** | 操作成功 | 写操作弹出简短正面反馈（如“已保存用户”“已停用角色”），动作动词与按钮名称保持一致 |
 | **`400` / `100xxx`~`102xxx`** | 参数/业务规则拒绝 | 表单校验类精确回显至对应字段下方或保留抽屉弹窗并顶部提示具体原因与恢复动作；严禁只弹笼统“失败” |
-| **`401`** | 未登录、令牌过期或被强制踢出 | 立即清空本地凭据、`TenantManager` 重置回 `"0"`、卸载动态路由与页签缓存，自动跳转 `/login?redirect=<原路径>` |
-| **`403`** | 路由无权限或接口越权/账号禁用 | 路由访问未授权菜单跳转 `/403` 引导页（提供“返回工作台”按钮）；接口级越权弹出明确拒绝原因（不跳转整页） |
+| **`401` / `101005`**（已认证态） | 未登录、令牌过期、被强退或运行时所属租户停用/过期 | 防重入清空本地凭据、`TenantManager` 重置回 `"0"`、清理 `DictManager`、卸载动态路由与页签缓存，提示原因并跳转 `/login?redirect=<原路径>` |
+| **`100002`** | 平台超管跨租户切换/访问失效目标租户 | **严禁注销 `"0"` 平台会话**；自动复位 `TenantManager("0")`、清空 `DictManager`、重刷 `/auth/info` 与 `/auth/routes`，提示原因并回退 `/dashboard` |
+| **`101004`** | 登录页触发防爆破锁定 | 跳过全局弹窗，登录页读取 `(err.cause as Result<LoginLockDetailVO>)?.data` 驱动 `IP` / `ACCOUNT` 差异化倒计时 |
+| **`403`** | 路由无权限或接口越权/账号禁用 | 路由访问未授权菜单跳转 `/403` 引导页（提供“返回工作台”与零菜单“退出登录”出口）；接口级越权弹出明确拒绝原因（不跳转整页） |
 | **`409`** | 并发乐观锁冲突或唯一键冲突 | 保持当前表单不清空，提示“数据已被其他用户修改或编码已存在，请刷新核对后重试” |
 | **`429` / `40003`** | 限流拦截或 `v-idempotent` 防重 | 弹出克制警告提示 `"操作过于频繁，请稍后再试"` |
 | **`500` / `503`** | 系统未捕获异常或服务超时 | 提示 `"系统内部处理异常，请稍后重试"`，并附带后端返回的 `traceId` 及一键 `[复制 traceId]` 按钮，**绝不向用户暴露 SQL、表名或 Java 堆栈** |
 
 ---
 
-## 5. 后续前端工程规则同步备忘
+## 5. 前端工程规则同步状态（已收口）
 
-由于第一阶段正式确立了不绑定 `theme-pro.css` 默认皮肤、采用方案 A 与 `Precision Slate & Cobalt` 自有令牌体系的视觉路线，后续在 `Spec 1 / Spec 2` 启动 `ateng-solid-admin-web` 编码及 `#10` 终审归档时，需同步修订：
-- `ateng-solid-admin-web/docs/agents/styling-and-ateng-ui.md`
-- `ateng-solid-admin-web/docs/adr/0001-tailwindcss-without-preflight-and-theme-pro.md`
-- 若保留或放弃 `AtengProLayout` 改由自建轻量 `AdminLayout` 配合 `useTabsNav`，须同步记录至上述前端规范文档与 `Spec 2` 评审单。
+第一阶段视觉与布局架构已于 `ateng-solid-admin-web` 全面定稿并同步落盘：
+- 样式与令牌体系（彻底剥离 `theme-pro.css`、Light/Dark 双主色静态映射、`initTheme` 不传 `themeColor` 与防 FOUC）：见 `ateng-solid-admin-web/docs/adr/0001-tailwindcss-without-preflight-and-theme-pro.md` 与 `ateng-solid-admin-web/docs/agents/styling-and-ateng-ui.md`；
+- 方案 A 轻量自建 `AdminLayout`（组合复用 `AtengTabsNav`/`useTabsNav` + `provide(ATENG_PRO_LAYOUT_KEY)`）与单源 `useAuth` `WeakMap` 桥接：见 `ateng-solid-admin-web/docs/adr/0003-lightweight-scheme-a-admin-layout-and-state-assembly.md`。

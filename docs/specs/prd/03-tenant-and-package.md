@@ -117,8 +117,8 @@
 | :--- | :--- | :--- |
 | **登录入口校验** | `POST /admin/auth/login` 解析租户后发现已停用或 `expire_time < now` ➔ 抛出 `101005` | 登录页警报区提示 `"所属租户已停用或已过期，请联系平台管理员"` 并刷新验证码 |
 | **平台主动停用/删除租户** | 立即强退目标租户所有活跃 `admin` Token；下次请求触发 `NotLoginException` (`401`) | `AuthManager` 清空凭据、重置 `TenantManager("0")`、跳转 `/login` 并提示重新登录 |
-| **租户到期（`expire_time` 自然越过）** | 认证/租户状态守卫校验当前工作租户未停用且未过期（带短 TTL 缓存防每次查库），过期拦截返回 `101005`（或清理会话返回 `401`） | 前端拦截 `101005` / `401` 后清空本地登录态、回退 `"0"`、跳至 `/login` 并清晰提示 `"当前所属租户已停用或已过期"` |
-| **平台超管 `X-Tenant-Id` 切换拦截** | `TenantHeaderSwitchValidator` 校验切换目标不可为空、不可已删除或停用；不可切入停用租户（`403`） | 顶栏切换列表 `GET /admin/system/tenant/options` 已前置过滤仅展示正常未过期租户 |
+| **租户到期（`expire_time` 自然越过）** | `TenantAvailabilityInterceptor`（`order = 10`，多租户开启时激活）读取零漂移 `TenantAuthDTO` 缓存并实时比对 `now`；发现普通租户已停用/删除/到期立即 `LoginHelper.logout("admin")` 并抛出 `101005` | 前端响应拦截器将已登录态收到的 `101005` 视同会话终止，清空 `AuthManager`、将 `TenantManager` 复位为 `"0"`、跳至 `/login` 并清晰提示 `"当前所属租户已停用或已过期"` |
+| **平台超管 `X-Tenant-Id` 切换拦截** | `TenantHeaderSwitchValidator` 校验切换目标租户可用性，失效时直接抛出 `100002`（**绝不注销超管自身 `"0"` 号租户会话**） | 顶栏切换列表 `GET /admin/system/tenant/options` 已前置过滤仅展示正常未过期租户；若运行中遇 `100002` 则自动将 `TenantManager` 复位回 `"0"` 并刷新工作台 |
 
 ### 4.2 平台超管视角切换（`super_admin` in `"0"` ➔ `T != "0"`）互斥规则
 1. 切回/切出触发动作严格执行 [00-overview-and-ux-standards.md](./00-overview-and-ux-standards.md) §2.3：更新 `X-Tenant-Id` ➔ 关闭除 `/dashboard` 外所有页签 ➔ 重拉 `/admin/auth/info` 与 `/admin/auth/routes`。

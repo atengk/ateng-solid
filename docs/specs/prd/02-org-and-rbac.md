@@ -33,8 +33,8 @@
 | 底座组件 / 工具 | 实测约束与工程落地方案 | 门禁与调研锚点 |
 | :--- | :--- | :--- |
 | **`PermissionCacheService`** | 涉及用户角色变动、用户停用/删除、角色菜单变动时，**必须调用 3 参租户隔离重载** `clearUserCache("admin", tenantId, userId)` 与 `clearRoleCache("admin", tenantId, roleKey)` | `boot-1.2.0-constraints.md` `F3` / `B10` |
-| **`DataScopeType` & `@DataScope`** | 底座无内置 `DataScopeType` 枚举；由 `ateng-solid-common` 定义 `DataScopeType`（`1=ALL..5=SELF`）并由 `ateng-solid-system` 实现 `DataPermissionHandler` SPI；`DEPT_AND_CHILD` 通过 `sys_dept.ancestors` 服务端预解析为有界 `IN (...)` | `boot-1.2.0-constraints.md` `F4` / `auth-rbac` §3.2 |
-| **`ExcelUtil.readWithResult` & `ExcelFeedbackUtil`** | 底座 `readWithResult` 暂未强制检查 `maxSyncRows`（**`B14` `ateng-boot#1171` 待发版锁版后解锁 `Spec 3` 导入编码**）；返回模型为 `ExcelReadResult<T>`，转译 `ImportResultVO` 时**必须剥离 `ExcelErrorRow.rowData`** 防止实体敏感字段外泄 | `boot-1.2.0-constraints.md` `F6` / `B13` / `B14` |
+| **`DataScopeType` & `@DataScope`** | 底座无内置 `DataScopeType` 枚举；由 `ateng-solid-system-api` 定义 `DataScopeType`（`1=ALL..5=SELF`）并由 `ateng-solid-system` 实现 `SolidDataPermissionHandler` SPI（配合 `B16` `#1173` `failure-strategy: DENY_ALL`）；`DEPT_AND_CHILD` 通过 `sys_dept.ancestors` 服务端预解析为有界 `IN (...)`（上限 `1000`） | `boot-1.2.1-engineering-constraints.md` / `auth-rbac` §3.2 |
+| **`ExcelUtil.readWithResult` & `ExcelFeedbackUtil`** | `B14`（`#1171`）与 `B17`（`#1174` 按次 `maxSyncRows` 重载）已在上游 `dev` 闭环并接入本地 `1.2.1-SNAPSHOT` 联调（合入前须锁正式版）；返回模型为 `ExcelReadResult<T>`，转译 `ImportResultVO` 时**必须剥离 `ExcelErrorRow.rowData`** 防止实体敏感字段外泄 | `boot-1.2.1-engineering-constraints.md` / `B13`/`B14`/`B17` |
 | **`AtengTable` 树形模式** | 透传 `:tree-props="{ children: 'children', hasChildren: 'hasChildren' }"`、`:show-pagination="false"` 与 `row-key="id"` 渲染 `/system/dept`、`/system/menu` | `ui-1.1.0-capabilities.md` `D8` |
 | **`AtengDrawer` & `AtengIconSelect` & `AtengExcelExport`** | 菜单图标通过 `:custom-icons` 注入全量 `@element-plus/icons-vue` 映射（`D6`）；自定义抽屉页脚作用域参数待 `U6` (`#370`)、图标插槽扩展待 `U7` (`#371`)、导出直读 `Content-Disposition` 待 `U8` (`#372`) 发版后于 `Spec 3` 升级锁定 | `ui-1.1.0-capabilities.md` `D6` / `D7` / `D9` & `U6~U8` |
 
@@ -166,7 +166,7 @@
   - 顶部部门关键词即时过滤框；
   - 点击任意部门节点时，右表默认**按“当前部门及全部子孙部门”递归过滤用户**，同时在右表工具栏/筛选区显示 `"筛选部门：{deptName}（含下级）[×]"` 胶囊以便一键恢复全租户视图。
 - **右侧检索区与表格（`storageKey: 'solid:table:sys-user'`）**：
-  - 检索区（`defaultCollapsed: true, collapsedRows: 1`）：第一行 `username`（账号/昵称模糊）、`phone`（手机号码）、`status`（账号状态）；展开行：`createTime`（创建时间范围）。
+  - 检索区（`defaultCollapsed: true, collapsedRows: 1`）：第一行 `username`（账号/昵称模糊）、`phone`（**完整手机号精确匹配**，因持久层启用确定性 `@FieldEncrypt`，占位提示 `"请输入完整手机号（精确查询）"`）、`status`（账号状态）；展开行：`createTime`（创建时间范围）。
   - 工具栏左区：`+ 新增用户`、`批量删除`（置灰计数）、`[导入]`、`AtengExcelExport`（下拉：`导出全部筛选结果` / `导出已选用户 (N)`）；右侧标准 5 工具。
   - 表格列：多选框、`用户ID`（`mono`）、`用户账号`（`mono` + 超管 `[内置]` 标签）、`用户昵称`、`头像`（缩略圆标，失败降级首字）、`归属部门`、`手机号码`（`formatMaskPhone`）、`电子邮箱`（`formatMaskEmail`）、`状态`（Switch 确认切换）、`创建时间`、固定右侧操作列（`编辑`、`重置密码`、`删除`）。
 
@@ -203,7 +203,7 @@
 - 响应采用 `ExcelWebUtil` 流式输出带 RFC 5987 文件名响应头（如 `用户数据_20261124173000.xlsx`），前端配合 `U8` (`ateng-ui#372`) 与 `Blob-JSON` 双态嗅探落地。
 
 ### 7.2 模板下载与纯新增整批原子导入规则
-- **前置门禁提示**：导入源码实现受 **`B14` (`ateng-boot#1171`：`ExcelUtil.readWithResult` 强制校验 `maxSyncRows`)** 约束，待底座发布递进版并锁版后再开启 `Spec 3` 导入实现。
+- **前置门禁提示**：`B14`（`ateng-boot#1171`）与 `B17`（`ateng-boot#1174` 按次 `maxSyncRows` 重载）已在上游 `dev` 修复关单并刷新至本地 `1.2.1-SNAPSHOT`，可直接开展编码与离线测试，**正式合入 `dev`/`main` 前须锁回递进正式版**。
 - **模板下载（`GET /admin/system/user/import/template`）**：后端生成带批注示例行与表头样式的 `.xlsx` 模板，包含以下 **9 列**：
 
 | 列序 | 表头名称 | 必填 | 格式与业务解析规则 |
@@ -222,9 +222,9 @@
   1. **文件与行数前置拦截**：仅接受 `.xlsx`（`<= 2MB`），单次同步原子导入上限 **`500` 行**（考虑 `PasswordUtil` 310,000 次 PBKDF2 单用户哈希耗时，500 行内保障同步事务稳定不超时；超限 Fail-Fast 返回 `100005` 提示拆批导入）。
   2. **表头契约与 JSR-303 校验（`ExcelUtil.readWithResult` + `HeaderValidationStrategy.STRICT` / `LOOSE`）**：缺失必填表头立即报错 `100005`；通过 `BatchValidationListener` 保留 1-based 物理行号 `rowIndex`（`B13`）并收集全部字段格式错误。
   3. **文件内查重、关联解析、库内唯一性与配额校验**：基于全量有效行收集批内重复键、批量 `IN` 查询库内冲突与部门/岗位/角色映射（**严禁循环 N+1 查 DB**），并校验 `tenantEnabled = true` 时 `现有用户数 + 导入行数 <= account_count`（配额不足生成整表或首数据行错误提示）。
-  4. **原子提交或生成批注反馈**：
-     - **零错误（`errors.isEmpty()`）**：在同一事务内为每位用户调用 `PasswordUtil.hash(initPassword)`（生成独立随机盐，`pwd_update_time = NULL`）并调用 `BatchUtil` 批量落库 `sys_user`、`sys_user_post`、`sys_user_role`，返回 `ImportResultVO { totalCount, successCount, failCount: 0, errors: [], feedbackToken: null }`。
-     - **存在任一行错误（`!errors.isEmpty()`）**：**整批回滚零入库（`successCount = 0`）**；调用 `ExcelFeedbackUtil.renderErrorFeedback(originStream, outStream, errors)` 生成原表标红+批注 `.xlsx` 字节流存入服务端缓存（TTL **`15` 分钟**，绑定元数据 `{ tenantId, operatorUserId }`），返回 `ImportResultVO`（**剔除 `ExcelErrorRow.rowData`**，每条错误映射为 `{ rowNum, columnName, errorMessage, rawValue }`）。
+  4. **三段式事务解耦提交或生成批注反馈**：
+     - **零错误（`errors.isEmpty()`）**：① 在**无事务阶段**通过进程内 `Semaphore`（默认并发度 `2`，超限返 `429`）与独立有界平台线程池 `ateng.boot.async.pools.password-hash`（`mode: platform`，**禁虚拟线程**）并行计算 500 个独立随机盐 `PasswordUtil.hash(initPassword)`（严禁共享同一哈希）；② 随后开启极短 `@Transactional`（`< 100ms`），通过 `PessimisticLockUtil.forUpdate` 锁租户行复核配额并调用 `BatchUtil.insertBatch` 一次性批量落库 `sys_user`（`pwd_update_time = NULL`）、`sys_user_post`、`sys_user_role`，返回 `ImportResultVO { totalCount, successCount, failCount: 0, errors: [], feedbackToken: null }`（前端导入接口 Axios 超时专项放宽至 `120_000 ms`）。
+     - **存在任一行错误（`!errors.isEmpty()`）**：**零哈希计算、零写事务（`successCount = 0`）**；基于单次缓冲的 `byte[]` 二次构造 `ByteArrayInputStream` 调用 `ExcelFeedbackUtil.renderErrorFeedback(...)` 生成原表标红+批注 `.xlsx`，以 Redis 双 Key（`meta` + `bin`，TTL **`15` 分钟**，绑定 `{ tenantId, operatorUserId }`；无 Redis 时本地有界降级）暂存，返回 `ImportResultVO`（**剔除 `ExcelErrorRow.rowData`**，每条错误映射为 `{ rowNum, columnName, errorMessage, rawValue }`）。
 
 ### 7.3 前端 `<AtengExcelFeedback>` 交互与防越权下载
 1. 打开“导入用户”弹窗（`AtengDialog` `560px`）：提供 `[下载导入模板]` 链接、清晰规则摘要（`最多 500 行 · 2MB · 默认初始密码 · 任一行错误整批不入库`）与 `<AtengUpload accept=".xlsx" :max-size="2*1024*1024" :http-request="importUsersRequest" />`。

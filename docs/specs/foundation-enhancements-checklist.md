@@ -2,9 +2,12 @@
 
 本文档基于对同级目录 `ateng-boot`、`ateng-cloud`、`ateng-ui` 源码、Git 提交记录及 GitHub Issues 状态核查整理，受 [底层缺口即停工规范](../agents/foundation-first-gate.md) 硬门禁约束：**凡标为“硬停工等待项”的缺口，上层严禁编写临时降级/绕过补丁，必须待底座完成通用改造、通过独立性验收并发布递进正式版后，再升级恢复上层开发**。
 
-> **最新修订（2026-11-24 · `Spec 0` 已解锁，`B14~B15` 与 `U5~U8` 上游已修复关单、本地联调态已激活、待发版锁版合入）**：
+> **最新修订（2026-11-25 · `Spec 0` 已解锁，`B14~B17` 与 `U5~U12` 全部 12 项增量增强均已在上游 `dev` 修复关单并刷新本地联调，正式合入前待发版锁版）**：
 > - **首轮基础底座锁版（`Spec 0` ✅ 解封）**：`ateng-boot:1.2.0`、`ateng-cloud:1.1.0`、`ateng-ui:1.1.0`（`@atengk/{core,vue,element-plus}`）已完成双轴验收并锁版；
-> - **一阶段增量底座增强项（`B14~B15` & `U5~U8` · 🟢 上游 `dev` 已实现并关单 · 🔵 本地联调中 · ⏳ 正式合入前待发版锁版）**：6 项增量缺口（`ateng-boot#1171`、`#1172` 与 `ateng-ui#369`–`#372`）均已在底座仓库 `dev` 分支完成通用改造、单测验收并关闭 Issue，尚未发布 Maven Central / npm 正式版。本地开发阶段按第 5 节 SOP 消费本地临时构建（`ateng-boot:1.2.1-SNAPSHOT` 与 `pnpm pack + yalc` `@atengk/element-plus`），**正式代码提交合入 `dev`/`main` 前须待底座发布递进正式版（`1.2.1` / `1.1.1`）并还原锁版（由 `pre-commit` 硬拦截守护）**。
+> - **一阶段全部增量增强（`B14~B17` & `U5~U12` · 🟢 上游 `dev` 均已修复关单 · 🔵 本地联调包已刷新 · ⏳ 正式合入前待发版锁版）**：
+>   - `ateng-boot`：`#1171` (`8e7bef82`)、`#1172` (`0c172a12`)、`#1173` (`11457a6d`)、`#1174` (`e701cc34`) 均已关单并重新安装本地 `1.2.1-SNAPSHOT`；
+>   - `ateng-ui`：`#369`–`#372` (`36da58c`)、`#373` (`758b4c2`)、`#374` (`cdab8c3`)、`#375` (`3434c86`)、`#376` (`3cb4d48`) 均已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`；
+>   - 上述 12 项均可在本地按第 5 节 SOP 直接参与 `Spec 1 ~ Spec 4` 架构设计、编码与全量离线测试验证；**正式提交合入 `dev`/`main` 前须待底座发布递进正式版（`1.2.1` / `1.1.1`）并还原锁版（由 `pre-commit` 硬拦截守护）**。
 
 ---
 
@@ -13,10 +16,10 @@
 | 上层阶段 | 依赖底座项 | 当前状态 | 规划期/本地联调可推进工作 | 正式提交合入解锁条件 |
 | :--- | :--- | :---: | :--- | :--- |
 | **第一阶段 PRD & HTML 原型** | 已完成 `#2`/`#3` 调研 | 🟢 **已完结待签收** | 按 `atengk/ateng-solid#1` 路线图已完成全套 PRD、总装原型与跨仓 1:1 终审 | 已完结 |
-| **Spec 1**（公共原语/事件/骨架） | `ateng-boot-core:1.2.0`（含 **B9** `#1163`） | 🟢 **已发版并锁版验收通过** | 公共常量、错误码、`DomainEventPublisher`、`AuthGrantHandler` 接口与骨架 | 已解锁（`ateng-boot:1.2.0` + `ateng-ui:1.1.0`） |
-| **Spec 2**（认证会话/动态路由/基础壳） | **B1** (`#1076`)、**B2** (`#1077`)、**B4** (`#1079`)、**B5** (`flyway`/`#1094`)、**B9** (`#1163`)、**B10** (`#1164`)、**B12** (`#1166`)、**U0** (`#362~#364`)、**U1** (`#365`)；**增量**：**U5** (`#369` 已关单) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 认证中心、验证码、防爆破、动态路由、在线会话与 `AdminLayout`（本地通过 `yalc` 接入 `#369`） | `ateng-ui` 发布含 `#369` 的递进正式版并还原锁版 |
-| **Spec 3**（RBAC/数据权限/可开关多租户） | **B2** (`#1077`)、**B3** (`#1078`)、**B7** (`#1093`)、**B8** (`#1134`)、**B9** (`#1163`)、**B10** (`#1164`)、**U0** (`#362~#364`)；**增量**：**B14** (`#1171` 已关单)、**U6** (`#370` 已关单)、**U7** (`#371` 已关单)、**U8** (`#372` 已关单) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 全量 DDL、RBAC、`@DataScope`、可开关多租户及 Excel 原子导入导出（本地通过 `1.2.1-SNAPSHOT` 与 `yalc` 联调验证） | `ateng-boot` 发布含 `#1171`、`ateng-ui` 发布含 `#370~#372` 的递进正式版并还原锁版 |
-| **Spec 4**（枚举/字典/参数/Excel批注/头像/审计） | **B5** (`#1094`)、**B8** (`#1134`)、**B9** (`#1163`)、**B11** (`#1165`)、**B13** (`#1167`)、**U0** (`#362`)、**U4** (`#367`)；**增量**：**B15** (`#1172` 已关单) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 枚举接管、字典/参数、审计日志与预签名头像直链（本地消费 `1.2.1-SNAPSHOT` 验证 `whitelist-presigned-download: true`） | `ateng-boot` 发布含 `#1172` 的递进正式版并还原锁版 |
+| **Spec 1**（公共原语/事件/骨架/令牌） | `ateng-boot-core:1.2.0`（含 **B9** `#1163`）；**增量**：**B16** (`#1173`)、**U9** (`#373`)、**U10** (`#374`) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 公共原语、`system-api` 契约、双模配置（`DENY_ALL`）、17 表 DDL/种子、9 条 ArchUnit 与前端无 `theme-pro` 令牌/三单例/Vitest 基线 | `ateng-boot` 发布含 `#1173`、`ateng-ui` 发布含 `#373~#374` 的递进正式版并还原锁版 |
+| **Spec 2**（认证会话/动态路由/方案 A 壳） | **B1** (`#1076`)、**B2** (`#1077`)、**B4** (`#1079`)、**B5** (`flyway`/`#1094`)、**B9** (`#1163`)、**B10** (`#1164`)、**B12** (`#1166`)、**U0** (`#362~#364`)、**U1** (`#365`)；**增量**：**U5** (`#369`)、**U12** (`#376`) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 认证中心、验证码、防爆破 `101004`、不透明句柄、超管引导器、租户运行时拦截、动态路由与方案 A `AdminLayout`（本地通过 `yalc` 接入 `#369`/`#376`） | `ateng-ui` 发布含 `#369`/`#376` 的递进正式版并还原锁版 |
+| **Spec 3**（RBAC/数据权限/可开关多租户/导入） | **B2** (`#1077`)、**B3** (`#1078`)、**B7** (`#1093`)、**B8** (`#1134`)、**B9** (`#1163`)、**B10** (`#1164`)、**B13** (`#1167`)、**U0** (`#362~#364`)；**增量**：**B14** (`#1171`)、**B16** (`#1173`)、**B17** (`#1174`)、**U6~U8** (`#370~#372`)、**U11** (`#375`) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 5 级 `@DataScope`、组织与 RBAC、可开关多租户与套餐裁剪、500 行三段式 Fesod 并发导入与批注回写（本地通过 `1.2.1-SNAPSHOT` 与 `yalc` 联调验证） | `ateng-boot` 发布含 `#1171/#1173/#1174`、`ateng-ui` 发布含 `#370~#372/#375` 的递进正式版并还原锁版 |
+| **Spec 4**（枚举/字典/参数/头像/审计） | **B5** (`#1094`)、**B8** (`#1134`)、**B9** (`#1163`)、**B11** (`#1165`)、**U0** (`#362`)、**U4** (`#367`)；**增量**：**B15** (`#1172`)、**U11** (`#375`) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 枚举接管、字典/参数缓存、操作/登录只读审计与 S3/RustFS（含 `local` `#1172` 回退）预签名 `inline` 头像直链 | `ateng-boot` 发布含 `#1172`、`ateng-ui` 发布含 `#375` 的递进正式版并还原锁版 |
 | **Spec 5**（`ateng-cloud` 双态并存挂壳） | **B6** (`#1080`)、**C1~C6** (`#198~#205`) | 🟢 **`ateng-cloud:1.1.0` 已随 `1.2.0` 发版**（按规划排期在单体稳固后实施） | 双装配桥接设计与目录规划 | 已解锁（`ateng-cloud:1.1.0` 已发布至 Maven Central） |
 
 ---
@@ -164,6 +167,22 @@
 
 ---
 
+### [B16] 高优先级（上游 `dev` 已闭环 · 本地 `1.2.1-SNAPSHOT` 已更新 · 正式合入待发版锁版）：`AtengDataPermissionInnerInterceptor` 自动对 `OrExpression` 加括号与 Fail-Closed 可配失败策略
+
+- **现状与源码锚点**：`AtengDataPermissionInnerInterceptor.java:108-114` 原先存在两处数据权限安全防卫缺口：① 透传返回 `DataPermissionHandler` 生成的裸 `OrExpression`；② 捕获处理器异常后直接 `return null`（Fail-Open）。
+- **实际落地通用改造**：新增 `DataPermissionFailureStrategy` 枚举与 `ateng.boot.mybatis-plus.data-permission.failure-strategy`（默认 `DENY_ALL`，支持 `THROW`/`FAIL_OPEN`）；写时复制包裹顶层及嵌套 `OrExpression`，并显式透传 `BusinessException`。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1173`](https://github.com/atengk/ateng-boot/issues/1173)，`dev` 提交 `11457a6d`），已更新本地 `1.2.1-SNAPSHOT`，待发布正式版后锁版勾选
+
+---
+
+### [B17] 中优先级（上游 `dev` 已闭环 · 本地 `1.2.1-SNAPSHOT` 已更新 · 正式合入待发版锁版）：`ExcelUtil.readWithResult` 支持按次覆写 `maxSyncRows` 重载并完善 `ExcelReaderBuilder` 行号保留
+
+- **现状与源码锚点**：`ExcelUtil.java:1239-1341` 缺少按单次调用覆写 `maxSyncRows` 的重载；`ExcelReaderBuilder` 聚合监听器丢失 `validRowRecords`。
+- **实际落地通用改造**：`ExcelUtil.readWithResult` 新增 4 个无歧义 `int maxSyncRows` 重载；`ExcelReaderBuilder` 与 `ExcelMultiSheetResult` 同步保留 1-based `ExcelRowData` 物理行号视图。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1174`](https://github.com/atengk/ateng-boot/issues/1174)，`dev` 提交 `e701cc34`），已更新本地 `1.2.1-SNAPSHOT`，待发布正式版后锁版勾选
+
+---
+
 ## 2. `ateng-cloud`（已锁定正式版 **`1.1.0`** / 对齐 `ateng-boot:1.2.0`）
 
 > 经核查，`ateng-cloud` 已于 `2026-11-23` 正式发布 **`v1.1.0`**（提交 `a8b9fe4`）至 Maven Central，锁定 `<ateng-boot.version>1.2.0</ateng-boot.version>`，以下全部 8 个关联 Issue 均已闭环发版：
@@ -246,6 +265,34 @@
 - **现状与源码锚点**：`AtengExcelExport.vue:106-111` 在未传 `props.filename` 时直接回退 `export_${Date.now()}.xlsx`，未像同库 `@atengk/vue` `useExcel` 一样优先读取 `@atengk/core` `getBlobDisposition` + `parseContentDispositionFilename` 提取的服务端文件名。
 - **目标通用改造**：在 `AtengExcelExport.vue` 接入 `props.filename || parseContentDispositionFilename(getBlobDisposition(result)) || 'export_' + Date.now() + '.xlsx'`，100% 向后兼容。
 - **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#372`](https://github.com/atengk/ateng-ui/issues/372)，`dev` 提交 `36da58c`），本地已通过 `pnpm pack + yalc` 接入验证，待 npm 发版后还原锁版勾选
+
+---
+
+### [U9] 高优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 正式合入待发版锁版）：补齐 `@atengk/element-plus` `.vue.d.ts` 与 `GlobalComponents` 声明并修正查询/表格组件泛型约束
+
+- **实际落地通用改造**：升级 `vite-plugin-dts@^4.3.0`，1:1 生成 43 个 `.vue.d.ts` 并导出 39 组 78 项 `GlobalComponents`；放宽 `AtengTable`/`AtengQueryForm`/`AtengDescriptions` 泛型至 `T extends object`，修正 `QueryFormPagination` 零 `any` 契约并引入 `vue-tsc` 门禁。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#373`](https://github.com/atengk/ateng-ui/issues/373)，`dev` 提交 `758b4c2`），已通过 `pnpm pack + yalc` 更新本地联调包，待 npm 发版后还原锁版勾选
+
+---
+
+### [U10] 高优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 正式合入待发版锁版）：将 `AtengLoadingBar`、`AtengLoading` 与 `html.is-theme-switching` 基础样式下沉至 `dist/index.css`
+
+- **实际落地通用改造**：抽离 `_loading-base.scss` 与 `_theme-switch.scss` 共用 partial 由 `index.scss`（`dist/index.css`）与 `theme-pro.css` 共同复用（零 `!important`），补齐 `--el-color-primary-rgb` 等 CSS Fallback 与 `:root.dark` / `.dark` 兼容。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#374`](https://github.com/atengk/ateng-ui/issues/374)，`dev` 提交 `cdab8c3`），已通过 `pnpm pack + yalc` 更新本地联调包，待 npm 发版后还原锁版勾选
+
+---
+
+### [U11] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 正式合入待发版锁版）：修复 `AtengQueryForm` 嵌套防双发、`AtengExcelFeedback` 文件名解析与 `AtengDictTag` 空 `tagType` 告警
+
+- **实际落地通用改造**：`AtengQueryForm` 支持 `tableContext.loading` 回退、嵌套防双发与重置重入守卫；`AtengExcelFeedback` 对齐显式参数 > `Content-Disposition` > 默认名三级优先级；`AtengDictTag` 经 `resolveElTagType` 将空串/非法 `tagType` 归一化为 `undefined`。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#375`](https://github.com/atengk/ateng-ui/issues/375)，`dev` 提交 `3434c86`），已通过 `pnpm pack + yalc` 更新本地联调包，待 npm 发版后还原锁版勾选
+
+---
+
+### [U12] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 正式合入待发版锁版）：完善 `AtengProLayout` 与 `AtengTabsNav` 未接线属性及定制扩展性
+
+- **实际落地通用改造**：`AtengProLayout` 接入 `fixedHeader`/`fixedAside`/`tabsHeight`/`contentPadding`/`escExit` 并全量转发 `update:modelValue`/`batchClose` 与 4 插槽；`AtengTabsNav` 替换 Emoji 为可定制 SVG（`menuIcons`/`#menuIcon`），新增 `@batch-close`/`emitCloseOnBatch` 及 `iconResolver`/`#tabIcon`。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#376`](https://github.com/atengk/ateng-ui/issues/376)，`dev` 提交 `3cb4d48`），已通过 `pnpm pack + yalc` 更新本地联调包，待 npm 发版后还原锁版勾选
 
 ---
 
