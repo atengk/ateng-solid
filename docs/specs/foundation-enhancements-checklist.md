@@ -8,8 +8,8 @@
 >   - `ateng-boot`：`#1171` (`8e7bef82`)、`#1172` (`0c172a12`)、`#1173` (`11457a6d`)、`#1174` (`e701cc34`)、`#1175` (`900bd9c9`) 均已在上游 `dev` 修复并重新安装本地 `1.2.1-SNAPSHOT`；
 >   - `ateng-ui`：`#369`–`#372` (`36da58c`)、`#373` (`758b4c2`)、`#374` (`cdab8c3`)、`#375` (`3434c86`)、`#376` (`3cb4d48`) 均已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`；
 >   - 上述 13 项均可在 `dev` 携带 `1.2.1-SNAPSHOT` / `file:.yalc` 直接完成编码、本地全量验证、提交与关单；**合入 `main` 与正式发版前须待底座发布递进正式版（`1.2.1` / `1.1.1`）并还原锁版（由 `main` `pre-commit`、`pre-push`、`main` CI 与 `release.yml` 硬拦截守护）**。
-> - **全功能走查后继增强（2026-11-26 · 🟢 上游 `dev` 均已闭环 · 🔵 本地联调包已刷新 · ⏳ 合入 `main` 前待发版锁版）**：
->   - `ateng-boot`：**`B20`**（[`#1177`](https://github.com/atengk/ateng-boot/issues/1177)，提交 `fc329ec2`，已安装本地 `1.2.1-SNAPSHOT`，关联 [`atengk/ateng-solid#47`](https://github.com/atengk/ateng-solid/issues/47)）；
+> - **全功能走查后继增强（2026-11-27 · `B20`/`B21`/`U13~U17` 上游 Issue 均已闭环，本地快照/yalc 联调就绪）**：
+>   - `ateng-boot`：**`B20`**（[`#1177`](https://github.com/atengk/ateng-boot/issues/1177)，提交 `fc329ec2`，已安装本地 `1.2.1-SNAPSHOT`，关联 [`atengk/ateng-solid#47`](https://github.com/atengk/ateng-solid/issues/47)）；**`B21`**（[`#1178`](https://github.com/atengk/ateng-boot/issues/1178) 已关闭，提交 `a8e656c2`，`dev` `Java CI` 全绿且已刷新本地 `1.2.1-SNAPSHOT` 完成 `ateng-solid-server` 联调，合入 `main` 前待发版锁版）；
 >   - `ateng-ui`：**`U13`**（[`#377`](https://github.com/atengk/ateng-ui/issues/377)）、**`U14`**（[`#378`](https://github.com/atengk/ateng-ui/issues/378)），均于上游 `dev` 提交 `a9616d0` 闭环并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`（分别关联 [`atengk/ateng-solid#53`](https://github.com/atengk/ateng-solid/issues/53) 与 [`atengk/ateng-solid#50`](https://github.com/atengk/ateng-solid/issues/50)）；**`U15`**（[`#379`](https://github.com/atengk/ateng-ui/issues/379)，上游提交 `ee55b3b` / `d255cd8` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0004](../../ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md)）；**`U16`**（[`#380`](https://github.com/atengk/ateng-ui/issues/380)，上游提交 `19f79a7` / `1365732` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md)）；**`U17`**（[`#381`](https://github.com/atengk/ateng-ui/issues/381)，上游提交 `934135a` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 [`atengk/ateng-solid#57`](https://github.com/atengk/ateng-solid/issues/57)）。
 
 ---
@@ -209,6 +209,15 @@
 - **现状与源码锚点**：`ateng-boot-web` 的 `OperateLogAspect.java:132,208` 原固定采集 `request.getRequestURI()` 并写入 `OperateLogModel.requestUrl`。
 - **实际落地通用改造**：上游提交 `fc329ec2` 新增 `OperateLogUrlStrategy`（`DEFAULT` / `RAW_URI` / `BEST_MATCHING_PATTERN`），并在 `@OperateLog` 与 `WebProperties.OperateLogProperties` 增加 `urlStrategy` 与 `templateUrls` 配置能力（100% 向后兼容 `RAW_URI` 默认行为）；配合既有 `excludeParams` 即可同时脱敏路径路由与敏感参数。
 - **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1177`](https://github.com/atengk/ateng-boot/issues/1177)，提交 `fc329ec2`），已更新本地 `1.2.1-SNAPSHOT` 并由 [`atengk/ateng-solid#47`](https://github.com/atengk/ateng-solid/issues/47) 消费联调，待上游发布正式版并锁版后勾选
+
+---
+
+### [B21] 低/中优先级（🟢 上游 `dev` 已修复 `a8e656c2` · 🔵 本地 `1.2.1-SNAPSHOT` 联调通过 · ⏳ `main` 锁版待发版）：`GlobalExceptionHandler` 细分拦截非体积超限的 `MultipartException`
+
+- **现状与源码锚点**：`ateng-boot-web` `dev` 分支已在 `GlobalExceptionHandler.java` 补充 `@ExceptionHandler(MultipartException.class)`（提交 `a8e656c2`），严格保留 `MissingServletRequestPartException`（`400`）与 `MaxUploadSizeExceededException`（`413`）高优先级处理与 `GlobalExceptionCustomizer` SPI 优先介入，并将客户端畸形格式（`INVALID_FORMAT`）、传输中断（`CLIENT_DISCONNECTED`）与分片数量超限（`FILE_COUNT_EXCEEDED`）映射为 `400`，仅服务端临时目录/IO 故障维持 `500`。
+- **上层联调验证**：已通过本地 `ateng-boot` 仓 `dev`（提交 `a8e656c2`）编译安装最新 `1.2.1-SNAPSHOT`，并在 `ateng-solid-server` 的 `AuthSecurityEdgeMockMvcTest`（`/admin/auth/profile/avatar`）与 `SysUserExcelImportIntegrationTest`（`/admin/system/user/import`）补充非 multipart JSON 请求 `400`（`文件上传请求格式不合法或内容解析失败`）及缺失分片 `400` 联调断言；全模块离线测试 `153/153` 全部通过。
+- **准入纪律**：**严禁在 `ateng-solid-server` 通过上层 `GlobalExceptionCustomizer` 对 `MultipartException` 兜底打补丁**；`ateng-solid-server` 内其余 14 处 `IllegalStateException` / `IllegalArgumentException` 抛出点经核查均属于启动期校验、服务端配置/JDK 能力缺失、内部事务不变式守卫或已在 `BoundedDualModeCache` 内部捕获自愈，维持既有异常语义。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1178`](https://github.com/atengk/ateng-boot/issues/1178)，`dev` 提交 `a8e656c2`，远端 `Java CI` `#1169` / `45902095474` JDK 17 & 21 全绿通过），本地 `1.2.1-SNAPSHOT` 跨仓联调已通过；待上游合入 `main`、发布正式版并在 `ateng-solid-server` 锁版后勾选最终闭环
 
 ---
 
