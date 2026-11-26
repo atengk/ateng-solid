@@ -22,7 +22,7 @@
 - **关联父子工单（Sub-issues）**：`gh issue create -R atengk/ateng-solid --parent <parent> ...` 或 `gh issue edit <parent> -R atengk/ateng-solid --add-sub-issue <child>`；若环境不支持，则在子单顶部注明 `Part of #<parent>`
 - **阻塞依赖（Blocking）**：优先使用原生依赖 `gh issue create -R atengk/ateng-solid --blocked-by "<n1>,<n2>"` 或 `gh issue edit <child> -R atengk/ateng-solid --add-blocked-by <blocker>`；查询未关闭阻塞数：`gh issue view <n> -R atengk/ateng-solid --json blockedBy --jq '[.blockedBy.nodes[] | select(.state == "OPEN")] | length'`；不可用时回退至正文顶部 `Blocked by: #<n>`
 - **评论与状态流转**：`gh issue comment <number> -R atengk/ateng-solid -F <file>`、`gh issue edit <number> -R atengk/ateng-solid --add-label "<add>" --remove-label "<remove>"`、`gh issue edit <number> -R atengk/ateng-solid --add-assignee "@me"`
-- **关闭工单**：先评论交付说明 `gh issue comment <number> -R atengk/ateng-solid -F <summary-file>`，再执行 `gh issue close <number> -R atengk/ateng-solid`
+- **关闭工单**：先评论交付说明 `gh issue comment <number> -R atengk/ateng-solid -F <summary-file>`，再执行 `gh issue close <number> -R atengk/ateng-solid`（`[server]` / `[admin-web]` 功能与缺陷单只要关联底座改动已提交底座 `dev` 且通过底座单测、本仓已提交 `dev` 且本地全量测试通过即可关单；发版锁版统一由发版收口单追踪）
 
 > **目标仓库校验**：首次执行写操作前确认目标仓库为 `atengk/ateng-solid`（底座缺口单除外），严禁向第三方插件上游误提单。
 

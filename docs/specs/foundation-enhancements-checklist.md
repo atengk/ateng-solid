@@ -1,13 +1,16 @@
 # 底层基础设施待增强清单 (Foundation Enhancements Checklist)
 
-本文档基于对同级目录 `ateng-boot`、`ateng-cloud`、`ateng-ui` 源码、Git 提交记录及 GitHub Issues 状态核查整理，受 [底层缺口即停工规范](../agents/foundation-first-gate.md) 硬门禁约束：**凡标为“硬停工等待项”的缺口，上层严禁编写临时降级/绕过补丁，必须待底座完成通用改造、通过独立性验收并发布递进正式版后，再升级恢复上层开发**。
+本文档基于对同级目录 `ateng-boot`、`ateng-cloud`、`ateng-ui` 源码、Git 提交记录及 GitHub Issues 状态核查整理，受 [底层零补丁与跨仓联调规范](../agents/foundation-first-gate.md) 约束：**上层严禁编写临时降级/绕过补丁；经本地 `-SNAPSHOT` / `yalc` 调通且底座改动已提交至底座 `dev` 后，上层可在 `dev` 正常提交并关闭对应业务/缺陷 Issue，合入 `main` 与发版前须待底座发布递进正式版并锁回正式版本号**。
 
-> **最新修订（2026-11-25 · `Spec 0` 已解锁，`B14~B18` 与 `U5~U12` 已在上游 `dev` 修复并刷新本地联调，正式合入前待发版锁版）**：
+> **最新修订（2026-11-26 · 同步 `ADR-0004` 双阶门禁与后继底座项 `B20`/`U13~U16`）**：
 > - **首轮基础底座锁版（`Spec 0` ✅ 解封）**：`ateng-boot:1.2.0`、`ateng-cloud:1.1.0`、`ateng-ui:1.1.0`（`@atengk/{core,vue,element-plus}`）已完成双轴验收并锁版；
-> - **一阶段全部增量增强（`B14~B18` & `U5~U12` · 🟢 上游 `dev` 均已修复 · 🔵 本地联调包已刷新 · ⏳ 正式合入前待发版锁版）**：
+> - **一阶段全部增量增强（`B14~B18` & `U5~U12` · 🟢 上游 `dev` 均已修复 · 🔵 本地联调包已刷新 · ⏳ 合入 `main` 前待发版锁版）**：
 >   - `ateng-boot`：`#1171` (`8e7bef82`)、`#1172` (`0c172a12`)、`#1173` (`11457a6d`)、`#1174` (`e701cc34`)、`#1175` (`900bd9c9`) 均已在上游 `dev` 修复并重新安装本地 `1.2.1-SNAPSHOT`；
 >   - `ateng-ui`：`#369`–`#372` (`36da58c`)、`#373` (`758b4c2`)、`#374` (`cdab8c3`)、`#375` (`3434c86`)、`#376` (`3cb4d48`) 均已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`；
->   - 上述 13 项均可在本地按第 5 节 SOP 直接参与 `Spec 1 ~ Spec 4` 架构设计、编码与全量离线测试验证；**正式提交合入 `dev`/`main` 前须待底座发布递进正式版（`1.2.1` / `1.1.1`）并还原锁版（由 `pre-commit` 硬拦截守护）**。
+>   - 上述 13 项均可在 `dev` 携带 `1.2.1-SNAPSHOT` / `file:.yalc` 直接完成编码、本地全量验证、提交与关单；**合入 `main` 与正式发版前须待底座发布递进正式版（`1.2.1` / `1.1.1`）并还原锁版（由 `main` `pre-commit`、`pre-push`、`main` CI 与 `release.yml` 硬拦截守护）**。
+> - **全功能走查后继增强（2026-11-26 · 🟢 上游 `dev` 均已闭环 · 🔵 本地联调包已刷新 · ⏳ 合入 `main` 前待发版锁版）**：
+>   - `ateng-boot`：**`B20`**（[`#1177`](https://github.com/atengk/ateng-boot/issues/1177)，提交 `fc329ec2`，已安装本地 `1.2.1-SNAPSHOT`，关联 [`atengk/ateng-solid#47`](https://github.com/atengk/ateng-solid/issues/47)）；
+>   - `ateng-ui`：**`U13`**（[`#377`](https://github.com/atengk/ateng-ui/issues/377)）、**`U14`**（[`#378`](https://github.com/atengk/ateng-ui/issues/378)），均于上游 `dev` 提交 `a9616d0` 闭环并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`（分别关联 [`atengk/ateng-solid#53`](https://github.com/atengk/ateng-solid/issues/53) 与 [`atengk/ateng-solid#50`](https://github.com/atengk/ateng-solid/issues/50)）；**`U15`**（[`#379`](https://github.com/atengk/ateng-ui/issues/379)，上游提交 `ee55b3b` / `d255cd8` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0004](../../ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md)）；**`U16`**（[`#380`](https://github.com/atengk/ateng-ui/issues/380)，上游提交 `19f79a7` / `1365732` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md)）。
 
 ---
 
@@ -16,10 +19,10 @@
 | 上层阶段 | 依赖底座项 | 当前状态 | 规划期/本地联调可推进工作 | 正式提交合入解锁条件 |
 | :--- | :--- | :---: | :--- | :--- |
 | **第一阶段 PRD & HTML 原型** | 已完成 `#2`/`#3` 调研 | 🟢 **已完结待签收** | 按 `atengk/ateng-solid#1` 路线图已完成全套 PRD、总装原型与跨仓 1:1 终审 | 已完结 |
-| **Spec 1**（公共原语/事件/骨架/令牌） | `ateng-boot-core:1.2.0`（含 **B9** `#1163`）；**增量**：**B16** (`#1173`)、**U9** (`#373`)、**U10** (`#374`) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 公共原语、`system-api` 契约、双模配置（`DENY_ALL`）、17 表 DDL/种子、9 条 ArchUnit 与前端无 `theme-pro` 令牌/三单例/Vitest 基线 | `ateng-boot` 发布含 `#1173`、`ateng-ui` 发布含 `#373~#374` 的递进正式版并还原锁版 |
-| **Spec 2**（认证会话/动态路由/方案 A 壳） | **B1** (`#1076`)、**B2** (`#1077`)、**B4** (`#1079`)、**B5** (`flyway`/`#1094`)、**B9** (`#1163`)、**B10** (`#1164`)、**B12** (`#1166`)、**U0** (`#362~#364`)、**U1** (`#365`)；**增量**：**U5** (`#369`)、**U12** (`#376`) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 认证中心、验证码、防爆破 `101004`、不透明句柄、超管引导器、租户运行时拦截、动态路由与方案 A `AdminLayout`（本地通过 `yalc` 接入 `#369`/`#376`） | `ateng-ui` 发布含 `#369`/`#376` 的递进正式版并还原锁版 |
-| **Spec 3**（RBAC/数据权限/可开关多租户/导入） | **B2** (`#1077`)、**B3** (`#1078`)、**B7** (`#1093`)、**B8** (`#1134`)、**B9** (`#1163`)、**B10** (`#1164`)、**B13** (`#1167`)、**U0** (`#362~#364`)；**增量**：**B14** (`#1171`)、**B16** (`#1173`)、**B17** (`#1174`)、**U6~U8** (`#370~#372`)、**U11** (`#375`) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 5 级 `@DataScope`、组织与 RBAC、可开关多租户与套餐裁剪、500 行三段式 Fesod 并发导入与批注回写（本地通过 `1.2.1-SNAPSHOT` 与 `yalc` 联调验证） | `ateng-boot` 发布含 `#1171/#1173/#1174`、`ateng-ui` 发布含 `#370~#372/#375` 的递进正式版并还原锁版 |
-| **Spec 4**（枚举/字典/参数/头像/审计） | **B5** (`#1094`)、**B8** (`#1134`)、**B9** (`#1163`)、**B11** (`#1165`)、**U0** (`#362`)、**U4** (`#367`)；**增量**：**B15** (`#1172`)、**B18** (`#1175`)、**U11** (`#375`) | 🟢 **本地已就绪** / ⏳ **合入待发版锁版** | 7 项静态枚举接管、字典/参数多租户缓存、操作/登录只读审计与 S3/RustFS（含 `local` `#1172` 回退）预签名 `inline` 头像直链 | `ateng-boot` 发布含 `#1172`/`#1175`、`ateng-ui` 发布含 `#375` 的递进正式版并还原锁版 |
+| **Spec 1**（公共原语/事件/骨架/令牌） | `ateng-boot-core:1.2.0`（含 **B9** `#1163`）；**增量**：**B16** (`#1173`)、**U9** (`#373`)、**U10** (`#374`) | 🟢 **`dev` 已放行** / ⏳ **合 `main` 待锁版** | 公共原语、`system-api` 契约、双模配置（`DENY_ALL`）、17 表 DDL/种子、9 条 ArchUnit 与前端无 `theme-pro` 令牌/三单例/Vitest 基线 | `ateng-boot` 发布含 `#1173`、`ateng-ui` 发布含 `#373~#374` 的递进正式版并还原锁版 |
+| **Spec 2**（认证会话/动态路由/方案 A 壳） | **B1** (`#1076`)、**B2** (`#1077`)、**B4** (`#1079`)、**B5** (`flyway`/`#1094`)、**B9** (`#1163`)、**B10** (`#1164`)、**B12** (`#1166`)、**U0** (`#362~#364`)、**U1** (`#365`)；**增量**：**U5** (`#369`)、**U12** (`#376`) | 🟢 **`dev` 已放行** / ⏳ **合 `main` 待锁版** | 认证中心、验证码、防爆破 `101004`、不透明句柄、超管引导器、租户运行时拦截、动态路由与方案 A `AdminLayout`（本地通过 `yalc` 接入 `#369`/`#376`） | `ateng-ui` 发布含 `#369`/`#376` 的递进正式版并还原锁版 |
+| **Spec 3**（RBAC/数据权限/可开关多租户/导入） | **B2** (`#1077`)、**B3** (`#1078`)、**B7** (`#1093`)、**B8** (`#1134`)、**B9** (`#1163`)、**B10** (`#1164`)、**B13** (`#1167`)、**U0** (`#362~#364`)；**增量**：**B14** (`#1171`)、**B16** (`#1173`)、**B17** (`#1174`)、**U6~U8** (`#370~#372`)、**U11** (`#375`) | 🟢 **`dev` 已放行** / ⏳ **合 `main` 待锁版** | 5 级 `@DataScope`、组织与 RBAC、可开关多租户与套餐裁剪、500 行三段式 Fesod 并发导入与批注回写（本地通过 `1.2.1-SNAPSHOT` 与 `yalc` 联调验证） | `ateng-boot` 发布含 `#1171/#1173/#1174`、`ateng-ui` 发布含 `#370~#372/#375` 的递进正式版并还原锁版 |
+| **Spec 4**（枚举/字典/参数/头像/审计） | **B5** (`#1094`)、**B8** (`#1134`)、**B9** (`#1163`)、**B11** (`#1165`)、**U0** (`#362`)、**U4** (`#367`)；**增量**：**B15** (`#1172`)、**B18** (`#1175`)、**U11** (`#375`) | 🟢 **`dev` 已放行** / ⏳ **合 `main` 待锁版** | 7 项静态枚举接管、字典/参数多租户缓存、操作/登录只读审计与 S3/RustFS（含 `local` `#1172` 回退）预签名 `inline` 头像直链 | `ateng-boot` 发布含 `#1172`/`#1175`、`ateng-ui` 发布含 `#375` 的递进正式版并还原锁版 |
 | **Spec 5**（`ateng-cloud` 双态并存挂壳） | **B6** (`#1080`)、**C1~C6** (`#198~#205`) | 🟢 **`ateng-cloud:1.1.0` 已随 `1.2.0` 发版**（按规划排期在单体稳固后实施） | 双装配桥接设计与目录规划 | 已解锁（`ateng-cloud:1.1.0` 已发布至 Maven Central） |
 
 ---
@@ -153,7 +156,7 @@
 
 - **现状与源码锚点**：`ateng-boot-excel` 中 `ExcelUtil.read`（`ExcelUtil.java:940`）与 `ExcelUtil.readWithValidation`（`ExcelUtil.java:1221`）均校验 `maxSyncRows`（默认 `100_000`）；但 `ExcelUtil.readWithResult`（`ExcelUtil.java:1314-1342`）在无流式消费器（`dataConsumer = null`）全量驻留内存聚合法定数据与错误行时，完全未检查 `maxSyncRows`，存在大文件触发 OOM 的风险。
 - **目标通用改造**：在 `BatchValidationListener`（非流式全量聚合场景）与 `ExcelUtil.readWithResult` 中纳管 `maxSyncRows` 上限检查，超过即 Fail-Fast 抛出 `BusinessException(400, ...)`，100% 向后兼容。
-- **准入纪律**：**严禁在上层放弃 `ExcelUtil.readWithResult` 或自写全量计数监听器绕过**；本地开发阶段消费 `1.2.1-SNAPSHOT` 提前联调验证，正式合入 `dev`/`main` 前须待底座发布正式版并还原锁版。
+- **准入纪律**：**严禁在上层放弃 `ExcelUtil.readWithResult` 或自写全量计数监听器绕过**；`dev` 阶段消费 `1.2.1-SNAPSHOT` 联调提交，合入 `main` 与发版前须待底座发布正式版并还原锁版。
 - **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1171`](https://github.com/atengk/ateng-boot/issues/1171)，`dev` 提交 `8e7bef82`），本地已接入 `1.2.1-SNAPSHOT` 联调，待发布正式版后锁版勾选
 
 ---
@@ -162,7 +165,7 @@
 
 - **现状与源码锚点**：`ateng-boot-storage` 自动装配了 `LocalStorageDownloadController`（默认 `/storage/local/download`，内置 HMAC-SHA256 签名与 `expires` 时效防盗链）；但当宿主启用 `ateng-boot-satoken` 全局拦截（`check-login=true`、`includes=["/**"]`）时，浏览器 `<img>` / `<el-avatar>` 直接加载预签名链接会因无法携带自定义 Token 头返回 `401`。
 - **实际落地通用改造**：`LocalStorageProperties` 新增细粒度开关 `download-endpoint-enabled` / `upload-endpoint-enabled`（默认 `true`）与 `whitelist-presigned-download` / `whitelist-presigned-upload`（默认 `false`），在 `ateng-boot-storage` 中通过 `LocalStorageSaTokenWhitelistConfiguration`（类加载隔离）按需注册精确路径白名单。
-- **准入纪律**：**严禁在业务配置硬编码绕过内部下载端点或自写冗余转发代理控制器**；本地开发阶段消费 `1.2.1-SNAPSHOT` 提前联调验证，正式合入 `dev`/`main` 前须待底座发布正式版并还原锁版。
+- **准入纪律**：**严禁在业务配置硬编码绕过内部下载端点或自写冗余转发代理控制器**；`dev` 阶段消费 `1.2.1-SNAPSHOT` 联调提交，合入 `main` 与发版前须待底座发布正式版并还原锁版。
 - **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1172`](https://github.com/atengk/ateng-boot/issues/1172)，`dev` 提交 `0c172a12`），本地已接入 `1.2.1-SNAPSHOT` 联调，待发布正式版后锁版勾选
 
 ---
@@ -193,11 +196,19 @@
 
 ---
 
-### [B19] 中/高优先级（上游停工等待 · 关联 `atengk/ateng-solid#38`）：`AtengSaTokenAutoConfiguration` 与 `SaBeanInject` 初始化顺序竞态导致 `TokenProperties` 被覆盖
+### [B19] 中/高优先级（上游 `dev` 已修复 · 关联 `atengk/ateng-solid#38`）：`AtengSaTokenAutoConfiguration` 与 `SaBeanInject` 初始化顺序竞态导致 `TokenProperties` 被覆盖
 
 - **现状与源码锚点**：`AtengSaTokenAutoConfiguration.@PostConstruct initFirewallStrategy()` 将 `ateng.boot.satoken.token.timeout`（`24h`）与 `active-timeout` 写入 `SaManager.getConfig()` 后，后初始化的 `sa-token-spring-boot3-starter` `SaBeanInject` 构造函数调用 `SaManager.setConfig(SaBeanRegister.getSaTokenConfig())`，将全局配置覆盖回 Sa-Token 默认 `2592000s`（30 天）与 `-1`。
-- **准入纪律**：**严禁在上层 `ateng-solid-server` 编写自定义 `SaTokenConfig` Bean 或后置补丁绕过**；已提报上游通用修复工单并暂停受阻验证。
+- **准入纪律**：**严禁在上层 `ateng-solid-server` 编写自定义 `SaTokenConfig` Bean 或后置补丁绕过**；已在上游 `dev` 通用修复并可随 `dev` 提交闭环 `#38`，合入 `main` 前锁回正式版。
 - **核实状态**：- [ ] 上游 `dev` 已提交修复（[`atengk/ateng-boot#1176`](https://github.com/atengk/ateng-boot/issues/1176)，`dev` 提交 `193a7713`），已更新本地 `1.2.1-SNAPSHOT` 并完成 [`atengk/ateng-solid#38`](https://github.com/atengk/ateng-solid/issues/38) 端到端回归验证（`/admin/auth/online/page` 返回 `tokenTimeout=86388` / 页面显示 `23小时59分`），待上游推送并发布正式版后锁版勾选
+
+---
+
+### [B20] 中优先级（上游 `dev` 已闭环 · 本地 `1.2.1-SNAPSHOT` 已更新 · 正式合入待发版锁版）：`OperateLogAspect` 支持请求路由模板采集或路径参数脱敏配置
+
+- **现状与源码锚点**：`ateng-boot-web` 的 `OperateLogAspect.java:132,208` 原固定采集 `request.getRequestURI()` 并写入 `OperateLogModel.requestUrl`。
+- **实际落地通用改造**：上游提交 `fc329ec2` 新增 `OperateLogUrlStrategy`（`DEFAULT` / `RAW_URI` / `BEST_MATCHING_PATTERN`），并在 `@OperateLog` 与 `WebProperties.OperateLogProperties` 增加 `urlStrategy` 与 `templateUrls` 配置能力（100% 向后兼容 `RAW_URI` 默认行为）；配合既有 `excludeParams` 即可同时脱敏路径路由与敏感参数。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1177`](https://github.com/atengk/ateng-boot/issues/1177)，提交 `fc329ec2`），已更新本地 `1.2.1-SNAPSHOT` 并由 [`atengk/ateng-solid#47`](https://github.com/atengk/ateng-solid/issues/47) 消费联调，待上游发布正式版并锁版后勾选
 
 ---
 
@@ -311,6 +322,49 @@
 
 - **实际落地通用改造**：`AtengProLayout` 接入 `fixedHeader`/`fixedAside`/`tabsHeight`/`contentPadding`/`escExit` 并全量转发 `update:modelValue`/`batchClose` 与 4 插槽；`AtengTabsNav` 替换 Emoji 为可定制 SVG（`menuIcons`/`#menuIcon`），新增 `@batch-close`/`emitCloseOnBatch` 及 `iconResolver`/`#tabIcon`。
 - **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#376`](https://github.com/atengk/ateng-ui/issues/376)，`dev` 提交 `3cb4d48`），已通过 `pnpm pack + yalc` 更新本地联调包，待 npm 发版后还原锁版勾选
+
+---
+
+### [U13] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 正式合入待发版锁版）：修复 `AtengTabsNav` `role="tablist"` 作用域与嵌套 ARIA 角色违规
+
+- **现状与源码锚点**：`AtengTabsNav.vue:151` 原将 `role="tablist"` 置于最外层容器，且 `TabsNavItem.vue:79-127` 在 `contextMenu=true` 时导致 `ElDropdown` / `role="tab"` / 关闭按钮触发 ARIA 违规。
+- **实际落地通用改造**：上游提交 `a9616d0` 已收口 `role="tablist"` 至 `.at-tabs-nav__track` 并修正 `TabsNavItem` 的 `ElDropdown` / 语义按钮结构，100% 保持视觉与插槽兼容。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#377`](https://github.com/atengk/ateng-ui/issues/377)，提交 `a9616d0`），已通过 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，待 npm 发版锁版后勾选
+
+---
+
+### [U14] 低/中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 正式合入待发版锁版）：`AtengExcelFeedback` 透传底层 `AtengDialog` 的 `open`/`opened`/`closed` 生命周期事件
+
+- **现状与源码锚点**：`AtengExcelFeedback.vue:275-287` 与 `excel-feedback/types.ts:113-119` 原未透传底层 `AtengDialog` 的 `open`、`opened`、`closed` 事件。
+- **实际落地通用改造**：上游提交 `a9616d0` 已在 `AtengExcelFeedbackEmits` 补全并透传 `open`/`opened`/`closed` 事件，由 [`atengk/ateng-solid#50`](https://github.com/atengk/ateng-solid/issues/50) 接回 `UserImportDialog` 消费。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#378`](https://github.com/atengk/ateng-ui/issues/378)，提交 `a9616d0`），已通过 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，待 npm 发版锁版后勾选
+
+---
+
+### [U15] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 合入 `main` 前待发版锁版）：优化 `AtengTable` 双卡表面容器与分页栏自适应布局能力
+
+- **现状与源码锚点**：
+  - `AtengTable.vue`（原 L974-L1242, L1245-L1336 `.at-table` / `.at-table__pagination`）原设白底且 `padding: 0`、无圆角边框，分页仅 `padding: 12px 0 0 0; justify-content: flex-end;` 且缺 `flex-wrap` / `tabular-nums` 与单页/空态自适应；
+  - `AtengQueryForm.vue`（原 L411-L417）自带 `padding: 18px 18px 2px` 与 `margin-bottom: 16px`，嵌于 `AtengTable #query` 后导致白隙被吞并、下方工具栏/表格/分页（末字「页」及固定右操作列）左右下 `0px` 贴边，且与 `AtengPageSkeleton.vue` 左总右控分布及侧栏树卡片边框不一致；
+  - `AtengExcelFeedback.vue`（原 L317-L325, L384-L388）缺少分页折行与 `tabular-nums` 内置保障。
+- **实际落地通用改造**：上游提交 `ee55b3b` / `d255cd8` 已实现并关单：
+  1. `AtengTable` 与 `AtengQueryForm` 新增 `surface?: 'card' | 'plain'`（默认 `'card'`）与 `--at-table-card-radius`、`--at-table-card-border`、`--at-table-surface-padding`、`--at-table-query-gap`、`--at-query-form-*` CSS 变量，工具栏+表格+分页收敛至 `.at-table__surface` 独立卡且全屏模式自动去重框；
+  2. 新增 `paginationAlign`（默认 `'between'`：`共 N 条` 置左、其余控制置右）、`responsivePagination`（`<640px`/`<480px` 自适应降级与 `flex-wrap: wrap`）、`hidePaginationOnEmpty`（`total === 0` 自动隐藏）、`hideJumperOnSinglePage`（单页收敛 `jumper`），同步对齐 `AtengExcelFeedback` 的 `tabular-nums` 与换行；
+  3. 上层 `admin-web` 已在 `tokens.css` / `main.css` 对接细边框/圆角/`12px` 间距与分页视觉令牌，并移除 `dict` 页面的局部 `pagination-layout` 覆盖。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#379`](https://github.com/atengk/ateng-ui/issues/379)，提交 `ee55b3b` / `d255cd8`），已通过 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，待 npm 发版锁版后勾选（关联 `admin-web` [ADR-0004](../../ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md) 与 [00-overview-and-ux-standards.md](./prd/00-overview-and-ux-standards.md) §3.1–§3.2）
+
+---
+
+### [U16] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 合入 `main` 前待发版锁版）：`AtengTable` 扩展 `autoHeightMode?: 'fixed' | 'max'` 弹性封顶滚动能力
+
+- **现状与源码锚点**：
+  - `@atengk/element-plus` `AtengTable` 原 `autoHeight?: boolean | number` 仅向 `<el-table>` 绑定固定 `:height="tableHeight"`（少数据或空态下仍会强制撑满视口并留下大片空白），而关闭 `autoHeight` 时大量数据（每页 50/100 条或全展开树表）会触发外层页面容器滚动导致表头与分页栏滚出视口；
+  - `useTableAutoHeight` 计算可用高度时原未计入 `.at-table__surface` 底部 `borderBottomWidth`，当上层传入精确底部预留值（如 `:auto-height="16"`）时易产生 `1~2px` 外层滚动条溢出。
+- **实际落地通用改造**：上游提交 `19f79a7` / `1365732` 已实现并关单（100% 向后兼容）：
+  1. 在 `AtengTableProps` 新增 `autoHeightMode?: TableAutoHeightMode`（`'fixed' | 'max'`，默认 `'fixed'` 保留现有 `:height` 撑满行为）；`'max'` 模式下向 `<el-table>` 互斥绑定 `:max-height="tableHeight"`（`height: undefined`），实现“少数据随内容收缩、超出视口自动封顶并在表格体内部滚动锁定表头与分页栏”；
+  2. 在 `useTableLayout` 计入 `.at-table__surface` 底部边框宽度、修正 `:auto-height="0"` 边界并补齐 `#query`/`toolbar`/`pagination`/`expand-change` 联动重算与单测覆盖；
+  3. 上层 `admin-web` 已新增 `src/composables/useListTableLayout.ts` 并完成全站 12 个业务页（13 张表）接入与 `ListTableLayout.spec.ts` 全绿验收。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#380`](https://github.com/atengk/ateng-ui/issues/380)，提交 `19f79a7` / `1365732`），已通过 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 并完成上层全量改造与四合一校验，待 npm 发版锁版后勾选（关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md) 与 [00-overview-and-ux-standards.md](./prd/00-overview-and-ux-standards.md) §3.1–§3.2）
 
 ---
 

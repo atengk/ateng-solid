@@ -31,14 +31,14 @@
 
 ## 2. 底座缺口再审计结论（`ateng-boot` / `ateng-ui`）
 
-经核对 `docs/specs/prd/_research/boot-1.2.0-constraints.md`、`ui-1.1.0-capabilities.md` 与上游仓库最新 `dev` 提交及 GitHub Issues 状态：**本次终审未发现新的未登记底座缺口**；且先前登记的 **6 项增量门禁均已在上游 `dev` 修复验收并关闭 Issue**（尚未发布 Maven Central / npm 正式版，已按 `docs/agents/foundation-first-gate.md` 第 4 节 SOP 切入本地联调态供先行开发验证，**正式提交合入 `dev`/`main` 前须待发版并还原正式锁版**）：
+经核对 `docs/specs/prd/_research/boot-1.2.0-constraints.md`、`ui-1.1.0-capabilities.md` 与上游仓库最新 `dev` 提交及 GitHub Issues 状态：**本次终审未发现新的未登记底座缺口**；且先前登记的增量门禁均已在上游 `dev` 修复验收并关闭 Issue（本地已按 `docs/agents/foundation-first-gate.md` 第 4 节 SOP 切入 `-SNAPSHOT` / `yalc` 协同态，**可在 `dev` 正常提交并关闭业务/缺陷 Issue，合入 `main` 与发版前须待底座发版并还原正式锁版**）：
 
-| 门禁编号 | 上游 Issue & `dev` 提交 | 当前状态 | 本地联调方式 | 正式合入红线 |
+| 门禁编号 | 上游 Issue & `dev` 提交 | 当前状态 | 本地联调方式 | `main` 合入红线 |
 | :---: | :--- | :---: | :--- | :--- |
-| **B14** | [`atengk/ateng-boot#1171`](https://github.com/atengk/ateng-boot/issues/1171) (`8e7bef82`) | `CLOSED`（待发版） | `ateng-boot:1.2.1-SNAPSHOT` | `pre-commit` 拦截 `-SNAPSHOT` 提交；正式合入前锁版 `1.2.1+` |
-| **B15** | [`atengk/ateng-boot#1172`](https://github.com/atengk/ateng-boot/issues/1172) (`0c172a12`) | `CLOSED`（待发版） | `ateng-boot:1.2.1-SNAPSHOT`（新增 `whitelist-presigned-download: true` 与 `upload-endpoint-enabled: false`） | `pre-commit` 拦截 `-SNAPSHOT` 提交；正式合入前锁版 `1.2.1+` |
+| **B14** | [`atengk/ateng-boot#1171`](https://github.com/atengk/ateng-boot/issues/1171) (`8e7bef82`) | `CLOSED`（待发版） | `ateng-boot:1.2.1-SNAPSHOT` | `dev` 放行；合入 `main` 前锁版 `1.2.1+`（`pre-push`/`main` CI 拦截 `-SNAPSHOT`） |
+| **B15** | [`atengk/ateng-boot#1172`](https://github.com/atengk/ateng-boot/issues/1172) (`0c172a12`) | `CLOSED`（待发版） | `ateng-boot:1.2.1-SNAPSHOT`（新增 `whitelist-presigned-download: true` 与 `upload-endpoint-enabled: false`） | `dev` 放行；合入 `main` 前锁版 `1.2.1+` |
 | **B16 / B17** | [`atengk/ateng-boot#1173`](https://github.com/atengk/ateng-boot/issues/1173) / [`#1174`](https://github.com/atengk/ateng-boot/issues/1174) | `CLOSED`（待发版） | `ateng-boot:1.2.1-SNAPSHOT`（新增 `data-permission.failure-strategy: DENY_ALL` 与 Fesod 按次 `maxSyncRows` 重载） | 同上 |
-| **U5 ~ U8** | [`atengk/ateng-ui#369`](https://github.com/atengk/ateng-ui/issues/369) ~ [`#372`](https://github.com/atengk/ateng-ui/issues/372) (`36da58c`) | `CLOSED`（待发版） | `pnpm pack + yalc` 接入 `@atengk/element-plus` | `pre-commit` 拦截 `file:.yalc` 提交；发版后执行 `yalc remove --all && pnpm up @atengk/*` |
+| **U5 ~ U8** | [`atengk/ateng-ui#369`](https://github.com/atengk/ateng-ui/issues/369) ~ [`#372`](https://github.com/atengk/ateng-ui/issues/372) (`36da58c`) | `CLOSED`（待发版） | `pnpm pack + yalc` 接入 `@atengk/element-plus` | `dev` 放行；合入 `main` 前执行 `yalc remove --all && pnpm up @atengk/*` |
 | **U9 ~ U12** | [`atengk/ateng-ui#373`](https://github.com/atengk/ateng-ui/issues/373) ~ [`#376`](https://github.com/atengk/ateng-ui/issues/376) | `CLOSED`（待发版） | `pnpm pack + yalc` 接入 `@atengk/element-plus`（`.vue.d.ts` + `GlobalComponents`、`style.css` 内置 loading/theme-switch、`AtengQueryForm`/`AtengDictTag`/`AtengExcelFeedback` 修复、`AtengTabsNav` `emitCloseOnBatch`/`@batch-close`/`menuIcons`/`iconResolver`） | 同上 |
 
 ---
@@ -106,8 +106,8 @@
 - [x] `/login`（`AtengCaptcha` `:refresh` Prop、`101004` `err.cause.data` `IP`/`ACCOUNT` 倒计时、CapsLock 提示、`redirect` 白名单）、`/dashboard`、`/profile`（`AtengUpload` `:http-request` 桥接）、`/403`（零菜单退出兜底）、`/404` 通过 `pnpm 四合一` 与 Vitest 三层离线单测。
 
 ### Spec 3：组织架构、RBAC、`@DataScope` 与可开关 SaaS 多租户
-- [ ] **增量底座联调与正式合入锁版检查**：
-  - `B14`（`#1171`）、`B16`（`#1173`）、`B17`（`#1174`）与 `U6~U8`（`#370~#372`）、`U9~U12`（`#373~#376`）均已在底座 `dev` 关单，本地已分别通过 `1.2.1-SNAPSHOT` 与 `yalc` 接入可直接开展开发与自测；**正式向 `dev`/`main` 提交合入前**须待底座发布递进正式版并还原锁版；
+- [ ] **增量底座正式合入 `main` 锁版检查**：
+  - `B14`（`#1171`）、`B16`（`#1173`）、`B17`（`#1174`）与 `U6~U8`（`#370~#372`）、`U9~U12`（`#373~#376`）均已在底座 `dev` 关单，本地已分别通过 `1.2.1-SNAPSHOT` 与 `yalc` 接入并在 `dev` 放行提交与关单；**合入 `main` 与发版前**须待底座发布递进正式版并还原锁版；
 - [x] Flyway `V1.0.0__system_init_schema.sql`（17 表全量 `utf8mb4_0900_ai_ci` + 表简名前缀索引 + 显式 `NOT NULL DEFAULT 0` + 加密列宽 `phone 128`/`email 255`）与 `V1.0.1__system_init_seed.sql`（`< 100,000` 确定性 ID 号段、58 条菜单含 42 `F` 按钮）通过 MySQL 8.4 LTS 与 H2 (`MODE=MySQL`) 双模校验；`SysUser`/`SysDept` 联系字段经 `ContactFieldCrypto` 收口确定性加密与归一化；
 - [x] 实现 `SolidDataPermissionHandler` SPI（内部查询包 `runWithoutPermission`、`DEPT_AND_CHILD` 预解析 `sys_dept.ancestors` 禁写 `FIND_IN_SET` + `1000` 部门上限抛 `100003`、无部门兜底 `1 = 0`、`sys_user` `userColumn = "id"`）与 `TenantHeaderSwitchValidator` SPI；
 - [x] 角色/用户/菜单/租户权限缓存与会话强退副作用一律经 `TransactionUtil.executeAfterCommit` 后置触发（3 参 `PermissionCacheService.clearUserCache`/`clearRoleCache` 与 `clearAll`）；角色菜单回显遵循“联动态仅传叶子 ID”；
@@ -115,7 +115,7 @@
 - [x] 用户导入实现 9 列模板下载（`import/template`）、单次 `byte[]` 双读 + `#1174` 按次 `maxSyncRows=500` 重载、三段式解耦流水线（无事务校验 ➔ `Semaphore(2)` + 平台池 `password-hash` 并行哈希 ➔ 短事务批插，前端超时 `120s`）、剥离 `ExcelErrorRow.rowData` 及 Redis 双 Key 15 分钟归属隔离批注下载（`import/feedback/{feedbackToken}`）。
 
 ### Spec 4：静态枚举、动态字典、系统参数、头像直链与只读审计日志
-- [ ] **增量底座联调与正式合入锁版检查**：默认走 `storage.type=s3`（RustFS/MinIO，需 `software.amazon.awssdk:{s3,apache-client}`）+ `guard.enabled=true` + `strict-magic-check=true`；本地磁盘回退模式保留 `B15`（`#1172`）`local.whitelist-presigned-download=true` + `upload-endpoint-enabled=false` + 固定 `secret-key`；**正式提交合入前**须待 `ateng-boot` 发布正式版并还原锁版；
+- [ ] **增量底座正式合入 `main` 锁版检查**：默认走 `storage.type=s3`（RustFS/MinIO，需 `software.amazon.awssdk:{s3,apache-client}`）+ `guard.enabled=true` + `strict-magic-check=true`；本地磁盘回退模式保留 `B15`（`#1172`）`local.whitelist-presigned-download=true` + `upload-endpoint-enabled=false` + 固定 `secret-key`；**合入 `main` 与发版前**须待 `ateng-boot` 发布正式版并还原锁版；
 - [x] `SysEnumController` 接管 `/admin/system/enums/**` 并配置 `@SaCheckLogin`；前端枚举适配层将 `OptionItem` 映射为 `DictItem` 并把 `'default'` 归一化为 `''`；
 - [x] `/system/dict` 平台专属双面板管理支持 `dictType` 编辑锁定与 `isDefault` 同类型事务互斥（`30m` 缓存写后驱逐）；`sys_config` 对内置 `Y` 禁止删改键名、`sys.user.initPassword` 强制强口令校验，并支持多租户读取自动回退平台租户 `0` 全局默认值；
 - [x] `@OperateLog` 统一使用 `type = OperateTypeEnum.XXX`；`SolidOperateLogStorageProvider` 在异步线程中基于 `model.tenantId` + `model.userId` 主键查库补全真实 `userName`（禁调 `LoginHelper.getLoginUser()`）并落库 `description`/`browser`/`os`；登录日志消费领域事件并复用 `UserAgentUtil.parse`；两日志模块保持严格只读。

@@ -4,7 +4,7 @@
 - **关联工单**：[确定认证登录、工作台、个人中心与在线会话域 PRD 与原型](https://github.com/atengk/ateng-solid/issues/5)（路线图：[第一阶段（MVP 内核）需求文档（PRD）与高保真交互原型路线图](https://github.com/atengk/ateng-solid/issues/1)）
 - **前置真源**：
   - [设计系统规范](./design-system.md) | [第一阶段总览与全站交互规范](./00-overview-and-ux-standards.md)
-  - [跨端通信协议与数据契约](../../agents/contracts.md) | [底层缺口即停工规范](../../agents/foundation-first-gate.md)
+  - [跨端通信协议与数据契约](../../agents/contracts.md) | [底层零补丁与联调规范](../../agents/foundation-first-gate.md)
   - [Boot 1.2.0 一手源码调研](./_research/boot-1.2.0-constraints.md) | [UI 1.1.0 一手源码调研](./_research/ui-1.1.0-capabilities.md)
   - [底层基础设施待增强清单](../foundation-enhancements-checklist.md)
 - **交互参考原型**：[认证会话与工作台交互原型 (`auth-and-workspace.html`)](../../prototypes/phase1/auth-and-workspace.html) | [定稿方案 A 基础壳 (`shell-accepted.html`)](../../prototypes/phase1/shell-accepted.html)
@@ -218,7 +218,7 @@
   3. 同步触发操作审计 `@OperateLog(module = "在线会话", type = OperateTypeEnum.FORCE)`（或 `LOGOUT` 对齐 `OperateTypeEnum` 11 常量，见下表注）——注：`ateng-boot` `OperateTypeEnum` 常量为 `LOGOUT` / `DELETE` / `OTHER`，本强退操作统一标注 `type = OperateTypeEnum.LOGOUT, description = "强退在线会话"`。
 
 #### 检索区、表格列与操作保护（严格对齐 `OnlineUser` 原生字段）
-- **检索区（`AtengQueryForm`，`defaultCollapsed: true, collapsedRows: 1`）**：
+- **检索区（`AtengQueryForm`，`defaultCollapsed: false, showCollapse: false` 单行平铺）**：
   - `username`（登录账号，模糊包含匹配）；
   - `clientIp`（客户端 IP / CIDR 网段，如 `192.168.1.10` 或 `10.10.2.0/24`，提供占位提示说明支持 CIDR）；
   - 操作按钮：`[查询]`、`[重置]`（接入 `v-idempotent`；输入框按 `Enter` 忽略 IME 选词触发查询）。

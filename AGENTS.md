@@ -10,7 +10,7 @@
 ## 1. 工作区硬红线
 
 - **仓库隔离与双分支**：各子仓独立提交推送，严禁将子仓源码提交到根仓；全仓统一 `main`（只读发布）+ `dev`（日常开发）与 Conventional Commits；未获明确指令前改动保留工作区，暂存显式指定路径（禁 `git add .`/`-A`）。
-- **底层缺口即停工（Zero Workaround）**：遇 `ateng-boot`/`ateng-cloud`/`ateng-ui` 能力缺失或缺陷，**立即暂停受阻编码并向上游提通用 Issue**——严禁上层打临时补丁、严禁底座写死 `ateng-solid` 专属约定、严禁向 `dev`/`main` 提交 `-SNAPSHOT` 或 `yalc`/路径依赖。
+- **底层零补丁与主干锁版门禁（Zero Workaround, Lock on `main`）**：遇 `ateng-boot`/`ateng-cloud`/`ateng-ui` 能力缺失或缺陷，**严禁在上层打临时补丁、严禁底座写死 `ateng-solid` 专属约定**，应向底座提通用 Issue 并在底座本地改造测试；`dev` 分支允许携带 `-SNAPSHOT` / `file:.yalc` 本地联调提交、推进编码与关单（允许联调期远端 `dev` CI 暂红），**严禁向 `main` 合入或基于未锁版状态发版**（由 `pre-commit`/`pre-push`/`main` CI 守护）。
 - **公共规约单源同步**：跨仓公共规约仅在根仓 `docs/agents/{contracts,foundation-first-gate,coding-standards,documentation-specification}.md` 修改，改完运行 `bash scripts/workspace.sh sync-rules` 同步子仓，严禁直接修改子仓副本。
 - **重型任务门禁**：仅初始化新端、新增微服务域、重构跨端协议/基表或迁移 `ateng-cloud` 时走 `Blueprint ➔ Spec ➔ Ticket`（蓝图与规格产出后各暂停确认）；常规 CRUD、页面与修 Bug 直接开发。
 - **零明文凭据**：真实连接串与密钥仅存 `.gitignore` 忽略的 `application-local.yml` / `.env.local`，入库文件统一大写占位符或环境变量。

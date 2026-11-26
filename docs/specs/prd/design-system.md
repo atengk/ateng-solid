@@ -37,7 +37,7 @@
 | **结构细边框** | `--solid-border` (`--el-border-color`) | `rgba(15, 23, 42, 0.10)` | `rgba(226, 232, 240, 0.12)` | 面板分割线、表格网格线、输入框描边 |
 | **弱分割边框** | `--solid-border-light` (`--el-border-color-lighter`) | `rgba(15, 23, 42, 0.06)` | `rgba(226, 232, 240, 0.07)` | 列表行线、工具栏内分隔 |
 | **成功语义** | `--solid-success` (`--el-color-success`) | `#047857` | `#10B981` | 正常状态、校验通过（Light 深翡翠绿保 5.4:1 文本对比） |
-| **警告语义** | `--solid-warning` (`--el-color-warning`) | `#B45309` | `#F59E0B` | 切租户观察警告、配额预警（Light 深琥珀保 5.0:1） |
+| **警告语义** | `--solid-warning` (`--el-color-warning`) | `#92400E` | `#F59E0B` | 切租户观察警告、配额预警（Light 深琥珀保 >= 5.8:1 对比度） |
 | **危险语义** | `--solid-danger` (`--el-color-danger`) | `#DC2626` | `#F87171` | 停用、删除、强退会话、表单错误、Excel 批注错行 |
 | **信息中性语义** | `--solid-info` (`--el-color-info`) | `#475569` | `#94A3B8` | 默认只读状态胶囊、中性说明标签 |
 

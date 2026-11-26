@@ -64,12 +64,24 @@
 ## 3. 通用检索、表格、分页与弹层标尺
 
 ### 3.1 `AtengQueryForm` 检索区规范
-- **列数断点**：基于表单容器宽度自适应（`<768px: 1列`、`768~1200px: 2列`、`1200~1920px: 3列`、`>=1920px: 4列`）；
-- **默认折叠**：`defaultCollapsed = true`、`collapsedRows = 1`，超出首行可容纳字段数时自动折叠并展示 `展开 ▾ / 收起 ▴` 按钮；
+- **独立检索卡架构（上下双卡分体）**：检索表单自成独立白色卡片（`--solid-radius-lg` `8px` 圆角 + `1px` 细线边框 `--solid-border`），与下方表格分页卡保留 `12px` 间距，禁止两者白底混叠或与外层边界错位；
+- **列数断点**：默认按容器宽度自适应（`<768px: 1列`、`768~1200px: 2列`、`1200~1920px: 3列`、`>=1920px: 4列`）；针对常规全宽精简检索页显式收口 `:cols` 以消除桌面端操作区被迫换行；
+- **复杂度分级折叠策略（`ADR-0005`）**：
+  - **精简检索（≤3 项且容器够宽）**：全宽页（`menu`/`role`/`post`/`config`/`dept`/`online`/`tenant-package`）与 `dict` 右栏（2 项）统一设 `defaultCollapsed = false`、`showCollapse = false`，其中 3 项全宽页配置 `:cols="{ xs: 1, sm: 2, md: 4, lg: 4, xl: 4 }"`、2 项页配置 `:cols="{ xs: 1, sm: 3, md: 3, lg: 4, xl: 4 }"`，确保主流桌面端单行容纳全部条件与 `[查询][重置]` 且不出现冗余 `收起` 按钮；
+  - **窄分栏与多条件检索（≥4 项）**：`/system/dict` 左栏（44% 窄分栏 3 项）及 ≥4 项列表（`user`、`tenant`、`login-log`、`oper-log`）保持 `defaultCollapsed = true`、`collapsedRows = 1`，超出首行可容纳字段数时自动折叠并展示 `展开 ▾ / 收起 ▴` 按钮；
 - **回车与防重**：在输入框按 `Enter` 触发查询时必须前置判断 `!event.isComposing` 防止中文输入法选词误触发；查询与重置按钮接入 `v-idempotent` 防连点；嵌套于 `AtengTable #query` 时仅在 `AtengTable` 绑定 `:pagination` 避免重置双重请求。
 
-### 3.2 `AtengTable` 表格与分页规范
-- **分页基线**：默认每页 **`10` 条**，可选 `[10, 20, 50, 100]`，分页布局 `total, sizes, prev, pager, next, jumper`；页码、总条数与数值列强制 `tabular-nums`。
+### 3.2 `AtengTable` 表格卡与分页规范
+- **表格分页卡边界统一**：工具栏、表格主体与底部分页栏整体收纳于独立表面卡片内，采用统一 `8px` 圆角、`1px` 细线边框与 `16px` 四周内边距，彻底消除操作列与分页末字 `0px` 贴边问题，并与分栏侧边卡片（如部门架构树面板）保持视觉一致；
+- **弹性封顶与滚动模式（`ateng-ui#380` 与 `ADR-0005`）**：
+  - 桌面横排态下，全站 12 个业务列表页（8 个单分页表 + 2 个无分页树表 + `user`/`dict` 双栏面板，分栏外层配 `h-full min-h-0`）统一消费 `:auto-height="16"` 与 `auto-height-mode="max"`（`<el-table :max-height>` 语义）：数据少时紧包内容随数据走、不留大片空白；数据超出一屏剩余空间时自动封顶并锁定工具栏、表头与底部分页栏，仅表格数据区内部纵向滑动；
+  - 当视口处于 `<768px` 移动端或 `user`/`dict` 垂直堆叠态时，自动关闭封顶高度（`autoHeight = false`），退回自然流整页滚动，避免小屏上下多层滚动嵌套；
+- **分页主轴与等宽基线**：默认每页 **`10` 条**，可选 `[10, 20, 50, 100]`，标准布局 `total, sizes, prev, pager, next, jumper`；采用 **总条数置左（`共 N 条`）+ 翻页控制与跳转置右** 的两端分布（与 `AtengPageSkeleton` 骨架对齐），页码、总条数、跳转输入框与数值列强制 `.tabular-nums`；
+- **空态与单页自适应收敛（`ateng-ui#379`）**：
+  - `total === 0` 时默认自动隐藏底部分页栏（由 `AtengEmpty` 承担空态与清空筛选引导）；
+  - `total > 0` 且总页数 `<= 1` 时自动收起冗余 `jumper`（`前往 _ 页`），保留 `共 N 条` 与 `[10条/页] < 1 >`；`>= 2` 页时完整展示跳转框；
+  - 容器较窄（含双栏分栏与 `< 768px` 移动端）由 `AtengTable` 自动折行/紧凑适配并保证零横向溢出；全站分页列表统一消费默认自适应分页契约（同步移除 `/system/dict` 等局部手写 `pagination-layout` 覆盖）；
+  - 非 `AtengTable` 分页（`AtengExcelFeedback` 错误清单分页与 `AtengPageSkeleton`）同步对齐换行与 `.tabular-nums`（决策归档见 `ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md`）。
 - **工具栏标准布局**：
   - 左侧主操作区：`+ 新增<资源>`（主按钮）、`批量删除`（无勾选时置灰禁用，显示已选条数）、按需挂接 `导入` / `导出`；
   - 右侧 5 工具：`刷新`、`密度切换（宽松 12px / 默认 8px / 紧凑 4px）`、`斑马纹开关`、`列配置（支持显隐勾选与拖拽排序并按 storageKey 本地持久化）`、`表格全屏（ESC 退出）`。

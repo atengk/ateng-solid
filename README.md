@@ -2,7 +2,7 @@
 
 **ateng-solid** 是面向企业级场景的**开源全栈上层应用框架**与多端数字化系统聚合工作区（Polyrepo Workspace），以独立通用的 [`ateng-boot`](https://github.com/atengk/ateng-boot) 与 [`ateng-ui`](https://github.com/atengk/ateng-ui) 为基础设施底座，并预留向 [`ateng-cloud`](https://github.com/atengk/ateng-cloud) 微服务并存演进的模块化边界。
 
-> **双生生态定位**：`ateng-solid` 既用真实业务场景实战验证并反哺锤炼底层底座（遇底座缺口即停工完善并正式发布底座，绝不打上层补丁将就），又将其自身沉淀为可直接面向行业二次开发的纯净、零补丁企业级上层框架。
+> **双生生态定位**：`ateng-solid` 既用真实业务场景实战验证并反哺锤炼底层底座（遇底座缺口即下沉改造底座，绝不打上层补丁将就；`dev` 放行本地协同联调，`main` 强制锁回底座正式版），又将其自身沉淀为可直接面向行业二次开发的纯净、零补丁企业级上层框架。
 
 ---
 

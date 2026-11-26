@@ -4,7 +4,7 @@
 - **关联工单**：[确定组织架构与 RBAC（部门/岗位/菜单/角色/用户与导入导出）PRD 与原型](https://github.com/atengk/ateng-solid/issues/6)（路线图：[第一阶段（MVP 内核）需求文档（PRD）与高保真交互原型路线图](https://github.com/atengk/ateng-solid/issues/1)）
 - **前置真源**：
   - [设计系统规范](./design-system.md) | [第一阶段总览与全站交互规范](./00-overview-and-ux-standards.md) | [认证会话与工作台 PRD](./01-auth-and-workspace.md)
-  - [跨端通信协议与数据契约](../../agents/contracts.md) | [底层缺口即停工规范](../../agents/foundation-first-gate.md)
+  - [跨端通信协议与数据契约](../../agents/contracts.md) | [底层零补丁与联调规范](../../agents/foundation-first-gate.md)
   - [Boot 1.2.0 一手源码调研](./_research/boot-1.2.0-constraints.md) | [UI 1.1.0 一手源码调研](./_research/ui-1.1.0-capabilities.md)
   - [底层基础设施待增强清单](../foundation-enhancements-checklist.md)
 - **交互参考原型**：[组织架构与 RBAC 交互原型 (`org-and-rbac.html`)](../../prototypes/phase1/org-and-rbac.html) | [定稿方案 A 基础壳 (`shell-accepted.html`)](../../prototypes/phase1/shell-accepted.html)
@@ -203,7 +203,7 @@
 - 响应采用 `ExcelWebUtil` 流式输出带 RFC 5987 文件名响应头（如 `用户数据_20261124173000.xlsx`），前端配合 `U8` (`ateng-ui#372`) 与 `Blob-JSON` 双态嗅探落地。
 
 ### 7.2 模板下载与纯新增整批原子导入规则
-- **前置门禁提示**：`B14`（`ateng-boot#1171`）与 `B17`（`ateng-boot#1174` 按次 `maxSyncRows` 重载）已在上游 `dev` 修复关单并刷新至本地 `1.2.1-SNAPSHOT`，可直接开展编码与离线测试，**正式合入 `dev`/`main` 前须锁回递进正式版**。
+- **前置门禁提示**：`B14`（`ateng-boot#1171`）与 `B17`（`ateng-boot#1174` 按次 `maxSyncRows` 重载）已在上游 `dev` 修复关单并刷新至本地 `1.2.1-SNAPSHOT`，可在 `dev` 开展编码、离线测试、提交与关单，**合入 `main` 与发版前须锁回递进正式版**。
 - **模板下载（`GET /admin/system/user/import/template`）**：后端生成带批注示例行与表头样式的 `.xlsx` 模板，包含以下 **9 列**：
 
 | 列序 | 表头名称 | 必填 | 格式与业务解析规则 |
