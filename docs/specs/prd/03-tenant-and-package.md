@@ -107,6 +107,10 @@
 - **停用与删除租户**：
   - 表格行内切换 Switch 停用或删除租户时，二次确认明确提醒：`"停用/删除租户【{tenantName}】后，该租户下所有在线账号将被立即强制下线且无法再登录，确认执行？"`；
   - 确认执行后，后端事务落库并在事务提交后调用 `LoginHelper` **踢出该租户下全部管理端在线会话**（`tenantId` 过滤扫描强退）。
+  - **租户软删除采用逻辑隔离归档策略（不级联软删子表）**：`DELETE /admin/system/tenant/{ids}` 仅对 `sys_tenant` 执行逻辑删除（`deleted = 1`），不级联更新该租户名下 `sys_dept`、`sys_post`、`sys_user`、`sys_role`、`sys_config` 及关联表记录的 `deleted` 标记。原因与边界如下：
+    1. **避免长事务锁表与保持审计可溯源**：大租户删除不触发跨多张业务大表的同步批量更新锁表，同时保留历史账号/组织/角色上下文以便操作审计（`sys_oper_log`）与登录审计（`sys_login_log`）长期溯源；
+    2. **多层强制隔离屏障**：`sys_tenant` 软删除并提交后，系统立即驱逐 `TenantStatusCache` 并强退全部在线会话；登录入口、`TenantAvailabilityInterceptor` 与超管跨租户切换校验（`100002` 自动回退 `"0"`）共同确保已删除租户子表数据不可登录、不可通过正常业务链路访问；
+    3. **运维/DBA 归档与定期物理清理参考**：若需释放历史已删租户冷数据存储，可由 DBA 按独立脱敏归档作业分片清理 `sys_tenant.deleted = 1` 对应的 `tenant_id` 子表记录（覆盖 `sys_dept`、`sys_post`、`sys_user`、`sys_role`、`sys_config`、`sys_user_role`、`sys_user_post`、`sys_role_menu`、`sys_role_dept`），**建议保留 `sys_oper_log` 与 `sys_login_log`（或先冷归档后按合规留存周期清理）**。
 
 ---
 
