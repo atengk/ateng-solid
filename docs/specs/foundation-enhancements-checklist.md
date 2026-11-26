@@ -193,6 +193,14 @@
 
 ---
 
+### [B19] 中/高优先级（上游停工等待 · 关联 `atengk/ateng-solid#38`）：`AtengSaTokenAutoConfiguration` 与 `SaBeanInject` 初始化顺序竞态导致 `TokenProperties` 被覆盖
+
+- **现状与源码锚点**：`AtengSaTokenAutoConfiguration.@PostConstruct initFirewallStrategy()` 将 `ateng.boot.satoken.token.timeout`（`24h`）与 `active-timeout` 写入 `SaManager.getConfig()` 后，后初始化的 `sa-token-spring-boot3-starter` `SaBeanInject` 构造函数调用 `SaManager.setConfig(SaBeanRegister.getSaTokenConfig())`，将全局配置覆盖回 Sa-Token 默认 `2592000s`（30 天）与 `-1`。
+- **准入纪律**：**严禁在上层 `ateng-solid-server` 编写自定义 `SaTokenConfig` Bean 或后置补丁绕过**；已提报上游通用修复工单并暂停受阻验证。
+- **核实状态**：- [ ] 上游 `dev` 已提交修复（[`atengk/ateng-boot#1176`](https://github.com/atengk/ateng-boot/issues/1176)，`dev` 提交 `193a7713`），已更新本地 `1.2.1-SNAPSHOT` 并完成 [`atengk/ateng-solid#38`](https://github.com/atengk/ateng-solid/issues/38) 端到端回归验证（`/admin/auth/online/page` 返回 `tokenTimeout=86388` / 页面显示 `23小时59分`），待上游推送并发布正式版后锁版勾选
+
+---
+
 ## 2. `ateng-cloud`（已锁定正式版 **`1.1.0`** / 对齐 `ateng-boot:1.2.0`）
 
 > 经核查，`ateng-cloud` 已于 `2026-11-23` 正式发布 **`v1.1.0`**（提交 `a8b9fe4`）至 Maven Central，锁定 `<ateng-boot.version>1.2.0</ateng-boot.version>`，以下全部 8 个关联 Issue 均已闭环发版：

@@ -13,6 +13,8 @@
 | **[index.html](./index.html)** | **全站一体化总装原型（主入口）** | `#9` | 串联 `/login`、`/dashboard`、`/profile`、12 个 `/system/*` 模块与 `/403`、`/404` 共 **17 条第一阶段路由**，内置跨模块实时联动（新建用户同步写操作日志、登录后写登录日志）、底部悬浮总控台、17 路由覆盖矩阵弹窗、多页签 6 指令右键菜单与工作区最大化 |
 | **[shell-variants.html](./shell-variants.html)** | 布局方案 A/B/C 多方案比选原型 | `#4` | 用于对比经典左侧栏（A）、双栏折叠组（B）与紧凑顶栏混排（C）的视觉结构 |
 | **[shell-accepted.html](./shell-accepted.html)** | **定稿基础壳原型（方案 A）** | `#4` | 锁定 `Precision Slate & Cobalt` Light/Dark 令牌与方案 A（`228px`/`60px` 左侧栏 + `48px` 单行顶栏 + `36px` 独立页签栏），作为全站基础壳与组件对齐参考基线 |
+| **[logo-variants.html](./logo-variants.html)** | **品牌图形主标三方案比选原型（已定稿方案 B）** | - | 对比方案 A（互锁基石）、方案 B（三阶精密基座 · 已定稿）与方案 C（倒角内核框），支持 `?variant=A|B|C`、`16px–48px` 锐利度矩阵、实时标签页 Favicon 预览、Light/Dark 与跨租户观察态模拟 |
+| **[login-variants.html](./login-variants.html)** | **登录页构图三方案比选原型（已定稿方案 C）** | - | 对比方案 A（全屏双分屏）、方案 B（极简居中舞台）与方案 C（建筑感大双栏卡 · 已定稿），支持 `?variant=A|B|C`、Light/Dark、多租户与验证码四象限及 `101004` 锁定态模拟 |
 | **[auth-and-workspace.html](./auth-and-workspace.html)** | 认证、工作台、个人中心与会话切片 | `#5` | 深挖 `/login` SVG 验证码与防爆破倒计时、`redirect` 安全白名单测试、`/profile` 头像预览及 `/system/online` 多标签在线会话细节 |
 | **[org-and-rbac.html](./org-and-rbac.html)** | 组织架构与 RBAC 专题切片 | `#6` | 深挖部门 `ancestors` 级联与 `user/options`、菜单 `M`/`C`/`F` 与外链校验、角色树父子联动与 `@DataScope` `CUSTOM` 自定部门树、Fesod Excel 500 行原子校验及标红批注下载全流程 |
 | **[tenant-and-package.html](./tenant-and-package.html)** | SaaS 多租户与租户套餐专题切片 | `#7` | 深挖套餐自动剔除 `platform_only` 菜单与 `shrink-preview` 缩减裁剪预览、新建租户 4 步原子初始化凭据回显、`0` 号保护及停用/过期会话踢出联动 |

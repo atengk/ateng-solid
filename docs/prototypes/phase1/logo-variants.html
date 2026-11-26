@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ateng-solid 品牌图形主标多方案比选原型 (?variant=A|B|C)</title>
+  <link id="liveFavicon" rel="icon" type="image/svg+xml" href="" />
+  <style>
+    /* ============================================================
+     * Precision Slate & Cobalt Design Tokens (design-system.md)
+     * ============================================================ */
+    :root {
+      --solid-bg-canvas: #F6F7F9;
+      --solid-bg-surface: #FFFFFF;
+      --solid-bg-elevated: #FFFFFF;
+      --solid-bg-subtle: #EEF1F5;
+
+      --solid-text-primary: #0F172A;
+      --solid-text-regular: #334155;
+      --solid-text-secondary: #475569;
+      --solid-text-muted: #64748B;
+
+      --solid-primary: #1D4ED8;
+      --solid-primary-hover: #1E40AF;
+      --solid-primary-soft: #EFF6FF;
+      --solid-primary-border: #BFDBFE;
+
+      --solid-brand-panel-bg: #0F172A;
+      --solid-brand-panel-text: #F8FAFC;
+      --solid-brand-panel-text-secondary: #CBD5E1;
+      --solid-brand-panel-text-muted: #94A3B8;
+      --solid-brand-panel-card: rgba(255, 255, 255, 0.05);
+      --solid-brand-panel-border: rgba(255, 255, 255, 0.10);
+      --solid-brand-panel-dot: #3B82F6;
+
+      --solid-border: rgba(15, 23, 42, 0.10);
+      --solid-border-light: rgba(15, 23, 42, 0.06);
+
+      --solid-warning: #B45309;
+      --solid-warning-soft: #FFFBEB;
+      --solid-warning-border: #FDE68A;
+      --solid-success: #047857;
+      --solid-success-soft: #ECFDF5;
+
+      --solid-mark-secondary-opacity: 0.62;
+      --solid-mark-tertiary-opacity: 0.80;
+
+      --solid-radius-sm: 4px;
+      --solid-radius-md: 6px;
+      --solid-radius-lg: 8px;
+      --solid-radius-pill: 9999px;
+
+      --solid-shadow-floating: 0 12px 28px -6px rgba(15, 23, 42, 0.14), 0 4px 10px -2px rgba(15, 23, 42, 0.06);
+      --solid-focus-ring: 0 0 0 2px var(--solid-bg-surface), 0 0 0 4px var(--solid-primary);
+
+      --solid-font-sans: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --solid-font-mono: 'JetBrains Mono', 'Cascadia Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    html.dark {
+      --solid-bg-canvas: #0B0F17;
+      --solid-bg-surface: #111827;
+      --solid-bg-elevated: #182234;
+      --solid-bg-subtle: #1E293B;
+
+      --solid-text-primary: #F8FAFC;
+      --solid-text-regular: #CBD5E1;
+      --solid-text-secondary: #94A3B8;
+      --solid-text-muted: #64748B;
+
+      --solid-primary: #3B82F6;
+      --solid-primary-hover: #2563EB;
+      --solid-primary-soft: rgba(59, 130, 246, 0.14);
+      --solid-primary-border: rgba(59, 130, 246, 0.35);
+
+      --solid-brand-panel-bg: #090D16;
+
+      --solid-border: rgba(226, 232, 240, 0.12);
+      --solid-border-light: rgba(226, 232, 240, 0.07);
+
+      --solid-warning: #F59E0B;
+      --solid-warning-soft: rgba(245, 158, 11, 0.14);
+      --solid-warning-border: rgba(245, 158, 11, 0.32);
+      --solid-success: #10B981;
+      --solid-success-soft: rgba(16, 185, 129, 0.14);
+
+      --solid-mark-secondary-opacity: 0.68;
+      --solid-mark-tertiary-opacity: 0.84;
+
+      --solid-shadow-floating: 0 14px 32px -6px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(226, 232, 240, 0.16);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: var(--solid-font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      background: var(--solid-bg-canvas);
+      color: var(--solid-text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+    button { font-family: inherit; }
+    :focus-visible { outline: none; box-shadow: var(--solid-focus-ring); }
+    .mono { font-family: var(--solid-font-mono); font-variant-numeric: tabular-nums; }
+
+    /* ============================================================
+     * Page Layout & Shared Surface Cards
+     * ============================================================ */
+    .page-wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 20px 96px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .page-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--solid-border);
+    }
+    .page-title {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--solid-text-primary);
+      letter-spacing: -0.01em;
+    }
+    .page-subtitle {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--solid-text-secondary);
+    }
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .card {
+      background: var(--solid-bg-surface);
+      border: 1px solid var(--solid-border);
+      border-radius: var(--solid-radius-lg);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .section-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--solid-text-primary);
+    }
+    .section-note {
+      font-size: 12px;
+      color: var(--solid-text-secondary);
+    }
+
+    .pill-tag {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      padding: 0 9px;
+      border-radius: var(--solid-radius-sm);
+      border: 1px solid var(--solid-border);
+      background: var(--solid-bg-subtle);
+      color: var(--solid-text-regular);
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .pill-tag.primary {
+      background: var(--solid-primary-soft);
+      border-color: var(--solid-primary-border);
+      color: var(--solid-primary);
+    }
+
+    .btn {
+      height: 30px;
+      padding: 0 11px;
+      border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border);
+      background: var(--solid-bg-surface);
+      color: var(--solid-text-regular);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .btn:hover {
+      background: var(--solid-bg-subtle);
+      color: var(--solid-text-primary);
+    }
+
+    /* ============================================================
+     * Brand Mark & Wordmark Primitive (Zero Outer Box)
+     * ============================================================ */
+    .brand-mark-svg {
+      display: block;
+      flex-shrink: 0;
+      color: var(--solid-primary);
+    }
+    .brand-mark-svg.on-dark-panel {
+      color: var(--solid-brand-panel-dot);
+    }
+    .brand-mark-svg.on-white-ink {
+      color: #FFFFFF;
+    }
+    .brand-wordmark {
+      font-family: var(--solid-font-sans);
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      white-space: nowrap;
+      line-height: 1;
+    }
+
+    /* ============================================================
+     * 1. Side-by-Side 3-Variant Selector Cards
+     * ============================================================ */
+    .variant-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .variant-card {
+      text-align: left;
+      cursor: pointer;
+      background: var(--solid-bg-canvas);
+      border: 1px solid var(--solid-border);
+      border-radius: var(--solid-radius-lg);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      color: inherit;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .variant-card:hover {
+      background: var(--solid-bg-subtle);
+    }
+    .variant-card.active {
+      background: var(--solid-bg-surface);
+      border-color: var(--solid-primary);
+      box-shadow: inset 0 0 0 1px var(--solid-primary);
+    }
+    .variant-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .variant-stage-pair {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .stage-tile {
+      width: 52px;
+      height: 52px;
+      border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .stage-tile.light-tile {
+      background: var(--solid-bg-surface);
+    }
+    .stage-tile.slate-tile {
+      background: #0F172A;
+      border-color: rgba(255, 255, 255, 0.14);
+    }
+    .variant-name {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--solid-text-primary);
+    }
+    .variant-desc {
+      margin: 0;
+      font-size: 13px;
+      color: var(--solid-text-secondary);
+      line-height: 1.5;
+    }
+    .variant-traits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: auto;
+    }
+
+    /* ============================================================
+     * 2. Pixel Scale & Browser Favicon Matrix
+     * ============================================================ */
+    .matrix-grid {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 14px;
+    }
+    .sub-panel {
+      background: var(--solid-bg-canvas);
+      border: 1px solid var(--solid-border);
+      border-radius: var(--solid-radius-md);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .sub-panel-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--solid-text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .scale-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      gap: 16px;
+    }
+    .scale-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .scale-frame {
+      padding: 6px;
+      border-radius: var(--solid-radius-sm);
+      border: 1px dashed var(--solid-border);
+      background: var(--solid-bg-surface);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .scale-frame.dark-bg {
+      background: #0F172A;
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+    .scale-label {
+      font-size: 12px;
+      color: var(--solid-text-secondary);
+    }
+
+    /* Simulated Chrome/Edge Tab Strip */
+    .browser-tabs-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .browser-chrome {
+      border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border);
+      overflow: hidden;
+    }
+    .browser-strip {
+      padding: 8px 10px 0;
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      font-size: 12px;
+    }
+    .browser-strip.chrome-light {
+      background: #DEE1E6;
+      color: #1E293B;
+    }
+    .browser-strip.chrome-dark {
+      background: #202124;
+      color: #E2E8F0;
+    }
+    .browser-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      height: 30px;
+      padding: 0 12px;
+      border-radius: 6px 6px 0 0;
+      font-size: 12px;
+      font-weight: 500;
+      max-width: 210px;
+    }
+    .chrome-light .browser-tab.active {
+      background: #FFFFFF;
+      color: #0F172A;
+    }
+    .chrome-light .browser-tab.inactive {
+      background: transparent;
+      color: #475569;
+    }
+    .chrome-dark .browser-tab.active {
+      background: #35363A;
+      color: #F8FAFC;
+    }
+    .chrome-dark .browser-tab.inactive {
+      background: transparent;
+      color: #94A3B8;
+    }
+    .browser-tab-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ============================================================
+     * 3. Scheme A AdminLayout Live Shell Preview
+     * ============================================================ */
+    .shell-preview-frame {
+      border: 1px solid var(--solid-border);
+      border-radius: var(--solid-radius-lg);
+      overflow: hidden;
+      background: var(--solid-bg-canvas);
+      height: 380px;
+      display: flex;
+    }
+    .mock-sidebar {
+      width: 228px;
+      flex-shrink: 0;
+      background: var(--solid-bg-surface);
+      border-right: 1px solid var(--solid-border);
+      display: flex;
+      flex-direction: column;
+      transition: width 0.2s ease;
+    }
+    .mock-sidebar.collapsed {
+      width: 60px;
+    }
+    .mock-brand-bar {
+      height: 48px;
+      padding: 0 14px;
+      border-bottom: 1px solid var(--solid-border-light);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+      cursor: pointer;
+      color: var(--solid-text-primary);
+      width: 100%;
+      text-align: left;
+      overflow: hidden;
+      transition: background 0.15s;
+    }
+    .mock-brand-bar:hover {
+      background: var(--solid-bg-subtle);
+    }
+    .mock-sidebar.collapsed .mock-brand-bar {
+      justify-content: center;
+      padding: 0;
+    }
+    .mock-sidebar.collapsed .brand-wordmark {
+      display: none;
+    }
+    .mock-menu-list {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow-y: auto;
+    }
+    .mock-menu-group {
+      padding: 8px 10px 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--solid-text-muted);
+      white-space: nowrap;
+    }
+    .mock-sidebar.collapsed .mock-menu-group {
+      display: none;
+    }
+    .mock-menu-item {
+      height: 34px;
+      padding: 0 10px;
+      border-radius: var(--solid-radius-md);
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-size: 13px;
+      color: var(--solid-text-regular);
+      position: relative;
+      white-space: nowrap;
+    }
+    .mock-menu-item.active {
+      background: var(--solid-primary-soft);
+      color: var(--solid-primary);
+      font-weight: 600;
+    }
+    .mock-menu-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 6px;
+      bottom: 6px;
+      width: 3px;
+      border-radius: 0 4px 4px 0;
+      background: var(--solid-primary);
+    }
+    .mock-sidebar.collapsed .mock-menu-item {
+      justify-content: center;
+      padding: 0;
+    }
+    .mock-sidebar.collapsed .mock-menu-label {
+      display: none;
+    }
+
+    .mock-main {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+    }
+    .mock-topbar {
+      height: 48px;
+      background: var(--solid-bg-surface);
+      border-bottom: 1px solid var(--solid-border);
+      padding: 0 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .mock-tabs {
+      height: 36px;
+      background: var(--solid-bg-surface);
+      border-bottom: 1px solid var(--solid-border);
+      padding: 0 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+    }
+    .mock-tab-active {
+      height: 26px;
+      padding: 0 10px;
+      border-radius: var(--solid-radius-sm);
+      background: var(--solid-primary-soft);
+      border: 1px solid var(--solid-primary-border);
+      color: var(--solid-primary);
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+    }
+    .mock-tab-idle {
+      height: 26px;
+      padding: 0 10px;
+      color: var(--solid-text-secondary);
+      display: inline-flex;
+      align-items: center;
+    }
+    .mock-tenant-banner {
+      height: 36px;
+      padding: 0 14px;
+      background: var(--solid-warning-soft);
+      border-bottom: 1px solid var(--solid-warning-border);
+      color: var(--solid-warning);
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .mock-workspace {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .mock-card-placeholder {
+      background: var(--solid-bg-surface);
+      border: 1px solid var(--solid-border);
+      border-radius: var(--solid-radius-lg);
+      padding: 14px 16px;
+      font-size: 13px;
+      color: var(--solid-text-secondary);
+    }
+
+    /* ============================================================
+     * 4. Login Stage Preview (Desktop 2-Column + Mobile Compact)
+     * ============================================================ */
+    .login-preview-grid {
+      display: grid;
+      grid-template-columns: 1.55fr 0.85fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+    .login-stage-box {
+      border: 1px solid var(--solid-border);
+      border-radius: var(--solid-radius-lg);
+      background-color: var(--solid-bg-canvas);
+      background-image: radial-gradient(var(--solid-border) 1px, transparent 1px);
+      background-size: 18px 18px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-desktop-card {
+      width: 100%;
+      min-height: 310px;
+      border-radius: var(--solid-radius-lg);
+      border: 1px solid var(--solid-border);
+      background: var(--solid-bg-surface);
+      box-shadow: var(--solid-shadow-floating);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 44% 56%;
+    }
+    .login-aside {
+      background: var(--solid-brand-panel-bg);
+      color: var(--solid-brand-panel-text);
+      padding: 22px 20px;
+      border-right: 1px solid var(--solid-border);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+    .login-lockup {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .login-aside-title {
+      margin: 14px 0 6px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--solid-brand-panel-text);
+    }
+    .login-aside-sub {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--solid-brand-panel-text-secondary);
+    }
+    .login-spec-pill {
+      margin-top: 12px;
+      padding: 8px 10px;
+      border-radius: var(--solid-radius-md);
+      background: var(--solid-brand-panel-card);
+      border: 1px solid var(--solid-brand-panel-border);
+      font-size: 12px;
+      color: var(--solid-brand-panel-text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .login-spec-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 9999px;
+      background: var(--solid-brand-panel-dot);
+      flex-shrink: 0;
+    }
+    .login-aside-foot {
+      padding-top: 10px;
+      border-top: 1px solid var(--solid-brand-panel-border);
+      font-size: 12px;
+      color: var(--solid-brand-panel-text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .login-form-side {
+      padding: 22px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 10px;
+    }
+    .mock-input {
+      height: 32px;
+      border: 1px solid var(--solid-border);
+      border-radius: var(--solid-radius-md);
+      background: var(--solid-bg-surface);
+      padding: 0 10px;
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      color: var(--solid-text-muted);
+    }
+    .mock-submit {
+      height: 34px;
+      border-radius: var(--solid-radius-md);
+      background: var(--solid-primary);
+      color: #FFFFFF;
+      font-size: 13px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 4px;
+    }
+    .login-mobile-card {
+      width: 100%;
+      max-width: 280px;
+      border-radius: var(--solid-radius-lg);
+      border: 1px solid var(--solid-border);
+      background: var(--solid-bg-surface);
+      box-shadow: var(--solid-shadow-floating);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ============================================================
+     * Floating Prototype Switcher Bar (?variant=A|B|C)
+     * ============================================================ */
+    .proto-bar {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1400;
+      background: #0F172A;
+      color: #F8FAFC;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--solid-radius-pill);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.45);
+      font-size: 12px;
+      white-space: nowrap;
+      max-width: calc(100vw - 24px);
+      overflow-x: auto;
+    }
+    .proto-sep {
+      width: 1px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.18);
+      flex-shrink: 0;
+    }
+    .proto-btn {
+      border: 1px solid transparent;
+      background: transparent;
+      color: #CBD5E1;
+      padding: 4px 10px;
+      border-radius: var(--solid-radius-pill);
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .proto-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #FFFFFF;
+    }
+    .proto-btn.active {
+      background: #2563EB;
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .proto-toggle {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.08);
+      color: #F8FAFC;
+      padding: 4px 10px;
+      border-radius: var(--solid-radius-pill);
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .proto-toggle.on {
+      border-color: #60A5FA;
+      background: rgba(37, 99, 235, 0.40);
+    }
+
+    @media (max-width: 980px) {
+      .variant-grid,
+      .matrix-grid,
+      .login-preview-grid {
+        grid-template-columns: 1fr;
+      }
+      .login-desktop-card {
+        grid-template-columns: 1fr;
+      }
+      .login-aside {
+        border-right: none;
+        border-bottom: 1px solid var(--solid-border);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main id="app" class="page-wrap"></main>
+
+  <nav class="proto-bar" aria-label="品牌方案切换与环境模拟">
+    <button class="proto-btn" type="button" data-var="A" onclick="setVariant('A')">方案 A · 互锁基石</button>
+    <button class="proto-btn" type="button" data-var="B" onclick="setVariant('B')">方案 B · 三阶基座</button>
+    <button class="proto-btn" type="button" data-var="C" onclick="setVariant('C')">方案 C · 倒角内核</button>
+    <span class="proto-sep"></span>
+    <button id="btnTheme" class="proto-toggle" type="button" onclick="toggleTheme()">Light</button>
+    <button id="btnSidebar" class="proto-toggle" type="button" onclick="toggleSidebar()">侧栏: 展开</button>
+    <button id="btnTenant" class="proto-toggle" type="button" onclick="toggleTenantObserving()">观察态: 关</button>
+    <span class="proto-sep"></span>
+    <span style="color:#94A3B8;padding:0 4px;">支持 ← / → 切换方案</span>
+  </nav>
+
+  <script>
+    /**
+     * 3 套纯几何品牌图形定义（统一 32x32 精密网格、双阶单色自适应、无渐变、16px 像素锐利）。
+     */
+    const VARIANTS = {
+      A: {
+        id: 'A',
+        title: '方案 A · 互锁基石 (Interlocking Cornerstone)',
+        shortTitle: '互锁基石',
+        metaphor: '45° 精密斜切L型顶梁与实心切角基座咬合，留出等距工程缝隙，拼合成稳固方正轮廓。',
+        traits: ['底座+上层零补丁咬合', '3px 等距折线缝隙', '16px 清晰硬朗'],
+        renderMark(size, extraClass = '') {
+          return `
+            <svg class="brand-mark-svg ${extraClass}" width="${size}" height="${size}" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+              <path d="M4 4H28V11H19L11 19V28H4V4Z" fill="currentColor" />
+              <path d="M20 14H28V28H14V20L20 14Z" fill="currentColor" style="opacity:var(--solid-mark-secondary-opacity)" />
+            </svg>
+          `;
+        },
+        buildFaviconSvg(darkMode) {
+          const bg = darkMode ? '#2563EB' : '#1D4ED8';
+          return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='${bg}'/><path d='M6.5 6.5H25.5V12H18.4L12 18.4V25.5H6.5V6.5Z' fill='#FFFFFF'/><path d='M19.2 14.4H25.5V25.5H14.4V19.2L19.2 14.4Z' fill='#FFFFFF' fill-opacity='0.64'/></svg>`;
+        },
+      },
+      B: {
+        id: 'B',
+        title: '方案 B · 三阶精密基座 (Tri-Layer Precision Stack)',
+        shortTitle: '三阶精密基座',
+        metaphor: '底宽顶锐的三阶斜切实体块沿中心轴线稳步层叠，象征基础设施、核心内核与全端矩阵。',
+        traits: ['三层架构力学递进', '斜切动势防汉堡化', '双阶渐变透明度'],
+        renderMark(size, extraClass = '') {
+          return `
+            <svg class="brand-mark-svg ${extraClass}" width="${size}" height="${size}" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+              <path d="M11 5H24L21 10H8L11 5Z" fill="currentColor" />
+              <path d="M9 13.5H26L23 18.5H6L9 13.5Z" fill="currentColor" style="opacity:var(--solid-mark-tertiary-opacity)" />
+              <path d="M7 22H28L25 27H4L7 22Z" fill="currentColor" style="opacity:var(--solid-mark-secondary-opacity)" />
+            </svg>
+          `;
+        },
+        buildFaviconSvg(darkMode) {
+          const bg = darkMode ? '#2563EB' : '#1D4ED8';
+          return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='${bg}'/><path d='M12 7H22.5L20 11.2H9.5L12 7Z' fill='#FFFFFF'/><path d='M10.2 13.9H24.2L21.7 18.1H7.7L10.2 13.9Z' fill='#FFFFFF' fill-opacity='0.82'/><path d='M8.5 20.8H26L23.5 25H6L8.5 20.8Z' fill='#FFFFFF' fill-opacity='0.64'/></svg>`;
+        },
+      },
+      C: {
+        id: 'C',
+        title: '方案 C · 倒角内核框 (Chamfered Core & Boundary)',
+        shortTitle: '倒角内核框',
+        metaphor: '对称 45° 双倒角工业边界外框环抱中心实心锚核，直接诠释多租户边界隔离与系统稳固核心。',
+        traits: ['多租户隔离心智', '4:3:10 黄金网格', '芯片级工业辨识度'],
+        renderMark(size, extraClass = '') {
+          return `
+            <svg class="brand-mark-svg ${extraClass}" width="${size}" height="${size}" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M4 4H21L28 11V28H11L4 21V4ZM8 8V20L12 24H24V12L20 8H8Z" fill="currentColor" style="opacity:var(--solid-mark-secondary-opacity)" />
+              <path d="M11 11H18L21 14V21H14L11 18V11Z" fill="currentColor" />
+            </svg>
+          `;
+        },
+        buildFaviconSvg(darkMode) {
+          const bg = darkMode ? '#2563EB' : '#1D4ED8';
+          return `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='${bg}'/><path fill-rule='evenodd' clip-rule='evenodd' d='M6 6H20.2L26 11.8V26H11.8L6 20.2V6ZM9.5 9.5V19.2L12.8 22.5H22.5V12.8L19.2 9.5H9.5Z' fill='#FFFFFF' fill-opacity='0.66'/><path d='M12 12H17.6L20 14.4V20H14.4L12 17.6V12Z' fill='#FFFFFF'/></svg>`;
+        },
+      },
+    };
+
+    const VARIANT_ORDER = ['A', 'B', 'C'];
+
+    function readInitialVariant() {
+      const params = new URLSearchParams(window.location.search);
+      const raw = (params.get('variant') || 'A').toUpperCase();
+      return VARIANT_ORDER.includes(raw) ? raw : 'A';
+    }
+
+    const state = {
+      variant: readInitialVariant(),
+      dark: false,
+      sidebarCollapsed: false,
+      observingTenant: false,
+    };
+
+    function syncUrlParam(variantId) {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('variant', variantId);
+        window.history.replaceState(null, '', url.toString());
+      } catch (_err) {
+        // file:// 下部分受限环境静默忽略
+      }
+    }
+
+    function setVariant(variantId) {
+      if (!VARIANT_ORDER.includes(variantId)) return;
+      state.variant = variantId;
+      syncUrlParam(variantId);
+      render();
+    }
+
+    function cycleVariant(delta) {
+      const idx = VARIANT_ORDER.indexOf(state.variant);
+      const nextIdx = (idx + delta + VARIANT_ORDER.length) % VARIANT_ORDER.length;
+      setVariant(VARIANT_ORDER[nextIdx]);
+    }
+
+    function toggleTheme() {
+      state.dark = !state.dark;
+      document.documentElement.classList.toggle('dark', state.dark);
+      render();
+    }
+
+    function toggleSidebar() {
+      state.sidebarCollapsed = !state.sidebarCollapsed;
+      render();
+    }
+
+    function toggleTenantObserving() {
+      state.observingTenant = !state.observingTenant;
+      render();
+    }
+
+    function toSvgDataUri(svgString) {
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgString);
+    }
+
+    function renderFaviconBadge(variant, size, darkChrome) {
+      const uri = toSvgDataUri(variant.buildFaviconSvg(darkChrome));
+      return `<img src="${uri}" width="${size}" height="${size}" alt="Favicon ${size}px" style="display:block;border-radius:4px;" />`;
+    }
+
+    function render() {
+      const active = VARIANTS[state.variant];
+      const liveFavicon = document.getElementById('liveFavicon');
+      if (liveFavicon) {
+        liveFavicon.setAttribute('href', toSvgDataUri(active.buildFaviconSvg(state.dark)));
+      }
+
+      const app = document.getElementById('app');
+      app.innerHTML = `
+        <header class="page-header">
+          <div>
+            <h1 class="page-title">ateng-solid 品牌图形主标比选原型</h1>
+            <p class="page-subtitle">
+              遵循 Precision Slate &amp; Cobalt 设计令牌（Light #1D4ED8 / Dark #3B82F6 / 深岩 #0F172A），站内采用无外框纯矢量双阶单色图形，Favicon 保留圆角底板。
+            </p>
+          </div>
+          <div class="header-meta">
+            <span class="pill-tag primary">当前聚焦：${active.shortTitle}</span>
+            <span class="pill-tag">模式：${state.dark ? 'Dark' : 'Light'}</span>
+            <span class="pill-tag">实例品牌归属：不随租户变标</span>
+          </div>
+        </header>
+
+        <!-- 1. 三方案并排选择矩阵 -->
+        <section class="card" aria-label="三套图形概念对比">
+          <div class="section-head">
+            <h2 class="section-title">候选方案并排对比（点击切换下方全场景实景预览）</h2>
+            <span class="section-note">左侧为浅色/暗色画布主色呈现，右侧为深岩面板高对比呈现</span>
+          </div>
+          <div class="variant-grid">
+            ${VARIANT_ORDER.map(id => {
+              const v = VARIANTS[id];
+              const isSelected = id === state.variant;
+              return `
+                <button
+                  type="button"
+                  class="variant-card ${isSelected ? 'active' : ''}"
+                  aria-pressed="${isSelected}"
+                  onclick="setVariant('${id}')"
+                >
+                  <div class="variant-card-top">
+                    <div class="variant-stage-pair">
+                      <span class="stage-tile light-tile">${v.renderMark(28)}</span>
+                      <span class="stage-tile slate-tile">${v.renderMark(28, 'on-dark-panel')}</span>
+                    </div>
+                    <span class="pill-tag ${isSelected ? 'primary' : ''}">${isSelected ? '已选中' : '方案 ' + id}</span>
+                  </div>
+                  <div>
+                    <h3 class="variant-name">${v.title}</h3>
+                    <p class="variant-desc">${v.metaphor}</p>
+                  </div>
+                  <div class="variant-traits">
+                    ${v.traits.map(t => `<span class="pill-tag">${t}</span>`).join('')}
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </section>
+
+        <!-- 2. 像素尺度清晰度与浏览器标签页 Favicon 实景 -->
+        <section class="card" aria-label="多尺寸清晰度与浏览器标签页预览">
+          <div class="section-head">
+            <h2 class="section-title">像素锐利度与浏览器标签页 Favicon 实景 · ${active.shortTitle}</h2>
+            <span class="section-note">本页浏览器真实标签页图标已同步切换为当前方案，可直接抬头对照</span>
+          </div>
+          <div class="matrix-grid">
+            <div class="sub-panel">
+              <div class="sub-panel-title">
+                <span>站内纯矢量多尺寸矩阵（16px – 48px）</span>
+                <span class="mono" style="font-size:12px;color:var(--solid-text-secondary);">viewBox 0 0 32 32</span>
+              </div>
+              <div class="scale-row">
+                ${[16, 20, 24, 28, 32, 48].map(sz => `
+                  <div class="scale-item">
+                    <span class="scale-frame">${active.renderMark(sz)}</span>
+                    <span class="scale-label mono">${sz}px</span>
+                  </div>
+                `).join('')}
+                <div class="scale-item">
+                  <span class="scale-frame dark-bg">${active.renderMark(28, 'on-dark-panel')}</span>
+                  <span class="scale-label mono">深岩 28px</span>
+                </div>
+                <div class="scale-item">
+                  <span class="scale-frame dark-bg">${active.renderMark(28, 'on-white-ink')}</span>
+                  <span class="scale-label mono">纯白 28px</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="sub-panel">
+              <div class="sub-panel-title">
+                <span>浏览器标签栏 16px Favicon（浅/深标签适配）</span>
+                <span>public/favicon.svg</span>
+              </div>
+              <div class="browser-tabs-stack">
+                <div class="browser-chrome">
+                  <div class="browser-strip chrome-light">
+                    <div class="browser-tab active">
+                      ${renderFaviconBadge(active, 16, false)}
+                      <span class="browser-tab-title">ateng-solid 管理后台</span>
+                    </div>
+                    <div class="browser-tab inactive">
+                      <span class="browser-tab-title">文档中心</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="browser-chrome">
+                  <div class="browser-strip chrome-dark">
+                    <div class="browser-tab active">
+                      ${renderFaviconBadge(active, 16, true)}
+                      <span class="browser-tab-title">ateng-solid 管理后台</span>
+                    </div>
+                    <div class="browser-tab inactive">
+                      <span class="browser-tab-title">文档中心</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. AdminLayout 方案 A 实景装配效果 -->
+        <section class="card" aria-label="方案 A 管理台布局壳实景">
+          <div class="section-head">
+            <h2 class="section-title">管理台主布局壳（AdminLayout 方案 A）Brand Lockup 实景</h2>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <button class="btn" type="button" onclick="toggleSidebar()">
+                ${state.sidebarCollapsed ? '展开侧栏 (228px)' : '折叠侧栏 (60px)'}
+              </button>
+              <button class="btn" type="button" onclick="toggleTenantObserving()">
+                ${state.observingTenant ? '退出跨租户观察态' : '模拟超管切入租户 10002'}
+              </button>
+            </div>
+          </div>
+
+          <div class="shell-preview-frame">
+            <aside class="mock-sidebar ${state.sidebarCollapsed ? 'collapsed' : ''}">
+              <button
+                type="button"
+                class="mock-brand-bar"
+                title="ateng-solid 管理后台 · 点击返回工作台"
+                onclick="alert('预览提示：正式环境中点击品牌区将导航至 /dashboard 工作台')"
+              >
+                ${active.renderMark(24)}
+                <span class="brand-wordmark" style="font-size:14px;">ateng-solid</span>
+              </button>
+
+              <div class="mock-menu-list">
+                <div class="mock-menu-item active" title="工作台">
+                  <span aria-hidden="true">⌂</span>
+                  <span class="mock-menu-label">工作台</span>
+                </div>
+                <div class="mock-menu-group">组织权限</div>
+                <div class="mock-menu-item" title="用户管理">
+                  <span aria-hidden="true">⛨</span>
+                  <span class="mock-menu-label">用户管理</span>
+                </div>
+                <div class="mock-menu-item" title="角色管理">
+                  <span aria-hidden="true">◈</span>
+                  <span class="mock-menu-label">角色管理</span>
+                </div>
+                <div class="mock-menu-item" title="部门管理">
+                  <span aria-hidden="true">⫢</span>
+                  <span class="mock-menu-label">部门管理</span>
+                </div>
+                <div class="mock-menu-group">审计安全</div>
+                <div class="mock-menu-item" title="在线会话">
+                  <span aria-hidden="true">◉</span>
+                  <span class="mock-menu-label">在线会话</span>
+                </div>
+              </div>
+            </aside>
+
+            <div class="mock-main">
+              <header class="mock-topbar">
+                <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--solid-text-secondary);">
+                  <button class="btn" type="button" style="height:28px;padding:0 8px;" onclick="toggleSidebar()" aria-label="切换侧栏折叠">☰</button>
+                  <span>首页 / <strong style="color:var(--solid-text-primary);">工作台</strong></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  ${state.observingTenant ? `<span class="pill-tag" style="background:var(--solid-warning-soft);border-color:var(--solid-warning-border);color:var(--solid-warning);">租户：星辰智能科技</span>` : ''}
+                  <button class="btn" type="button" onclick="toggleTheme()">${state.dark ? '☀ 浅色' : '☾ 深色'}</button>
+                </div>
+              </header>
+              <div class="mock-tabs">
+                <span class="mock-tab-active">工作台</span>
+                <span class="mock-tab-idle">用户管理 ×</span>
+              </div>
+              ${state.observingTenant ? `
+                <div class="mock-tenant-banner">
+                  <span>当前正以平台超管视角观察【星辰智能科技】(10002)，左上角品牌标识仍保持平台实例稳固不变。</span>
+                  <button class="btn" type="button" onclick="toggleTenantObserving()">切回平台 (0)</button>
+                </div>
+              ` : ''}
+              <div class="mock-workspace">
+                <div class="mock-card-placeholder">
+                  <strong style="color:var(--solid-text-primary);">实例品牌稳定性对照</strong>：左上角侧栏顶部 48px 品牌区（24px 纯矢量图形 + ateng-solid 短名）在折叠到 60px 时自动居中只留图形；切换至租户观察态时仅出现琥珀金横幅提示租户上下文，不改变平台品牌标。
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. 登录页（双栏深岩面板 + 窄屏单卡）实景 -->
+        <section class="card" aria-label="登录页品牌组合实景">
+          <div class="section-head">
+            <h2 class="section-title">登录页（/login）桌面双栏与窄屏单卡 Lockup 实景</h2>
+            <span class="section-note">深岩面板 #0F172A 采用亮钴蓝 #3B82F6 主标与 #F8FAFC 反白字标</span>
+          </div>
+
+          <div class="login-preview-grid">
+            <div class="login-stage-box">
+              <div class="login-desktop-card">
+                <aside class="login-aside">
+                  <div>
+                    <div class="login-lockup">
+                      ${active.renderMark(26, 'on-dark-panel')}
+                      <span class="brand-wordmark" style="font-size:15px;color:var(--solid-brand-panel-text);">ateng-solid</span>
+                    </div>
+                    <h3 class="login-aside-title">企业级多租户管理后台核心框架</h3>
+                    <p class="login-aside-sub">基于统一认证、可开关 SaaS 多租户隔离与严格前后端契约构筑的标准工程底座。</p>
+                    <div class="login-spec-pill">
+                      <span class="login-spec-dot"></span>
+                      <span>支持单租户零侵入默认态与多租户隔离切换</span>
+                    </div>
+                  </div>
+                  <div class="login-aside-foot">
+                    <span class="mono">v0.1.0</span>
+                    <span>单租户默认态 (000000)</span>
+                  </div>
+                </aside>
+                <div class="login-form-side">
+                  <div style="font-size:17px;font-weight:600;">登录管理后台</div>
+                  <div style="font-size:12px;color:var(--solid-text-secondary);">请输入账号凭据与安全校验信息以进入系统</div>
+                  <div class="mock-input">请输入登录账号</div>
+                  <div class="mock-input">请输入登录密码</div>
+                  <div class="mock-submit">登录管理后台</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="login-stage-box">
+              <div style="margin-bottom:10px;display:flex;align-items:center;gap:8px;">
+                ${active.renderMark(24)}
+                <span class="brand-wordmark" style="font-size:15px;">ateng-solid</span>
+              </div>
+              <div class="login-mobile-card">
+                <div style="font-size:15px;font-weight:600;">登录管理后台</div>
+                <div class="mock-input">请输入登录账号</div>
+                <div class="mock-input">请输入登录密码</div>
+                <div class="mock-submit">登录管理后台</div>
+              </div>
+            </div>
+          </div>
+        </section>
+      `;
+
+      document.querySelectorAll('.proto-btn[data-var]').forEach(btn => {
+        const isOn = btn.dataset.var === state.variant;
+        btn.classList.toggle('active', isOn);
+        btn.setAttribute('aria-current', isOn ? 'true' : 'false');
+      });
+
+      const btnTheme = document.getElementById('btnTheme');
+      btnTheme.textContent = state.dark ? 'Dark' : 'Light';
+      btnTheme.classList.toggle('on', state.dark);
+
+      const btnSidebar = document.getElementById('btnSidebar');
+      btnSidebar.textContent = state.sidebarCollapsed ? '侧栏: 折叠' : '侧栏: 展开';
+      btnSidebar.classList.toggle('on', state.sidebarCollapsed);
+
+      const btnTenant = document.getElementById('btnTenant');
+      btnTenant.textContent = state.observingTenant ? '观察态: 开' : '观察态: 关';
+      btnTenant.classList.toggle('on', state.observingTenant);
+    }
+
+    document.addEventListener('keydown', e => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || (e.target && e.target.isContentEditable)) return;
+      if (e.key === 'ArrowLeft') cycleVariant(-1);
+      if (e.key === 'ArrowRight') cycleVariant(1);
+    });
+
+    render();
+  </script>
+</body>
+</html>

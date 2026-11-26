@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ateng-solid 登录页多结构比选原型 (?variant=A|B|C)</title>
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32' fill='none'%3E%3Crect width='32' height='32' rx='7' fill='%231D4ED8'/%3E%3Cpath d='M12 7H22.5L20 11.2H9.5L12 7Z' fill='%23FFFFFF'/%3E%3Cpath d='M10.2 13.9H24.2L21.7 18.1H7.7L10.2 13.9Z' fill='%23FFFFFF' fill-opacity='0.82'/%3E%3Cpath d='M8.5 20.8H26L23.5 25H6L8.5 20.8Z' fill='%23FFFFFF' fill-opacity='0.64'/%3E%3C/svg%3E"
+  />
+  <style>
+    /* ============================================================
+     * Precision Slate & Cobalt Design Tokens (design-system.md)
+     * ============================================================ */
+    :root {
+      --solid-bg-canvas: #F6F7F9;
+      --solid-bg-surface: #FFFFFF;
+      --solid-bg-elevated: #FFFFFF;
+      --solid-bg-subtle: #EEF1F5;
+
+      --solid-text-primary: #0F172A;
+      --solid-text-regular: #334155;
+      --solid-text-secondary: #475569;
+      --solid-text-muted: #64748B;
+
+      --solid-primary: #1D4ED8;
+      --solid-primary-hover: #1E40AF;
+      --solid-primary-soft: #EFF6FF;
+      --solid-primary-border: #BFDBFE;
+
+      --solid-brand-panel-bg: #0F172A;
+      --solid-brand-panel-text: #F8FAFC;
+      --solid-brand-panel-text-secondary: #CBD5E1;
+      --solid-brand-panel-text-muted: #94A3B8;
+      --solid-brand-panel-border: rgba(255, 255, 255, 0.10);
+      --solid-brand-panel-dot: #3B82F6;
+
+      --solid-mark-tertiary-opacity: 0.80;
+      --solid-mark-secondary-opacity: 0.62;
+
+      --solid-border: rgba(15, 23, 42, 0.10);
+      --solid-border-light: rgba(15, 23, 42, 0.06);
+
+      --solid-warning: #B45309;
+      --solid-warning-soft: rgba(180, 83, 9, 0.08);
+      --solid-danger: #DC2626;
+      --solid-danger-soft: rgba(220, 38, 38, 0.08);
+      --solid-danger-border: rgba(220, 38, 38, 0.28);
+
+      --solid-radius-sm: 4px;
+      --solid-radius-md: 6px;
+      --solid-radius-lg: 8px;
+      --solid-radius-pill: 9999px;
+
+      --solid-shadow-floating: 0 12px 28px -6px rgba(15, 23, 42, 0.12), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
+      --solid-focus-ring: 0 0 0 2px var(--solid-bg-surface), 0 0 0 4px var(--solid-primary);
+
+      --solid-font-sans: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --solid-font-mono: 'JetBrains Mono', 'Cascadia Mono', ui-monospace, SFMono-Regular, monospace;
+    }
+
+    html.dark {
+      --solid-bg-canvas: #0B0F17;
+      --solid-bg-surface: #111827;
+      --solid-bg-elevated: #182234;
+      --solid-bg-subtle: #1E293B;
+
+      --solid-text-primary: #F8FAFC;
+      --solid-text-regular: #CBD5E1;
+      --solid-text-secondary: #94A3B8;
+      --solid-text-muted: #64748B;
+
+      --solid-primary: #3B82F6;
+      --solid-primary-hover: #2563EB;
+      --solid-primary-soft: rgba(59, 130, 246, 0.14);
+      --solid-primary-border: rgba(59, 130, 246, 0.35);
+
+      --solid-brand-panel-bg: #090D16;
+
+      --solid-mark-tertiary-opacity: 0.84;
+      --solid-mark-secondary-opacity: 0.68;
+
+      --solid-border: rgba(226, 232, 240, 0.12);
+      --solid-border-light: rgba(226, 232, 240, 0.07);
+
+      --solid-warning: #F59E0B;
+      --solid-warning-soft: rgba(245, 158, 11, 0.14);
+      --solid-danger: #F87171;
+      --solid-danger-soft: rgba(248, 113, 113, 0.14);
+      --solid-danger-border: rgba(248, 113, 113, 0.32);
+
+      --solid-shadow-floating: 0 16px 36px -8px rgba(0, 0, 0, 0.50), 0 0 0 1px rgba(226, 232, 240, 0.14);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: var(--solid-font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      background: var(--solid-bg-canvas);
+      color: var(--solid-text-primary);
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input { font-family: inherit; }
+    :focus-visible { outline: none; box-shadow: var(--solid-focus-ring); }
+    .mono { font-family: var(--solid-font-mono); font-variant-numeric: tabular-nums; }
+    .tabular { font-variant-numeric: tabular-nums; }
+
+    /* ============================================================
+     * Brand Lockup (Scheme B · Tri-Layer Precision Stack)
+     * ============================================================ */
+    .brand-lockup {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      user-select: none;
+    }
+    .brand-mark-primary { color: var(--solid-primary); }
+    .brand-mark-dark { color: var(--solid-brand-panel-dot); }
+    .brand-tier-mid { opacity: var(--solid-mark-tertiary-opacity); }
+    .brand-tier-base { opacity: var(--solid-mark-secondary-opacity); }
+    .brand-wordmark {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    /* ============================================================
+     * Theme Toggle Anchor & Subtle Status Text
+     * ============================================================ */
+    .theme-btn {
+      height: 32px;
+      padding: 0 10px;
+      border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border);
+      background: var(--solid-bg-surface);
+      color: var(--solid-text-regular);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .theme-btn:hover {
+      background: var(--solid-bg-subtle);
+      color: var(--solid-text-primary);
+    }
+
+    /* ============================================================
+     * Shared Clean Form System (40px Unified Height, Zero Red *)
+     * ============================================================ */
+    .form-head {
+      margin-bottom: 24px;
+    }
+    .form-title {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      color: var(--solid-text-primary);
+      line-height: 1.3;
+    }
+    .form-subtitle {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--solid-text-secondary);
+    }
+
+    .alert-banner {
+      margin-bottom: 18px;
+      padding: 10px 12px;
+      border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-danger-border);
+      background: var(--solid-danger-soft);
+      color: var(--solid-danger);
+      font-size: 13px;
+      line-height: 1.45;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .alert-left {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .retry-btn {
+      height: 26px;
+      padding: 0 9px;
+      border-radius: var(--solid-radius-sm);
+      border: 1px solid var(--solid-danger-border);
+      background: var(--solid-bg-surface);
+      color: var(--solid-danger);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--solid-text-regular);
+      line-height: 1.3;
+    }
+    .input-shell {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-icon {
+      position: absolute;
+      left: 12px;
+      width: 15px;
+      height: 15px;
+      color: var(--solid-text-muted);
+      pointer-events: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .input-control {
+      width: 100%;
+      height: 40px;
+      padding: 0 12px 0 36px;
+      border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border);
+      background: var(--solid-bg-surface);
+      color: var(--solid-text-primary);
+      font-size: 14px;
+      transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+    }
+    .input-control::placeholder {
+      color: var(--solid-text-muted);
+      font-size: 13px;
+    }
+    .input-control:hover:not(:disabled) {
+      border-color: var(--solid-text-muted);
+    }
+    .input-control:focus {
+      outline: none;
+      border-color: var(--solid-primary);
+      box-shadow: 0 0 0 3px var(--solid-primary-soft);
+    }
+    .input-control.has-suffix {
+      padding-right: 38px;
+    }
+    .input-suffix-btn {
+      position: absolute;
+      right: 6px;
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: var(--solid-radius-sm);
+      background: transparent;
+      color: var(--solid-text-muted);
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .input-suffix-btn:hover {
+      background: var(--solid-bg-subtle);
+      color: var(--solid-text-primary);
+    }
+
+    .capslock-hint {
+      font-size: 12px;
+      color: var(--solid-warning);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-top: 2px;
+    }
+
+    .captcha-row {
+      display: grid;
+      grid-template-columns: 1fr 130px;
+      gap: 10px;
+      align-items: stretch;
+    }
+    .captcha-box {
+      width: 130px;
+      height: 40px;
+      border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border);
+      background: var(--solid-bg-subtle);
+      padding: 0;
+      overflow: hidden;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .captcha-box:hover {
+      border-color: var(--solid-primary);
+    }
+
+    .form-aux-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin-top: -2px;
+    }
+    .checkbox-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--solid-text-regular);
+      cursor: pointer;
+      user-select: none;
+    }
+    .checkbox-label input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: var(--solid-primary);
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .submit-btn {
+      width: 100%;
+      height: 40px;
+      margin-top: 2px;
+      border: none;
+      border-radius: var(--solid-radius-md);
+      background: var(--solid-primary);
+      color: #FFFFFF;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .submit-btn:hover:not(:disabled) {
+      background: var(--solid-primary-hover);
+    }
+    .submit-btn:disabled {
+      opacity: 0.56;
+      cursor: not-allowed;
+    }
+
+    /* ============================================================
+     * Architectural Blueprint Brand Artwork (Slate #0F172A)
+     * ============================================================ */
+    .blueprint-panel {
+      position: relative;
+      background-color: var(--solid-brand-panel-bg);
+      color: var(--solid-brand-panel-text);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    /* Crisp architectural drafting grid (zero glow/purple gradients) */
+    .blueprint-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+    .blueprint-watermark {
+      position: absolute;
+      right: -36px;
+      bottom: 44px;
+      width: 360px;
+      height: 360px;
+      pointer-events: none;
+      opacity: 0.95;
+    }
+    .blueprint-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ============================================================
+     * Variant A: Full-Bleed Asymmetric Split Screen
+     * ============================================================ */
+    .stage-a {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 45% 55%;
+      background: var(--solid-bg-surface);
+    }
+    .stage-a-left {
+      padding: 32px 44px 76px;
+      border-right: 1px solid var(--solid-border);
+    }
+    .stage-a-hero {
+      max-width: 400px;
+      margin-top: auto;
+      padding-bottom: 24px;
+    }
+    .stage-a-hero h2 {
+      margin: 0 0 10px;
+      font-size: 26px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.3;
+      color: var(--solid-brand-panel-text);
+    }
+    .stage-a-hero p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--solid-brand-panel-text-secondary);
+    }
+    .stage-a-left-foot {
+      position: relative;
+      z-index: 1;
+      padding-top: 16px;
+      border-top: 1px solid var(--solid-brand-panel-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--solid-brand-panel-text-muted);
+    }
+
+    .stage-a-right {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 28px 44px 76px;
+      background: var(--solid-bg-surface);
+    }
+    .stage-a-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 32px;
+    }
+    .stage-a-mobile-brand {
+      display: none;
+    }
+    .stage-a-form-wrap {
+      width: 100%;
+      max-width: 380px;
+      margin: 24px auto;
+    }
+    .stage-a-footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--solid-text-muted);
+    }
+
+    /* ============================================================
+     * Variant B: Minimal Centered Auth Stage
+     * ============================================================ */
+    .stage-b {
+      min-height: 100vh;
+      background-color: var(--solid-bg-canvas);
+      background-image: radial-gradient(var(--solid-border) 1px, transparent 1px);
+      background-size: 22px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 24px 32px 84px;
+    }
+    .stage-b-header {
+      width: 100%;
+      max-width: 1120px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .stage-b-header-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .mode-pill {
+      height: 28px;
+      padding: 0 10px;
+      border-radius: var(--solid-radius-md);
+      border: 1px solid var(--solid-border);
+      background: var(--solid-bg-surface);
+      color: var(--solid-text-secondary);
+      font-size: 12px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .stage-b-center {
+      width: 100%;
+      max-width: 400px;
+      margin: 20px auto;
+      background: var(--solid-bg-surface);
+      border: 1px solid var(--solid-border);
+      border-radius: var(--solid-radius-lg);
+      box-shadow: var(--solid-shadow-floating);
+      padding: 32px;
+    }
+    .stage-b-footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--solid-text-muted);
+    }
+
+    /* ============================================================
+     * Variant C: Elevated Architectural Canvas (1040px Wide)
+     * ============================================================ */
+    .stage-c {
+      min-height: 100vh;
+      background-color: var(--solid-bg-canvas);
+      background-image:
+        linear-gradient(to right, var(--solid-border-light) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--solid-border-light) 1px, transparent 1px);
+      background-size: 48px 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 28px 24px 86px;
+      gap: 18px;
+    }
+    .stage-c-card {
+      width: 100%;
+      max-width: 1040px;
+      border-radius: var(--solid-radius-lg);
+      border: 1px solid var(--solid-border);
+      background: var(--solid-bg-surface);
+      box-shadow: var(--solid-shadow-floating);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 44% 56%;
+    }
+    .stage-c-left {
+      padding: 36px 36px;
+      min-height: 460px;
+      border-right: 1px solid var(--solid-border);
+    }
+    .stage-c-copy {
+      max-width: 340px;
+      margin-top: auto;
+    }
+    .stage-c-copy h2 {
+      margin: 0 0 8px;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.015em;
+      color: var(--solid-brand-panel-text);
+    }
+    .stage-c-copy p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.65;
+      color: var(--solid-brand-panel-text-secondary);
+    }
+    .stage-c-right {
+      padding: 28px 44px 42px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .stage-c-right-top {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+    .stage-c-form-wrap {
+      width: 100%;
+      max-width: 368px;
+      margin: auto;
+    }
+    .stage-c-footer {
+      font-size: 12px;
+      color: var(--solid-text-muted);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ============================================================
+     * Narrow / Mobile Responsive (< 960px or Simulated Mobile)
+     * ============================================================ */
+    .mobile-shell {
+      min-height: 100vh;
+      background-color: var(--solid-bg-canvas);
+      background-image: radial-gradient(var(--solid-border) 1px, transparent 1px);
+      background-size: 20px 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 16px 84px;
+    }
+    .mobile-topbar {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .mobile-card {
+      width: 100%;
+      max-width: 420px;
+      margin: 20px auto;
+      background: var(--solid-bg-surface);
+      border: 1px solid var(--solid-border);
+      border-radius: var(--solid-radius-lg);
+      box-shadow: var(--solid-shadow-floating);
+      padding: 26px 24px;
+    }
+    .mobile-footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--solid-text-muted);
+    }
+
+    /* Force simulated mobile frame inside desktop browser when toggled */
+    .force-mobile-frame {
+      max-width: 440px;
+      margin: 20px auto 84px;
+      min-height: calc(100vh - 104px);
+      border: 1px solid var(--solid-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--solid-shadow-floating);
+    }
+
+    @media (max-width: 960px) {
+      .stage-a,
+      .stage-c-card {
+        grid-template-columns: 1fr;
+      }
+      .stage-a-left,
+      .stage-c-left {
+        display: none;
+      }
+      .stage-a {
+        background-color: var(--solid-bg-canvas);
+        background-image: radial-gradient(var(--solid-border) 1px, transparent 1px);
+        background-size: 20px 20px;
+        padding: 20px 16px 84px;
+      }
+      .stage-a-right {
+        background: transparent;
+        padding: 0;
+        justify-content: space-between;
+      }
+      .stage-a-topbar {
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+      }
+      .stage-a-mobile-brand {
+        display: inline-flex;
+      }
+      .stage-a-form-wrap {
+        max-width: 420px;
+        background: var(--solid-bg-surface);
+        border: 1px solid var(--solid-border);
+        border-radius: var(--solid-radius-lg);
+        box-shadow: var(--solid-shadow-floating);
+        padding: 26px 24px;
+      }
+      .stage-c {
+        padding: 20px 16px 84px;
+      }
+      .stage-c-card {
+        max-width: 420px;
+      }
+      .stage-c-right {
+        padding: 24px;
+      }
+    }
+
+    /* ============================================================
+     * Floating Prototype Switcher Bar (?variant=A|B|C)
+     * ============================================================ */
+    .proto-bar {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1400;
+      background: #0F172A;
+      color: #F8FAFC;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--solid-radius-pill);
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      box-shadow: 0 18px 40px -8px rgba(0, 0, 0, 0.45);
+      font-size: 12px;
+      white-space: nowrap;
+      max-width: calc(100vw - 24px);
+      overflow-x: auto;
+    }
+    .proto-sep {
+      width: 1px;
+      height: 16px;
+      background: rgba(255, 255, 255, 0.18);
+      flex-shrink: 0;
+    }
+    .proto-btn {
+      border: 1px solid transparent;
+      background: transparent;
+      color: #CBD5E1;
+      padding: 4px 10px;
+      border-radius: var(--solid-radius-pill);
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .proto-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      color: #FFFFFF;
+    }
+    .proto-btn.active {
+      background: #2563EB;
+      color: #FFFFFF;
+      font-weight: 600;
+    }
+    .proto-toggle {
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(255, 255, 255, 0.08);
+      color: #F8FAFC;
+      padding: 4px 9px;
+      border-radius: var(--solid-radius-pill);
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .proto-toggle.on {
+      border-color: #60A5FA;
+      background: rgba(37, 99, 235, 0.42);
+    }
+  </style>
+</head>
+<body>
+  <main id="app"></main>
+
+  <nav class="proto-bar" aria-label="登录页构图切换与双态模拟">
+    <button class="proto-btn" type="button" data-var="A" onclick="setVariant('A')">方案 A · 全屏双分屏</button>
+    <button class="proto-btn" type="button" data-var="B" onclick="setVariant('B')">方案 B · 极简居中舞台</button>
+    <button class="proto-btn" type="button" data-var="C" onclick="setVariant('C')">方案 C · 建筑大双栏</button>
+    <span class="proto-sep"></span>
+    <button id="btnTheme" class="proto-toggle" type="button" onclick="toggleTheme()">Light</button>
+    <button id="btnTenant" class="proto-toggle" type="button" onclick="toggleTenant()">多租户: 关</button>
+    <button id="btnCaptcha" class="proto-toggle" type="button" onclick="toggleCaptcha()">验证码: 关</button>
+    <button id="btnAlert" class="proto-toggle" type="button" onclick="cycleAlert()">报错态: 正常</button>
+    <button id="btnViewport" class="proto-toggle" type="button" onclick="toggleMobileView()">视口: 桌面</button>
+  </nav>
+
+  <script>
+    const VARIANT_ORDER = ['A', 'B', 'C'];
+    const ALERT_MODES = ['none', 'error', 'locked', 'configError'];
+    const CAPTCHA_SAMPLES = ['A7K9', 'M4P2', 'X9D3', 'H6T8'];
+
+    function readInitialVariant() {
+      const params = new URLSearchParams(window.location.search);
+      const v = (params.get('variant') || 'A').toUpperCase();
+      return VARIANT_ORDER.includes(v) ? v : 'A';
+    }
+
+    const state = {
+      variant: readInitialVariant(),
+      dark: false,
+      tenantEnabled: false,
+      captchaEnabled: false,
+      alertMode: 'none', // none | error | locked | configError
+      mobilePreview: false,
+      showPassword: false,
+      capsLock: false,
+      remember: true,
+      captchaIdx: 0,
+      lockSeconds: 298,
+      form: {
+        tenantCode: '000000',
+        username: 'superadmin',
+        password: '',
+        captchaCode: '',
+      },
+    };
+
+    let lockTimer = null;
+
+    function syncLockTimer() {
+      if (lockTimer) {
+        clearInterval(lockTimer);
+        lockTimer = null;
+      }
+      if (state.alertMode === 'locked') {
+        lockTimer = setInterval(() => {
+          if (state.lockSeconds <= 1) {
+            state.alertMode = 'none';
+            state.lockSeconds = 298;
+            syncLockTimer();
+            render();
+            return;
+          }
+          state.lockSeconds -= 1;
+          render();
+        }, 1000);
+      }
+    }
+
+    function padTwo(n) {
+      return String(Math.max(0, Math.floor(n))).padStart(2, '0');
+    }
+
+    function renderBrandLogo(size, tone) {
+      const markCls = tone === 'dark' ? 'brand-mark-dark' : 'brand-mark-primary';
+      const textStyle =
+        tone === 'dark'
+          ? 'color:var(--solid-brand-panel-text);'
+          : 'color:var(--solid-text-primary);';
+      return `
+        <span class="brand-lockup">
+          <svg class="${markCls}" width="${size}" height="${size}" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M11 5H24L21 10H8L11 5Z" fill="currentColor" />
+            <path d="M9 13.5H26L23 18.5H6L9 13.5Z" fill="currentColor" class="brand-tier-mid" />
+            <path d="M7 22H28L25 27H4L7 22Z" fill="currentColor" class="brand-tier-base" />
+          </svg>
+          <span class="brand-wordmark" style="${textStyle}">ateng-solid</span>
+        </span>
+      `;
+    }
+
+    function renderBlueprintWatermark() {
+      return `
+        <svg class="blueprint-watermark" viewBox="0 0 360 360" fill="none" aria-hidden="true">
+          <!-- Architectural guide lines -->
+          <path d="M24 316L316 24" stroke="rgba(148,163,184,0.12)" stroke-width="1" stroke-dasharray="4 4" />
+          <path d="M84 336H336V84" stroke="rgba(148,163,184,0.10)" stroke-width="1" />
+          <circle cx="290" cy="70" r="3" fill="rgba(59,130,246,0.35)" />
+          <!-- Enlarged Scheme B Tri-Layer Precision Stack Wireframe -->
+          <path d="M132 76H268L238 128H102L132 76Z" fill="rgba(59,130,246,0.08)" stroke="rgba(59,130,246,0.28)" stroke-width="1.2" />
+          <path d="M108 158H292L262 210H78L108 158Z" fill="rgba(148,163,184,0.05)" stroke="rgba(148,163,184,0.22)" stroke-width="1.2" />
+          <path d="M84 240H316L286 292H54L84 240Z" fill="rgba(148,163,184,0.03)" stroke="rgba(148,163,184,0.18)" stroke-width="1.2" />
+        </svg>
+      `;
+    }
+
+    function renderCaptchaSvg() {
+      const code = CAPTCHA_SAMPLES[state.captchaIdx];
+      const bg = state.dark ? '#1E293B' : '#EEF1F5';
+      const fg = state.dark ? '#F8FAFC' : '#0F172A';
+      const accent = state.dark ? '#3B82F6' : '#1D4ED8';
+      const svg = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="130" height="40" viewBox="0 0 130 40">
+          <rect width="130" height="40" fill="${bg}"/>
+          <path d="M8 29 Q 42 8, 86 28 T 124 14" stroke="${accent}" stroke-opacity="0.35" stroke-width="1.5" fill="none"/>
+          <path d="M14 13 L 116 30" stroke="${fg}" stroke-opacity="0.16" stroke-width="1"/>
+          <text x="65" y="26" text-anchor="middle" fill="${fg}" font-family="ui-monospace,Consolas,monospace" font-size="19" font-weight="700" letter-spacing="6">${code}</text>
+        </svg>
+      `;
+      return svg;
+    }
+
+    function renderThemeButton() {
+      const icon = state.dark
+        ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>`
+        : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+      return `
+        <button class="theme-btn" type="button" onclick="toggleTheme()" aria-label="切换明暗主题">
+          ${icon}
+          <span>${state.dark ? '浅色模式' : '深色模式'}</span>
+        </button>
+      `;
+    }
+
+    function renderIcons() {
+      return {
+        tenant: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>`,
+        user: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6"/></svg>`,
+        lock: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>`,
+        key: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7.5" cy="15.5" r="4.5"/><path d="M11 12l9-9M17 6l3 3"/></svg>`,
+        eye: state.showPassword
+          ? `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-7 0-11-8-11-8a21.77 21.77 0 0 1 5.06-6.94M9.9 4.24A10.94 10.94 0 0 1 12 4c7 0 11 8 11 8a21.78 21.78 0 0 1-2.16 3.19M1 1l22 22"/></svg>`
+          : `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
+        warn: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5h.01"/></svg>`,
+      };
+    }
+
+    function renderAlertSlot() {
+      const ic = renderIcons();
+      if (state.alertMode === 'none') return '';
+      if (state.alertMode === 'configError') {
+        return `
+          <div class="alert-banner" role="alert">
+            <span class="alert-left">${ic.warn}<span>获取登录安全配置失败，请检查服务连接后点击重试</span></span>
+            <button class="retry-btn" type="button" onclick="state.alertMode='none';render();">重新获取</button>
+          </div>
+        `;
+      }
+      if (state.alertMode === 'locked') {
+        const mins = Math.floor(state.lockSeconds / 60);
+        const secs = state.lockSeconds % 60;
+        return `
+          <div class="alert-banner tabular" role="alert">
+            <span class="alert-left">${ic.warn}<span>连续登录失败次数过多，当前账号已锁定，请在 ${padTwo(mins)}分${padTwo(secs)}秒 后重试</span></span>
+          </div>
+        `;
+      }
+      return `
+        <div class="alert-banner" role="alert">
+          <span class="alert-left">${ic.warn}<span>用户名或密码错误，还剩 4 次尝试机会（连续失败 5 次将锁定 15 分钟）</span></span>
+        </div>
+      `;
+    }
+
+    function renderAuthFormBlock() {
+      const ic = renderIcons();
+      const subtitle = state.tenantEnabled
+        ? '请输入租户编码与账号凭据以进入控制台'
+        : '请输入账号凭据以进入控制台';
+      const isLocked = state.alertMode === 'locked';
+      const isDisabled = isLocked || state.alertMode === 'configError';
+      const btnText = isLocked
+        ? `已锁定 (${padTwo(Math.floor(state.lockSeconds / 60))}:${padTwo(state.lockSeconds % 60)})`
+        : '登录';
+
+      return `
+        <header class="form-head">
+          <h1 class="form-title">登录管理后台</h1>
+          <p class="form-subtitle">${subtitle}</p>
+        </header>
+
+        ${renderAlertSlot()}
+
+        <form class="auth-form" onsubmit="event.preventDefault(); handleMockSubmit();">
+          ${state.tenantEnabled ? `
+            <div class="field">
+              <label class="field-label" for="inputTenant">租户编码</label>
+              <div class="input-shell">
+                <span class="input-icon">${ic.tenant}</span>
+                <input
+                  id="inputTenant"
+                  class="input-control mono"
+                  type="text"
+                  value="${state.form.tenantCode}"
+                  placeholder="请输入租户编码（默认 000000）"
+                  oninput="state.form.tenantCode=this.value;"
+                />
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="field">
+            <label class="field-label" for="inputUser">登录账号</label>
+            <div class="input-shell">
+              <span class="input-icon">${ic.user}</span>
+              <input
+                id="inputUser"
+                class="input-control"
+                type="text"
+                value="${state.form.username}"
+                placeholder="请输入登录账号"
+                oninput="state.form.username=this.value;"
+              />
+            </div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="inputPwd">登录密码</label>
+            <div class="input-shell">
+              <span class="input-icon">${ic.lock}</span>
+              <input
+                id="inputPwd"
+                class="input-control has-suffix"
+                type="${state.showPassword ? 'text' : 'password'}"
+                value="${state.form.password}"
+                placeholder="请输入登录密码"
+                oninput="state.form.password=this.value;"
+                onkeydown="handleCapsCheck(event)"
+                onkeyup="handleCapsCheck(event)"
+              />
+              <button
+                type="button"
+                class="input-suffix-btn"
+                aria-label="${state.showPassword ? '隐藏密码' : '显示密码'}"
+                onclick="state.showPassword=!state.showPassword;render();"
+              >
+                ${ic.eye}
+              </button>
+            </div>
+            ${state.capsLock ? `
+              <div id="capsHintSlot" class="capslock-hint">${ic.warn}<span>大写锁定 (Caps Lock) 已开启</span></div>
+            ` : '<div id="capsHintSlot" class="capslock-hint" style="display:none;"></div>'}
+          </div>
+
+          ${state.captchaEnabled ? `
+            <div class="field">
+              <label class="field-label" for="inputCaptcha">图形验证码</label>
+              <div class="captcha-row">
+                <div class="input-shell">
+                  <span class="input-icon">${ic.key}</span>
+                  <input
+                    id="inputCaptcha"
+                    class="input-control mono"
+                    type="text"
+                    maxlength="6"
+                    value="${state.form.captchaCode}"
+                    placeholder="请输入验证码"
+                    oninput="state.form.captchaCode=this.value;"
+                  />
+                </div>
+                <button
+                  type="button"
+                  class="captcha-box"
+                  title="点击刷新验证码"
+                  aria-label="刷新图形验证码"
+                  onclick="state.captchaIdx=(state.captchaIdx+1)%CAPTCHA_SAMPLES.length;render();"
+                >
+                  ${renderCaptchaSvg()}
+                </button>
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="form-aux-row">
+            <label class="checkbox-label">
+              <input type="checkbox" ${state.remember ? 'checked' : ''} onchange="state.remember=this.checked;" />
+              <span>记住登录账号</span>
+            </label>
+          </div>
+
+          <button class="submit-btn tabular" type="submit" ${isDisabled ? 'disabled' : ''}>
+            ${btnText}
+          </button>
+        </form>
+      `;
+    }
+
+    function renderFooterStatusText() {
+      const tenantMode = state.tenantEnabled ? 'SaaS 多租户模式' : '单租户默认态 (000000)';
+      return `v0.1.0 · ${tenantMode}`;
+    }
+
+    function render() {
+      const app = document.getElementById('app');
+
+      if (state.mobilePreview) {
+        app.innerHTML = `
+          <div class="force-mobile-frame">
+            <section class="mobile-shell" style="min-height:100%;padding-bottom:24px;">
+              <div class="mobile-topbar">
+                ${renderBrandLogo(24, 'light')}
+                ${renderThemeButton()}
+              </div>
+              <div class="mobile-card">
+                ${renderAuthFormBlock()}
+              </div>
+              <footer class="mobile-footer">${renderFooterStatusText()}</footer>
+            </section>
+          </div>
+        `;
+      } else if (state.variant === 'A') {
+        app.innerHTML = `
+          <section class="stage-a">
+            <aside class="blueprint-panel stage-a-left">
+              <div class="blueprint-grid"></div>
+              ${renderBlueprintWatermark()}
+              <div class="blueprint-content">
+                ${renderBrandLogo(26, 'dark')}
+              </div>
+              <div class="blueprint-content stage-a-hero">
+                <h2>企业级多租户管理底座</h2>
+                <p>秩序清晰、高密可靠的组织权限、数据治理与系统审计控制中心。</p>
+              </div>
+              <div class="stage-a-left-foot">
+                <span class="mono">v0.1.0</span>
+                <span>${state.tenantEnabled ? 'SaaS 多租户模式' : '单租户默认态 (000000)'}</span>
+              </div>
+            </aside>
+
+            <section class="stage-a-right">
+              <div class="stage-a-topbar">
+                <span class="stage-a-mobile-brand">${renderBrandLogo(24, 'light')}</span>
+                <span style="margin-left:auto;">${renderThemeButton()}</span>
+              </div>
+
+              <div class="stage-a-form-wrap">
+                ${renderAuthFormBlock()}
+              </div>
+
+              <footer class="stage-a-footer">
+                ateng-solid · 企业级开源上层应用框架
+              </footer>
+            </section>
+          </section>
+        `;
+      } else if (state.variant === 'B') {
+        app.innerHTML = `
+          <section class="stage-b">
+            <header class="stage-b-header">
+              ${renderBrandLogo(24, 'light')}
+              <div class="stage-b-header-right">
+                <span class="mode-pill">${state.tenantEnabled ? 'SaaS 多租户' : '单租户 (000000)'}</span>
+                ${renderThemeButton()}
+              </div>
+            </header>
+
+            <div class="stage-b-center">
+              ${renderAuthFormBlock()}
+            </div>
+
+            <footer class="stage-b-footer">
+              v0.1.0 · ateng-solid 企业级开源管理控制台
+            </footer>
+          </section>
+        `;
+      } else {
+        app.innerHTML = `
+          <section class="stage-c">
+            <div class="stage-c-card">
+              <aside class="blueprint-panel stage-c-left">
+                <div class="blueprint-grid"></div>
+                ${renderBlueprintWatermark()}
+                <div class="blueprint-content">
+                  ${renderBrandLogo(26, 'dark')}
+                </div>
+                <div class="blueprint-content stage-c-copy">
+                  <h2>稳固底座 · 精密治理</h2>
+                  <p>面向企业级二开场景的统一认证、多租户隔离与系统运维工作台。</p>
+                </div>
+              </aside>
+
+              <div class="stage-c-right">
+                <div class="stage-c-right-top">
+                  ${renderThemeButton()}
+                </div>
+                <div class="stage-c-form-wrap">
+                  ${renderAuthFormBlock()}
+                </div>
+                <div style="height:8px;"></div>
+              </div>
+            </div>
+
+            <footer class="stage-c-footer">
+              <span class="mono">v0.1.0</span>
+              <span>·</span>
+              <span>${state.tenantEnabled ? 'SaaS 多租户模式' : '单租户默认态 (000000)'}</span>
+              <span>·</span>
+              <span>ateng-solid 管理控制台</span>
+            </footer>
+          </section>
+        `;
+      }
+
+      document.querySelectorAll('.proto-btn[data-var]').forEach(btn => {
+        const on = btn.dataset.var === state.variant;
+        btn.classList.toggle('active', on);
+        btn.setAttribute('aria-current', on ? 'true' : 'false');
+      });
+
+      const btnTheme = document.getElementById('btnTheme');
+      btnTheme.textContent = state.dark ? 'Dark' : 'Light';
+      btnTheme.classList.toggle('on', state.dark);
+
+      const btnTenant = document.getElementById('btnTenant');
+      btnTenant.textContent = state.tenantEnabled ? '多租户: 开' : '多租户: 关';
+      btnTenant.classList.toggle('on', state.tenantEnabled);
+
+      const btnCaptcha = document.getElementById('btnCaptcha');
+      btnCaptcha.textContent = state.captchaEnabled ? '验证码: 开' : '验证码: 关';
+      btnCaptcha.classList.toggle('on', state.captchaEnabled);
+
+      const alertLabelMap = {
+        none: '报错态: 正常',
+        error: '报错态: 密码错误',
+        locked: '报错态: 101004锁定',
+        configError: '报错态: 配置失败',
+      };
+      const btnAlert = document.getElementById('btnAlert');
+      btnAlert.textContent = alertLabelMap[state.alertMode];
+      btnAlert.classList.toggle('on', state.alertMode !== 'none');
+
+      const btnViewport = document.getElementById('btnViewport');
+      btnViewport.textContent = state.mobilePreview ? '视口: 窄屏单卡' : '视口: 桌面';
+      btnViewport.classList.toggle('on', state.mobilePreview);
+    }
+
+    function setVariant(v) {
+      if (!VARIANT_ORDER.includes(v)) return;
+      state.variant = v;
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set('variant', v);
+        window.history.replaceState(null, '', url.toString());
+      } catch (_err) {
+        // 忽略 file:// 限制
+      }
+      render();
+    }
+
+    function cycleVariant(delta) {
+      const idx = VARIANT_ORDER.indexOf(state.variant);
+      setVariant(VARIANT_ORDER[(idx + delta + VARIANT_ORDER.length) % VARIANT_ORDER.length]);
+    }
+
+    function toggleTheme() {
+      state.dark = !state.dark;
+      document.documentElement.classList.toggle('dark', state.dark);
+      render();
+    }
+
+    function toggleTenant() {
+      state.tenantEnabled = !state.tenantEnabled;
+      render();
+    }
+
+    function toggleCaptcha() {
+      state.captchaEnabled = !state.captchaEnabled;
+      render();
+    }
+
+    function cycleAlert() {
+      const idx = ALERT_MODES.indexOf(state.alertMode);
+      state.alertMode = ALERT_MODES[(idx + 1) % ALERT_MODES.length];
+      if (state.alertMode === 'locked') {
+        state.lockSeconds = 298;
+      }
+      syncLockTimer();
+      render();
+    }
+
+    function toggleMobileView() {
+      state.mobilePreview = !state.mobilePreview;
+      render();
+    }
+
+    function handleCapsCheck(event) {
+      if (typeof event.getModifierState === 'function') {
+        const next = event.getModifierState('CapsLock');
+        if (next !== state.capsLock) {
+          state.capsLock = next;
+          const slot = document.getElementById('capsHintSlot');
+          if (slot) {
+            const ic = renderIcons();
+            slot.innerHTML = next ? `${ic.warn}<span>大写锁定 (Caps Lock) 已开启</span>` : '';
+            slot.style.display = next ? 'flex' : 'none';
+          }
+        }
+      }
+    }
+
+    function handleMockSubmit() {
+      if (!state.form.username.trim() || !state.form.password) {
+        state.alertMode = 'error';
+        render();
+        return;
+      }
+      state.alertMode = 'none';
+      alert('原型校验通过：正式环境中将登录并跳转至工作台 /dashboard');
+    }
+
+    document.addEventListener('keydown', e => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) || (e.target && e.target.isContentEditable)) return;
+      if (e.key === 'ArrowLeft') cycleVariant(-1);
+      if (e.key === 'ArrowRight') cycleVariant(1);
+    });
+
+    render();
+  </script>
+</body>
+</html>

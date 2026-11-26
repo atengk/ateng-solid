@@ -92,3 +92,20 @@
   - 独立多页签条：固定高 `36px`，贴附于顶栏下方，右侧提供当前页刷新与工作区最大化开关；
   - 跨租户观察横幅：仅在 `tenantEnabled = true` 且平台超管切换至非 `0` 号租户时出现于页签栏下方，展示当前工作租户与一键切回平台按钮。
 - **被淘汰方案归档**：变体 B（双轨域栏）与变体 C（顶左混合流）记录保留在 [`shell-variants.html`](../../prototypes/phase1/shell-variants.html) 作为布局探索一手记录，不进入第一阶段正式规范。
+
+---
+
+## 6. 品牌图形主标与标识规范（方案 B · 2026-11-26 定稿）
+
+经多几何方案对比原型（[`logo-variants.html`](../../prototypes/phase1/logo-variants.html) 对比方案 A 互锁基石、方案 B 三阶精密基座、方案 C 倒角内核框）评审选定，正式确立 **方案 B「三阶精密基座（Tri-Layer Precision Stack）」** 作为 `ateng-solid` 全工作区统一品牌图形主标（矢量真源：[`ateng-solid-mark.svg`](../../assets/brand/ateng-solid-mark.svg)、自适应 Favicon：[`ateng-solid-favicon.svg`](../../assets/brand/ateng-solid-favicon.svg)）。
+
+- **几何与隐喻规范**：
+  - 采用 `32×32` 精密网格上的三层斜切平行实体块沿中心轴线稳步层叠，零渐变、零外框包裹，保证 `16px` 小尺寸下边缘仍清晰锐利；
+  - 顶层（最聚焦：`13×5`）、中层（核心：`17×5`）、底层（基座：`21×5`）象征独立通用底座、核心多租户内核与全端应用矩阵的递进架构。
+- **双态透明阶与对比度约束**：
+  - 站内图形统一经 `currentColor` + 两级次级透明度令牌呈色（Light：`--solid-mark-tertiary-opacity: 0.8` / `--solid-mark-secondary-opacity: 0.62`；Dark：`0.84` / `0.68`），确保在浅色表面（主色 `--solid-primary` `#1D4ED8`）、暗黑表面（`#3B82F6`）及深岩登录品牌栏（`#0F172A` 上采用 `--solid-brand-panel-dot` `#3B82F6`）下各层级图形均满足非文本对比度 `>= 3:1`；
+  - 浏览器 Favicon（`public/favicon.svg`）保留 `rx="7"` 深钴蓝圆角底板与纯白反白三阶图形，并通过 `@media (prefers-color-scheme: dark)` 适配浅/深浏览器标签栏。
+- **品牌组合标（Brand Lockup）与多租户边界**：
+  - **组合口径**：展开态侧栏顶部 `48px` 区、桌面登录深岩品牌栏及窄屏登录头部统一展示 **图形主标 + 全小写无衬线半粗字标 `ateng-solid`**（`font-weight: 600`、`letter-spacing: -0.02em`），侧栏折叠态（`60px`）自动隐藏字标仅留居中图形；`VITE_APP_TITLE` 专责浏览器 `<title>` 与悬浮/无障碍提示；
+  - **实例品牌归属（Instance Brand）**：品牌图形与字标始终归属当前部署的平台系统实例本身，不随 SaaS 多租户开关或平台超管切换工作租户而动态换标，租户上下文隔离继续由 `TenantObserveBanner` 承担。
+- **被淘汰备选归档**：方案 A（互锁基石）与方案 C（倒角内核框）完整矢量与实景对照保留于 [`logo-variants.html`](../../prototypes/phase1/logo-variants.html) 备查。
