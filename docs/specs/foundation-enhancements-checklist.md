@@ -10,7 +10,7 @@
 >   - 上述 13 项均可在 `dev` 携带 `1.2.1-SNAPSHOT` / `file:.yalc` 直接完成编码、本地全量验证、提交与关单；**合入 `main` 与正式发版前须待底座发布递进正式版（`1.2.1` / `1.1.1`）并还原锁版（由 `main` `pre-commit`、`pre-push`、`main` CI 与 `release.yml` 硬拦截守护）**。
 > - **全功能走查后继增强（2026-11-27 · `B20`/`B21`/`U13~U17` 上游 Issue 均已闭环，本地快照/yalc 联调就绪）**：
 >   - `ateng-boot`：**`B20`**（[`#1177`](https://github.com/atengk/ateng-boot/issues/1177)，提交 `fc329ec2`，已安装本地 `1.2.1-SNAPSHOT`，关联 [`atengk/ateng-solid#47`](https://github.com/atengk/ateng-solid/issues/47)）；**`B21`**（[`#1178`](https://github.com/atengk/ateng-boot/issues/1178) 已关闭，提交 `a8e656c2`，`dev` `Java CI` 全绿且已刷新本地 `1.2.1-SNAPSHOT` 完成 `ateng-solid-server` 联调，合入 `main` 前待发版锁版）；
->   - `ateng-ui`：**`U13`**（[`#377`](https://github.com/atengk/ateng-ui/issues/377)）、**`U14`**（[`#378`](https://github.com/atengk/ateng-ui/issues/378)），均于上游 `dev` 提交 `a9616d0` 闭环并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`（分别关联 [`atengk/ateng-solid#53`](https://github.com/atengk/ateng-solid/issues/53) 与 [`atengk/ateng-solid#50`](https://github.com/atengk/ateng-solid/issues/50)）；**`U15`**（[`#379`](https://github.com/atengk/ateng-ui/issues/379)，上游提交 `ee55b3b` / `d255cd8` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0004](../../ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md)）；**`U16`**（[`#380`](https://github.com/atengk/ateng-ui/issues/380)，上游提交 `19f79a7` / `1365732` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md)）；**`U17`**（[`#381`](https://github.com/atengk/ateng-ui/issues/381)，上游提交 `934135a` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 [`atengk/ateng-solid#57`](https://github.com/atengk/ateng-solid/issues/57)）。
+>   - `ateng-ui`：**`U13`**（[`#377`](https://github.com/atengk/ateng-ui/issues/377)）、**`U14`**（[`#378`](https://github.com/atengk/ateng-ui/issues/378)），均于上游 `dev` 提交 `a9616d0` 闭环并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`（分别关联 [`atengk/ateng-solid#53`](https://github.com/atengk/ateng-solid/issues/53) 与 [`atengk/ateng-solid#50`](https://github.com/atengk/ateng-solid/issues/50)）；**`U15`**（[`#379`](https://github.com/atengk/ateng-ui/issues/379)，上游提交 `ee55b3b` / `d255cd8` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0004](../../ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md)）；**`U16`**（[`#380`](https://github.com/atengk/ateng-ui/issues/380)，上游提交 `19f79a7` / `1365732` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md)）；**`U17`**（[`#381`](https://github.com/atengk/ateng-ui/issues/381)，上游提交 `934135a` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 [`atengk/ateng-solid#57`](https://github.com/atengk/ateng-solid/issues/57)）；**`U18`**（[`#388`](https://github.com/atengk/ateng-ui/issues/388)，上游已关闭，提交 `8d4c1d1`，`dev` `Frontend CI` 全绿并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 联调就绪，待 npm 发版后还原锁版）。
 
 ---
 
@@ -384,6 +384,21 @@
   1. 命中 `DictManager.getCache(dictCode)` 时在 `setup()` 同步初始化选项；区分异步加载中与加载完成未命中，支持 `loadingMode?: 'placeholder' | 'raw'` 与 `#loading` 插槽；
   2. 上层 `admin-web` 已通过 `pnpm pack + yalc` 更新本地 `.yalc/@atengk/element-plus`，并结合 `withDictPreload` 与 `useDetailDialogState().detailReady` 骨架门控确保列表与编辑弹窗/抽屉零首帧跳变（关联 [`atengk/ateng-solid#57`](https://github.com/atengk/ateng-solid/issues/57)）。
 - **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#381`](https://github.com/atengk/ateng-ui/issues/381)，提交 `934135a`），已通过 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 并完成实机联调，待 npm 发版锁版后勾选
+
+---
+
+### [U18] 低/中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 合入 `main` 前待发版锁版）：修复 `AtengQueryForm` 查询加载双图标、补齐防闪烁/刷新旋转与 `ElSwitch` 无 Preflight 护栏
+
+- **现状与源码锚点**：
+  - `@atengk/element-plus` `AtengQueryForm.vue`（原 L356–L383）将查询/重置 SVG 图标放入 `<el-button>` 默认插槽而非 `#icon` / `:icon`，导致 `:loading="true"` 时与转圈图标并排渲染；且缺少查询 Loading 防闪烁开关与加载期重置按钮禁用保护；
+  - `AtengTable.vue`（原 L1090–L1099, L1410–L1448）刷新工具按钮虽绑定 `.is-loading`，但未定义旋转动画；
+  - 禁用 Tailwind Preflight 时 Element Plus `.el-switch__inner` 因缺少 `box-sizing: border-box` 导致内嵌文案与滑块重叠。
+- **实际落地通用改造**：上游提交 `8d4c1d1` 已合入 `dev`、`Frontend CI` 全绿通过并关单：
+  1. `AtengQueryForm.vue` 查询/重置改用 `<template #icon>` 与 `ElButton` `loading` 互斥切换，移除 `.at-query-form__btn-icon` 手动左间距，默认重置按钮绑定 `:disabled="disabled || displayedSearchLoading"` 并在静默期拦截重复点击/回车；
+  2. `AtengQueryFormProps` 新增 Opt-in 防闪烁配置 `loadingDelay`（默认 `0` 保持兼容）与 `loadingMinDuration`（默认 `300`），复用 `@atengk/vue` `useAntiFlicker`；上层 `admin-web` 通过 `useListTableLayout.ts` 统一注入 `QUERY_FORM_LOADING_DELAY = 150`；
+  3. `AtengTable.vue` 为 `.at-table__tool-btn.is-loading svg` 补齐 `at-table-spin` 旋转动画并适配 `prefers-reduced-motion`；
+  4. 新增 `styles/_switch-base.scss` 在 `index.scss`（`dist/index.css`）与 `theme-pro/_switches.scss`（`dist/theme-pro.css`）共同注入 `.el-switch__core .el-switch__inner { box-sizing: border-box; }`，并从上层 `admin-web/src/styles/main.css` 移除冗余过渡 rule。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#388`](https://github.com/atengk/ateng-ui/issues/388)，提交 `8d4c1d1`），已通过 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 并完成实机/单测联调，待 npm 发版锁版后勾选
 
 ---
 
