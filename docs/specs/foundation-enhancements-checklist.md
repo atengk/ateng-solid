@@ -10,7 +10,7 @@
 >   - 上述 13 项均可在 `dev` 携带 `1.2.1-SNAPSHOT` / `file:.yalc` 直接完成编码、本地全量验证、提交与关单；**合入 `main` 与正式发版前须待底座发布递进正式版（`1.2.1` / `1.1.1`）并还原锁版（由 `main` `pre-commit`、`pre-push`、`main` CI 与 `release.yml` 硬拦截守护）**。
 > - **全功能走查后继增强（2026-11-26 · 🟢 上游 `dev` 均已闭环 · 🔵 本地联调包已刷新 · ⏳ 合入 `main` 前待发版锁版）**：
 >   - `ateng-boot`：**`B20`**（[`#1177`](https://github.com/atengk/ateng-boot/issues/1177)，提交 `fc329ec2`，已安装本地 `1.2.1-SNAPSHOT`，关联 [`atengk/ateng-solid#47`](https://github.com/atengk/ateng-solid/issues/47)）；
->   - `ateng-ui`：**`U13`**（[`#377`](https://github.com/atengk/ateng-ui/issues/377)）、**`U14`**（[`#378`](https://github.com/atengk/ateng-ui/issues/378)），均于上游 `dev` 提交 `a9616d0` 闭环并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`（分别关联 [`atengk/ateng-solid#53`](https://github.com/atengk/ateng-solid/issues/53) 与 [`atengk/ateng-solid#50`](https://github.com/atengk/ateng-solid/issues/50)）；**`U15`**（[`#379`](https://github.com/atengk/ateng-ui/issues/379)，上游提交 `ee55b3b` / `d255cd8` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0004](../../ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md)）；**`U16`**（[`#380`](https://github.com/atengk/ateng-ui/issues/380)，上游提交 `19f79a7` / `1365732` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md)）。
+>   - `ateng-ui`：**`U13`**（[`#377`](https://github.com/atengk/ateng-ui/issues/377)）、**`U14`**（[`#378`](https://github.com/atengk/ateng-ui/issues/378)），均于上游 `dev` 提交 `a9616d0` 闭环并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`（分别关联 [`atengk/ateng-solid#53`](https://github.com/atengk/ateng-solid/issues/53) 与 [`atengk/ateng-solid#50`](https://github.com/atengk/ateng-solid/issues/50)）；**`U15`**（[`#379`](https://github.com/atengk/ateng-ui/issues/379)，上游提交 `ee55b3b` / `d255cd8` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0004](../../ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md)）；**`U16`**（[`#380`](https://github.com/atengk/ateng-ui/issues/380)，上游提交 `19f79a7` / `1365732` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md)）；**`U17`**（[`#381`](https://github.com/atengk/ateng-ui/issues/381)，上游提交 `934135a` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 [`atengk/ateng-solid#57`](https://github.com/atengk/ateng-solid/issues/57)）。
 
 ---
 
@@ -365,6 +365,16 @@
   2. 在 `useTableLayout` 计入 `.at-table__surface` 底部边框宽度、修正 `:auto-height="0"` 边界并补齐 `#query`/`toolbar`/`pagination`/`expand-change` 联动重算与单测覆盖；
   3. 上层 `admin-web` 已新增 `src/composables/useListTableLayout.ts` 并完成全站 12 个业务页（13 张表）接入与 `ListTableLayout.spec.ts` 全绿验收。
 - **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#380`](https://github.com/atengk/ateng-ui/issues/380)，提交 `19f79a7` / `1365732`），已通过 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 并完成上层全量改造与四合一校验，待 npm 发版锁版后勾选（关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md) 与 [00-overview-and-ux-standards.md](./prd/00-overview-and-ux-standards.md) §3.1–§3.2）
+
+---
+
+### [U17] 低/中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 合入 `main` 前待发版锁版）：`AtengDictTag` 异步加载期间避免首帧直出原始编码值并实现字典套件同步缓存水合
+
+- **现状与源码锚点**：`@atengk/element-plus` `AtengDictTag.vue` 在 `isLoading === true` 且 `dictItems` 尚未加载完成时，`matchingItems` 原回退构造 `{ label: String(value), value }`，且 `setup()` 未先同步读取 `DictManager.getCache(dictCode)`，导致冷缓存表格/详情组件首帧或微任务期先输出原始码值（如 `"0"`），异步请求返回后再跳变为映射标签。
+- **实际落地通用改造**：上游提交 `934135a`（`feat(element-plus): 优化 AtengDictTag 冷加载占位策略并实现字典套件同步缓存水合`）已实现并关单：
+  1. 命中 `DictManager.getCache(dictCode)` 时在 `setup()` 同步初始化选项；区分异步加载中与加载完成未命中，支持 `loadingMode?: 'placeholder' | 'raw'` 与 `#loading` 插槽；
+  2. 上层 `admin-web` 已通过 `pnpm pack + yalc` 更新本地 `.yalc/@atengk/element-plus`，并结合 `withDictPreload` 与 `useDetailDialogState().detailReady` 骨架门控确保列表与编辑弹窗/抽屉零首帧跳变（关联 [`atengk/ateng-solid#57`](https://github.com/atengk/ateng-solid/issues/57)）。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#381`](https://github.com/atengk/ateng-ui/issues/381)，提交 `934135a`），已通过 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 并完成实机联调，待 npm 发版锁版后勾选
 
 ---
 
