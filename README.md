@@ -61,6 +61,41 @@ bash scripts/workspace.sh sync --pull
 bash scripts/workspace.sh checkout dev
 ```
 
+### 3.3 全栈运行时管理脚本（`scripts/solid.sh`）
+全工作区提供 [`scripts/solid.sh`](./scripts/solid.sh) 统一编排前后端启动、优雅关闭、状态查看、日志追踪与产物构建（无子命令时默认输出 `--help` 帮助；后端核心复用 [`ateng-solid-server/scripts/server.sh`](./ateng-solid-server/scripts/server.sh)，运行时 PID 与日志隔离归集至 `tmp/run/` 与 `logs/`）：
+
+```bash
+# 0. 查看全部支持选项（无参默认行为等同于 --help）
+bash scripts/solid.sh
+
+# 1. 前置环境与配置巡检
+bash scripts/solid.sh check
+
+# 2. 一键后台启动全栈（先启动后端 8080，再启动前端 5173）或单端启动
+bash scripts/solid.sh start
+bash scripts/solid.sh start server --build
+bash scripts/solid.sh start admin-web --preview
+
+# 3. 四层运行参数透传（脚本选项支持 --opt=val；单端可用 -- 尾随透传，全栈用 --server-args / --web-args）
+bash scripts/solid.sh start server --port=8081 --jvm-opts="-Xms512m -Xmx1g" -- --logging.level.root=DEBUG
+bash scripts/solid.sh start admin-web -- --open --mode staging
+bash scripts/solid.sh start --server-args "--spring.main.lazy-initialization=true" --web-args "--open"
+
+# 4. 查看全栈状态与实时聚合日志
+bash scripts/solid.sh status
+bash scripts/solid.sh logs -f
+bash scripts/solid.sh logs server -n 200
+
+# 5. 重启与优雅停止（仅清理脚本纳管进程，按需追加 --force 清理外部端口占用）
+bash scripts/solid.sh restart server --build
+bash scripts/solid.sh stop
+```
+
+> **运行时参数优先级与防呆约定**：
+> - **后端应用参数**：环境变量 `SOLID_APP_ARGS` 兜底，CLI `--server-args "..."` 覆盖前者，末尾 `-- <args...>`（仅限 `server` 单端目标）按原样追加在最后；
+> - **前端 CLI 参数**：环境变量 `SOLID_WEB_ARGS` 兜底，CLI `--web-args "..."` 覆盖前者，末尾 `-- <args...>`（仅限 `admin-web` 单端目标）按原样追加在最后；
+> - **冲突拦截**：端口与 Profile（`--server.port*` / `--spring.profiles.active*` / Vite `--port`）请统一使用脚本参数 `--server-port` / `--web-port` / `--port` / `-p`，透传中出现上述键将被主动拦截以防状态探活失配。
+
 ---
 
 ## 4. 参与贡献与开源协议
