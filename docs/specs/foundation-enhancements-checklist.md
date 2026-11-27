@@ -11,6 +11,10 @@
 > - **全功能走查后继增强（2026-11-27 · `B20`/`B21`/`U13~U17` 上游 Issue 均已闭环，本地快照/yalc 联调就绪）**：
 >   - `ateng-boot`：**`B20`**（[`#1177`](https://github.com/atengk/ateng-boot/issues/1177)，提交 `fc329ec2`，已安装本地 `1.2.1-SNAPSHOT`，关联 [`atengk/ateng-solid#47`](https://github.com/atengk/ateng-solid/issues/47)）；**`B21`**（[`#1178`](https://github.com/atengk/ateng-boot/issues/1178) 已关闭，提交 `a8e656c2`，`dev` `Java CI` 全绿且已刷新本地 `1.2.1-SNAPSHOT` 完成 `ateng-solid-server` 联调，合入 `main` 前待发版锁版）；
 >   - `ateng-ui`：**`U13`**（[`#377`](https://github.com/atengk/ateng-ui/issues/377)）、**`U14`**（[`#378`](https://github.com/atengk/ateng-ui/issues/378)），均于上游 `dev` 提交 `a9616d0` 闭环并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`（分别关联 [`atengk/ateng-solid#53`](https://github.com/atengk/ateng-solid/issues/53) 与 [`atengk/ateng-solid#50`](https://github.com/atengk/ateng-solid/issues/50)）；**`U15`**（[`#379`](https://github.com/atengk/ateng-ui/issues/379)，上游提交 `ee55b3b` / `d255cd8` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0004](../../ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md)）；**`U16`**（[`#380`](https://github.com/atengk/ateng-ui/issues/380)，上游提交 `19f79a7` / `1365732` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md)）；**`U17`**（[`#381`](https://github.com/atengk/ateng-ui/issues/381)，上游提交 `934135a` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 [`atengk/ateng-solid#57`](https://github.com/atengk/ateng-solid/issues/57)）；**`U18`**（[`#388`](https://github.com/atengk/ateng-ui/issues/388)，上游已关闭，提交 `8d4c1d1`，`dev` `Frontend CI` 全绿并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 联调就绪，待 npm 发版后还原锁版）。
+> - **API 传输层安全与分页边界后继增强（2026-11-27 · `B22`/`B23`/`C7`/`C8`/`U19` 已建单待排期，未阻塞当前单体加固）**：
+>   - `ateng-boot`：**`B22`**（[`#1179`](https://github.com/atengk/ateng-boot/issues/1179)，API 传输层混合加解密与 `@ApiSign` 协同）、**`B23`**（[`#1180`](https://github.com/atengk/ateng-boot/issues/1180)，`LoginHelper.searchOnlineUserPage` 页码偏移 `int` 溢出修复）；
+>   - `ateng-cloud`：**`C7`**（[`#207`](https://github.com/atengk/ateng-cloud/issues/207)，网关响应式边缘 API 加解密过滤器）、**`C8`**（[`#208`](https://github.com/atengk/ateng-cloud/issues/208)，`GatewaySignGuardFilter` 对齐统一规范签协议、多算法与响应式 Redis Nonce）；
+>   - `ateng-ui`：**`U19`**（[`#389`](https://github.com/atengk/ateng-ui/issues/389)，`@atengk/core` `DefaultRequestSigner` 对齐标准 HMAC-SHA256 统一规范签协议并新增 `RequestCipher`）。
 
 ---
 
@@ -221,6 +225,24 @@
 
 ---
 
+### [B22] 中优先级（待排期 · 未阻塞当前单体加固）：`ateng-boot-web` 新增 API 传输层混合加解密能力（`@ApiEncrypt`/`@ApiDecrypt`）并与 `@ApiSign` 协同
+
+- **现状与源码锚点**：`ateng-boot-encrypt` 仅面向配置文件提供 `ENC(...)` 解密；`ateng-boot-web` 已提供 `@ApiSign`（`ApiSignAspect` / `SignCanonicalUtil`），但缺少 HTTP 请求体与响应体传输级加解密注解能力。
+- **目标通用改造（默认关闭 Opt-in，100% 向后兼容）**：新增 `@ApiDecrypt` / `@ApiEncrypt` 与 `ateng.boot.web.crypto.*`（默认 `enabled: false`），采用混合加密协议（`RSA-OAEP-SHA256` / 可选国密 `SM2` 封装一次性密钥 + `AES-256-GCM` / 可选国密 `SM4-GCM` 加密 JSON 载荷，支持密钥轮换 `X-Key-Id`），明确与 `@ApiSign` 按 **Encrypt-then-Sign** 协同，并与 `CachedBodyHttpServletRequest` 及二进制/流式透传共存。
+- **准入纪律**：**严禁在 `ateng-solid-server` 自写全局 `RequestBodyAdvice` / `ResponseBodyAdvice` 临时补丁实现传输层加解密**。
+- **核实状态**：- [ ] 待底座实施并合入发版（[`atengk/ateng-boot#1179`](https://github.com/atengk/ateng-boot/issues/1179)）
+
+---
+
+### [B23] 中优先级（待底座修复 · 已于应用层前置边界防护）：`LoginHelper.searchOnlineUserPage` 页码偏移 `int` 乘法溢出引发 `IndexOutOfBoundsException`
+
+- **现状与源码锚点**：`ateng-boot-satoken` 的 `LoginHelper#searchOnlineUserPage` 使用 `int start = (page - 1) * actualSize;` 计算分页偏移。传入超大页码（如 `page = 21474838`、`size = 100`）时会溢出为负数绕过 `start >= total` 判断，进而触发 `subList`/`get` 抛出 `IndexOutOfBoundsException`（HTTP 500）。
+- **目标通用改造（100% 向后兼容）**：将全部分页切片分支改为 `long startOffset = (long) (actualPage - 1) * actualSize;`，若 `startOffset < 0L || startOffset >= total` 直接安全返回空记录分页。
+- **准入纪律**：**严禁在上层重写完整在线会话检索逻辑替换 `LoginHelper`**（上层仅允许对入参页码做合法区间快速剪枝保护，待底座修复合版后保持对齐）。
+- **核实状态**：- [ ] 待底座修复并合入发版（[`atengk/ateng-boot#1180`](https://github.com/atengk/ateng-boot/issues/1180)）
+
+---
+
 ## 2. `ateng-cloud`（已锁定正式版 **`1.1.0`** / 对齐 `ateng-boot:1.2.0`）
 
 > 经核查，`ateng-cloud` 已于 `2026-11-23` 正式发布 **`v1.1.0`**（提交 `a8b9fe4`）至 Maven Central，锁定 `<ateng-boot.version>1.2.0</ateng-boot.version>`，以下全部 8 个关联 Issue 均已闭环发版：
@@ -233,6 +255,18 @@
 - **[C4] Feign / Dubbo 远端异常 `traceId` 回传与 HTTP `409`/`504` 映射**：- [x] `v1.1.0` 已发布（[`atengk/ateng-cloud#203`](https://github.com/atengk/ateng-cloud/issues/203)）
 - **[C5] `AtengDubboExceptionFilter` 剥离非白名单 `cause` 开关**：- [x] `v1.1.0` 已发布（[`atengk/ateng-cloud#204`](https://github.com/atengk/ateng-cloud/issues/204)）
 - **[C6] `AtengSentinelEnvironmentPostProcessor` 尊重总开关及限流口径对齐**：- [x] `v1.1.0` 已发布（[`atengk/ateng-cloud#205`](https://github.com/atengk/ateng-cloud/issues/205)）
+
+### [C7] 中优先级（待排期 · 服务微服务演进期）：`ateng-cloud-gateway` 新增响应式边缘 API 加解密过滤器（`GatewayCryptoFilter`）
+
+- **现状与源码锚点**：`ateng-cloud-gateway` 尚无响应式 HTTP 请求体解密与响应体加密全局过滤器；公网网关边缘统一加解密可避免在微服务东西向重复加解密。
+- **目标通用改造（默认关闭 Opt-in，100% 向后兼容）**：新增 `AtengGatewayCryptoProperties`（`ateng.cloud.gateway.crypto.*`，默认 `enabled: false`）、`GatewayCryptoFilter`（定义在 `ORDER_SIGN_GUARD` 之后、`ORDER_SA_TOKEN` 之前的 **Encrypt-then-Sign** 协同顺序，释放 Netty 堆外 `PooledDataBuffer` 并跳过 `multipart/*` / `text/event-stream`）及可插拔 `GatewayCryptoKeyProvider` SPI，协议与 `ateng-boot-web` 混合加密契约一致。
+- **核实状态**：- [ ] 待底座实施并合入发版（[`atengk/ateng-cloud#207`](https://github.com/atengk/ateng-cloud/issues/207)）
+
+### [C8] 中/高优先级（待排期 · 服务微服务演进期）：`GatewaySignGuardFilter` 升级对齐统一规范签协议、多算法与响应式 Redis Nonce
+
+- **现状与源码锚点**：`GatewaySignGuardFilter#buildCanonicalString` 当前待签串缺失 HTTP Method 与 URI（存在跨接口重放风险）、与 `ateng-boot-web` `SignCanonicalUtil` 规范不兼容、仅硬编码 `HmacSHA256` 无响应加签，且 `GatewayNonceValidator` 为同步接口并缺开箱非阻塞 Redis 实现。
+- **目标通用改造（向后兼容旧模式）**：支持对齐 `Method\nURI\nTimestamp\nNonce\nSortedQueryString\nBodySha256` 的 `STANDARD` 规范模式与旧版兼容模式、抽象 `HMAC_SHA256`/`RSA`/`SM2` 验签与可选响应加签、新增 `ReactiveGatewayNonceValidator` 及基于 `ReactiveStringRedisTemplate` 的条件装配实现。
+- **核实状态**：- [ ] 待底座实施并合入发版（[`atengk/ateng-cloud#208`](https://github.com/atengk/ateng-cloud/issues/208)）
 
 ---
 
@@ -399,6 +433,15 @@
   3. `AtengTable.vue` 为 `.at-table__tool-btn.is-loading svg` 补齐 `at-table-spin` 旋转动画并适配 `prefers-reduced-motion`；
   4. 新增 `styles/_switch-base.scss` 在 `index.scss`（`dist/index.css`）与 `theme-pro/_switches.scss`（`dist/theme-pro.css`）共同注入 `.el-switch__core .el-switch__inner { box-sizing: border-box; }`，并从上层 `admin-web/src/styles/main.css` 移除冗余过渡 rule。
 - **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#388`](https://github.com/atengk/ateng-ui/issues/388)，提交 `8d4c1d1`），已通过 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 并完成实机/单测联调，待 npm 发版锁版后勾选
+
+---
+
+### [U19] 中优先级（待排期 · 未阻塞当前单体加固）：`@atengk/core` 升级 `DefaultRequestSigner` 对齐标准 HMAC-SHA256 统一规范签协议并新增 `RequestCipher`
+
+- **现状与源码锚点**：`@atengk/core` 的 `DefaultRequestSigner` 默认使用裸 `sha256Hex(canonical + "&secret=" + secret)` 且缺 `X-App-Id` 头，待签串与 `ateng-boot-web` / `ateng-cloud-gateway` 规范不一致；同时缺少传输层报文级加解密插件。
+- **目标通用改造（默认向后兼容，Opt-in 启用）**：升级 `DefaultRequestSigner` 支持 WebCrypto 标准 `HMAC-SHA256`、`X-App-Id` 与 `canonicalPreset: 'standard' | 'legacy'`；新增基于原生 WebCrypto（`AES-256-GCM + RSA-OAEP-SHA256`）且支持 `CipherAdapter` 国密扩展的 `RequestCipher`；在 `createHttpClient` 中确立与加签器按 **Encrypt-then-Sign** 协同的拦截器流水线并跳过 `FormData`/`Blob` 二进制请求。
+- **准入纪律**：**严禁在 `ateng-solid-admin-web` 自写 Axios 加密/签名魔改拦截器替代底座插件**。
+- **核实状态**：- [ ] 待底座实施并合入发版（[`atengk/ateng-ui#389`](https://github.com/atengk/ateng-ui/issues/389)）
 
 ---
 
