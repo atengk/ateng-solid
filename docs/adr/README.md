@@ -12,6 +12,7 @@
 | **0004** | **“独立通用底座 + 零补丁上层框架”双生演进模型与双阶门禁** | 🟢 Accepted | 确立底座通用独立性与上层零补丁原则；`2026-11-26` 修订为 `dev` 放行本地 `-SNAPSHOT`/`yalc` 协同并可按特性关单，`main`/Release 阶段强锁正式版与四项双轴验收 | 全工作区 | [查看](./0004-foundation-driven-framework-coevolution.md) |
 | **0005** | **“最小稳定内核 + 装配期可插拔扩展”框架扩展模型** | 🟢 Accepted | 确立前后端装配期插拔机制（Spring AutoConfiguration + 4 项轻量 SPI + 独立 Flyway；前端 `src/modules/*` 自发现）、内核/扩展边界与 1:1 子表防侵入原则 | 全工作区、后端、前端 | [查看](./0005-kernel-plus-pluggable-extensions.md) |
 | **0006** | **首期最小技术栈裁剪与后端对象映射策略** | 🟢 Accepted | 首期裁剪 `observability`/`@atengk/monitor` 等辅助包保持极简内核；对比 `BeanUtil`、`MapStruct` 与 `MapStruct-Plus`，确立首期 `BeanUtil` + 显式映射及二期演进阈值 | 全工作区、后端、前端 | [查看](./0006-stage1-minimal-stack-and-object-mapping.md) |
+| **0007** | **API 列表动态脱敏与编辑详情真明文边界契约** | 🟢 Accepted | 明确列表/树节点经 `@FieldSensitive` 服务端出界脱敏、Excel 经 `@ExcelSensitive` 脱敏，而编辑详情（`UserDetailVO`/`DeptVO`/`PersonalProfileVO`）保持内存真明文，同步纠偏 `@FieldSensitive` 真名 | 跨端契约、后端、前端 | [查看](./0007-api-list-masking-and-detail-plaintext-contract.md) |
 
 ---
 
