@@ -2,10 +2,10 @@
 
 > **调研目的**：为 `ateng-solid`（Issue #3 及后续 PRD / Spec 编写与开发）提供严格对齐 Maven Central 锁定版本 **`ateng-boot:1.2.0`** 的底座类签名、字段结构、默认配置、异常语义与运行边界的一手源码证据。  
 > **信源基线**：
-> - 上游底座仓库：`d:\source\ateng-boot`
+> - 上游底座仓库：`ateng-boot`
 > - Git Tag：`v1.2.0`（Tag 对象 `b867b1e6453d42c60a74e7cc3962543d6ecdae5c`，指向提交 `fd4ed2cebdde41c56be28f4a7b0d73a779e8c1d1`，即 `Merge pull request #1169 from atengk/dev`）
 > - 树一致性核验：`v1.2.0^{tree}` 与 `HEAD^{tree}`（`dev` 分支 `eeb3ad4e`）哈希完全一致（`257492bb032191d5aecb31bd7039d11dc14fb0af`），工作区干净；以下全部源码路径、类名、方法签名、字段与默认值均基于 `v1.2.0` 实测确认。
-> - 下游消费仓对照：`d:\source\ateng-solid\ateng-solid-server\pom.xml`（已锁定 `<ateng-boot.version>1.2.0</ateng-boot.version>`、`<spring-boot.version>3.3.13</spring-boot.version>`）、`ateng-solid-bootstrap/src/main/resources/application.yml`、`application-test.yml` 与 `ateng-solid-server/docs/specs/*`。
+> - 下游消费仓对照：`ateng-solid-server/pom.xml`（核心消费 7+1 等底座模块）、`ateng-solid-bootstrap/src/main/resources/application.yml`、`application-test.yml` 与 `ateng-solid-server/docs/specs/*`。
 
 ---
 
@@ -504,7 +504,7 @@
 
 ## 6. `ateng-solid-server` 现有配置对齐核查表
 
-对照 `d:\source\ateng-solid\ateng-solid-server\ateng-solid-bootstrap\src\main\resources\application.yml` 与 `application-test.yml`：
+对照 `ateng-solid-server/ateng-solid-bootstrap/src/main/resources/application.yml` 与 `application-test.yml`：
 
 | 检查项 | 当前状态 | 核查结论与后续动作建议 |
 | :--- | :--- | :--- |

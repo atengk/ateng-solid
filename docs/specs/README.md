@@ -5,7 +5,7 @@
 | 文档 | 核心内容 | 适用角色 |
 | :--- | :--- | :--- |
 | [首期 MVP 架构与领域蓝图](./mvp-architecture-and-domain-blueprint.md) | 首期精简技术栈与底座模块范围、二期延后边界、后端 5 模块与数据表域归属、前后端联调拓扑 | 架构师、全端开发、AI Agent |
-| [底层基础设施待增强清单](./foundation-enhancements-checklist.md) | `ateng-boot`（B1–B17）、`ateng-cloud`（#198–#206 / C1–C6）与 `ateng-ui`（U0–U12）实测状态、`dev` 闭环核查与发版解锁门禁 | 底座维护者、开发启动前自检 |
+| [底层基础设施待增强清单](./foundation-enhancements-checklist.md) | `ateng-boot`（B1–B26）、`ateng-cloud`（#198–#208 / C1–C8）与 `ateng-ui`（U0–U20）实测状态、`dev` 闭环核查与发版解锁门禁 | 底座维护者、开发启动前自检 |
 | [第一阶段编码开工准入检查表](./phase1-coding-readiness-checklist.md) | 跨端 1:1 终审汇总、`V1.0.1` 种子核对表、`Spec 1 ~ Spec 4` 门禁、双模本地联调冒烟规程与编码工单总导航表 | 全端开发、代码评审、AI Agent |
 | [跨端通信协议与数据契约](../agents/contracts.md) | 统一响应信封、6 位分段错误码、雪花 `string` 主键、`tenant_id BIGINT`、`/admin/**` 路由与权限/Excel 协议唯一真源 | 全端开发、代码评审、AI Agent |
 | [编码规范、架构拆解与注释准则](../agents/coding-standards.md) | 公共提取阶梯、大类/大文件拆分线、设计模式选型、事务防 N+1 与文档/逻辑注释规范 | 全端开发、代码评审、AI Agent |
@@ -27,12 +27,14 @@
 
 ## 子仓库专职设计规范入口
 
-- **后端设计规范（独立仓库 `ateng-solid-server`）**：
+- **后端设计规范与决策（独立仓库 `ateng-solid-server`）**：
+  - [后端 ADR 看板](../../ateng-solid-server/docs/adr/README.md)
   - [数据库建模与 Flyway 迁移规范](../../ateng-solid-server/docs/specs/database-and-flyway-spec.md)
   - [认证会话、RBAC 与 `@DataScope` 数据权限规范](../../ateng-solid-server/docs/specs/auth-rbac-and-datascope-spec.md)
   - [管理端接口契约与业务错误码明细规范](../../ateng-solid-server/docs/specs/api-and-error-codes-spec.md)
   - [工程配置基线与 ArchUnit 架构守卫规格](../../ateng-solid-server/docs/specs/configuration-and-archunit-spec.md)
   - [系统域核心引擎、并发导入、存储缓存与离线测试契约](../../ateng-solid-server/docs/specs/system-engines-and-testing-spec.md)
-- **前端设计规范（独立仓库 `ateng-solid-admin-web`）**：
+- **前端设计规范与决策（独立仓库 `ateng-solid-admin-web`）**：
+  - [前端 ADR 看板](../../ateng-solid-admin-web/docs/adr/README.md)
   - [前端工程结构、路由权限与样式混用规范](../../ateng-solid-admin-web/docs/specs/frontend-architecture-and-conventions.md)
   - [前端页面视图、动态路由与 Store 契约规格](../../ateng-solid-admin-web/docs/specs/views-and-routes-spec.md)

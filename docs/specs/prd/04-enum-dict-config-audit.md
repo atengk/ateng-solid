@@ -32,7 +32,7 @@
 | **`EnumDictionaryRegistry`** | 配置 `ateng.boot.web.enum.endpoint-enabled=false` 关闭底座默认 `/api/system/enums`，由 `SysEnumController` 注入 `EnumDictionaryRegistry` 挂载 `/admin/system/enums` 并实施 `@SaCheckLogin` 管控（默认 `LOWER_CAMEL_CASE` 剥离 `Enum` 后缀） | `boot-1.2.0-constraints.md` §4.2 / `B5` |
 | **`@OperateLog` & `OperateLogModel`** | 注解属性名为 **`type`**（非 `operateType`）；切面在请求线程同步填充 `userId`/`tenantId`/`browser`/`os`/`description` 后投递异步线程执行 `OperateLogStorageProvider#store`（异步线程不可调 `LoginHelper.getLoginUser()`，须用 `model.tenantId` + `model.userId` 主键查库补全真实 `userName`）；`AuditParamSanitizer` 自动将敏感键替换为 `"[EXCLUDED]"` | `boot-1.2.0-constraints.md` `F7` / §4.1 |
 | **`UserAgentUtil`** | 纯 JDK 零依赖有界扫描；登录日志由认证事件消费者直接调用 `UserAgentUtil.parse(rawUa)` 提取 `browser` 与 `os` 写入 `sys_login_log` | `boot-1.2.0-constraints.md` §4.1 / `B11` |
-| **`DictManager` & `AtengDictTag`** | `DictManager` 采用内存 `Map` + `inFlight` 请求去重；`AtengDictTag` `tagType` 仅接受 `'primary'|'success'|'warning'|'danger'|'info'|''|undefined`（转换层将任何 `'default'` 归一化为 `''`）；未匹配值降级渲染原值中性标签 | `ui-1.1.0-capabilities.md` §2.9 / `D11` |
+| **`DictManager` & `AtengDictTag`** | `DictManager` 采用内存 `Map` + `inFlight` 请求去重；`AtengDictTag` `tagType` 仅接受 `'primary'\|'success'\|'warning'\|'danger'\|'info'\|''\|undefined`（转换层将任何 `'default'` 归一化为 `''`）；未匹配值降级渲染原值中性标签 | `ui-1.1.0-capabilities.md` §2.9 / `D11` |
 
 ---
 

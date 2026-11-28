@@ -3,11 +3,11 @@
 > **关联任务**：GitHub Issue #2（`ateng-solid` 前端技术基线核查）
 > **调研日期**：2026-11-23
 > **一手信源范围**：
-> - `d:\source\ateng-solid\ateng-solid-admin-web\node_modules\@atengk\element-plus`（`1.1.0`，`.d.ts` 类型声明、`src/styles/theme-pro/*`、`dist/theme-pro.css`、`dist/index.css`）
-> - `d:\source\ateng-solid\ateng-solid-admin-web\node_modules\@atengk\vue`（`1.1.0`，`dist/index.d.ts`）
-> - `d:\source\ateng-solid\ateng-solid-admin-web\node_modules\@atengk\core`（`1.1.0`，`dist/index.d.ts`）
-> - `d:\source\ateng-ui`（只读对照 Git Tag `v1.1.0`，commit `c0be02b`，仅用于核验 `.d.ts` 无法体现的默认插槽、DOM 渲染及内部联动细节）
-> - 对比基线文档：`d:\source\ateng-solid\ateng-solid-admin-web\docs\specs\views-and-routes-spec.md` 与 `d:\source\ateng-solid\ateng-solid-admin-web\.agents\rules\styling-and-ateng-ui.md`
+> - `ateng-solid-admin-web/node_modules/@atengk/element-plus`（`1.1.0`，`.d.ts` 类型声明、`src/styles/theme-pro/*`、`dist/theme-pro.css`、`dist/index.css`）
+> - `ateng-solid-admin-web/node_modules/@atengk/vue`（`1.1.0`，`dist/index.d.ts`）
+> - `ateng-solid-admin-web/node_modules/@atengk/core`（`1.1.0`，`dist/index.d.ts`）
+> - `ateng-ui`（只读对照 Git Tag `v1.1.0`，commit `c0be02b`，仅用于核验 `.d.ts` 无法体现的默认插槽、DOM 渲染及内部联动细节）
+> - 对比基线文档：`ateng-solid-admin-web/docs/specs/views-and-routes-spec.md` 与 `ateng-solid-admin-web/docs/agents/styling-and-ateng-ui.md`（原 `.agents/rules/styling-and-ateng-ui.md` 已迁入）
 
 ---
 
@@ -15,7 +15,7 @@
 
 ### 1.1 `@atengk/element-plus@1.1.0` 导出矩阵
 
-依据 `node_modules\@atengk\element-plus\package.json`、`dist\index.d.ts`、`dist\installer.d.ts` 与 `d:\source\ateng-ui\packages\element-plus\src\installer.ts`：
+依据 `node_modules/@atengk/element-plus/package.json`、`dist/index.d.ts`、`dist/installer.d.ts` 与 `ateng-ui/packages/element-plus/src/installer.ts`：
 
 - **样式入口（`package.json#exports`）**：
   - `./style.css` ➔ `./dist/index.css`（包含组件 scoped 样式与 `src/styles/index.scss` 保底令牌及 `v-skeleton` 样式）
@@ -45,10 +45,10 @@
   - `node_modules\@atengk\element-plus\dist\components\pro-layout\index.d.ts`
   - `node_modules\@atengk\element-plus\dist\components\pro-layout\types.d.ts`
   - `node_modules\@atengk\element-plus\dist\components\pro-layout\context.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\pro-layout\AtengProLayout.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\pro-layout\ProMenu.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\pro-layout\ProMenuItemNode.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\pro-layout\ProLayoutTabs.vue`
+  - `ateng-ui/packages/element-plus/src/components/pro-layout/AtengProLayout.vue`
+  - `ateng-ui/packages/element-plus/src/components/pro-layout/ProMenu.vue`
+  - `ateng-ui/packages/element-plus/src/components/pro-layout/ProMenuItemNode.vue`
+  - `ateng-ui/packages/element-plus/src/components/pro-layout/ProLayoutTabs.vue`
 
 1. **支持的布局模式**：`ProLayoutMode = 'side' | 'top' | 'mix'`（`types.d.ts:9`，默认 `'side'`）。
    - `'side'`：左侧垂直菜单（支持移动端 `< mobileBreakpoint`（默认 `768`）抽屉化）+ 右侧顶栏 + 标签栏 + 内容区 + 页脚。
@@ -85,7 +85,7 @@
 - **一手源码**：
   - `node_modules\@atengk\element-plus\dist\components\tabs-nav\index.d.ts`
   - `node_modules\@atengk\element-plus\dist\components\tabs-nav\types.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\tabs-nav\AtengTabsNav.vue`
+  - `ateng-ui/packages/element-plus/src/components/tabs-nav/AtengTabsNav.vue`
 
 1. **Props 与视觉风格（`AtengTabsNavProps`）**：
    - `modelValue?: string`（当前激活 `tab.key`）、`tabs?: TabItem[]`（复用 `@atengk/vue` 的 `TabItem`）；
@@ -116,7 +116,7 @@
 
 - **一手源码**：
   - `node_modules\@atengk\element-plus\dist\components\query-form\types.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\query-form\AtengQueryForm.vue`
+  - `ateng-ui/packages/element-plus/src/components/query-form/AtengQueryForm.vue`
 
 1. **列数与容器感知响应式断点（`AtengQueryFormProps`）**：
    - `cols?: number | QueryFormResponsiveCols`；内部使用 `ResizeObserver` 监听 `<el-form>` 根节点真实 `clientWidth`（非单纯依赖窗口宽度，适合与 `AtengSplitLayout` 左树右表分栏配合！）；
@@ -140,8 +140,8 @@
 
 - **一手源码**：
   - `node_modules\@atengk\element-plus\dist\components\table\types.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\table\AtengTable.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\table\utils\vnode.ts`
+  - `ateng-ui/packages/element-plus/src/components/table/AtengTable.vue`
+  - `ateng-ui/packages/element-plus/src/components/table/utils/vnode.ts`
 
 1. **工具栏与密度控制**：
    - `tools?: boolean | TableToolItem[]`（默认 `true`），5 个原子项为 `'refresh' | 'density' | 'stripe' | 'column-setting' | 'fullscreen'`；另支持 `#toolbar-left` 与 `#toolbar-right`；
@@ -171,9 +171,9 @@
 - **一手源码**：
   - `node_modules\@atengk\element-plus\dist\components\dialog\types.d.ts`
   - `node_modules\@atengk\element-plus\dist\components\drawer\types.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\dialog\AtengDialog.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\drawer\AtengDrawer.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\shared\useAsyncConfirm.ts`
+  - `ateng-ui/packages/element-plus/src/components/dialog/AtengDialog.vue`
+  - `ateng-ui/packages/element-plus/src/components/drawer/AtengDrawer.vue`
+  - `ateng-ui/packages/element-plus/src/components/shared/useAsyncConfirm.ts`
 
 1. **尺寸与交互默认基线对比**：
    | 维度 | `AtengDialog` | `AtengDrawer` |
@@ -198,7 +198,7 @@
 
 - **一手源码**：
   - `node_modules\@atengk\element-plus\dist\components\captcha\types.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\captcha\AtengCaptcha.vue`
+  - `ateng-ui/packages/element-plus/src/components/captcha/AtengCaptcha.vue`
 
 1. **`type="image"` 图形验证码模式能力**：
    - **入参 Props**：
@@ -220,7 +220,7 @@
 
 - **一手源码**：
   - `node_modules\@atengk\element-plus\dist\components\upload\types.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\upload\AtengUpload.vue`
+  - `ateng-ui/packages/element-plus/src/components/upload/AtengUpload.vue`
 
 1. **头像与直传场景（`chunk: false` 默认值）**：
    - **`httpRequest` 与透传修复（`#367` 已在 `1.1.0` 落地）**：`AtengUploadProps` 显式声明 `httpRequest?: (options: UploadRequestOptions) => XMLHttpRequest | Promise<unknown>`；`defineOptions({ inheritAttrs: false })` 隔离根部 `class`/`style` 与内部 `<el-upload>` 属性透传；`:http-request="chunk ? handleCustomHttpRequest : httpRequest"`（`AtengUpload.vue:32-35,461`），可直接传入对接 `@atengk/core` `http` 客户端的自定义上传函数，确保携带 `satoken-admin` / `X-Tenant-Id` 并识别业务错误信封。
@@ -240,8 +240,8 @@
 - **一手源码**：
   - `node_modules\@atengk\element-plus\dist\components\icon-select\types.d.ts`
   - `node_modules\@atengk\element-plus\dist\components\icon-select\icons-data.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\icon-select\AtengIconSelect.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\icon-select\IconPanel.vue`
+  - `ateng-ui/packages/element-plus/src/components/icon-select/AtengIconSelect.vue`
+  - `ateng-ui/packages/element-plus/src/components/icon-select/IconPanel.vue`
 
 1. **交互形态与参数**：
    - `mode?: 'popover' | 'dialog'`（默认 `'popover'`，`popoverWidth` 默认 `380`，`dialog` 宽度固定 `'560px'`）；
@@ -262,10 +262,10 @@
   - `node_modules\@atengk\element-plus\dist\components\dict\types.d.ts`
   - `node_modules\@atengk\element-plus\dist\components\dict\DictManager.d.ts`
   - `node_modules\@atengk\element-plus\dist\components\dict\utils.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\dict\AtengDictTag.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\dict\AtengDictSelect.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\dict\AtengDictRadio.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\dict\AtengDictCheckbox.vue`
+  - `ateng-ui/packages/element-plus/src/components/dict/AtengDictTag.vue`
+  - `ateng-ui/packages/element-plus/src/components/dict/AtengDictSelect.vue`
+  - `ateng-ui/packages/element-plus/src/components/dict/AtengDictRadio.vue`
+  - `ateng-ui/packages/element-plus/src/components/dict/AtengDictCheckbox.vue`
 
 1. **标准字典数据结构与字段映射**：
    - `DictItem`：`{ label: string; value: string | number | boolean; tagType?: 'success' | 'warning' | 'info' | 'primary' | 'danger' | '' | undefined; disabled?: boolean; cssClass?: string; raw?: unknown }`；
@@ -288,7 +288,7 @@
 
 - **一手源码**：
   - `node_modules\@atengk\element-plus\dist\components\descriptions\types.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\descriptions\AtengDescriptions.vue`
+  - `ateng-ui/packages/element-plus/src/components/descriptions/AtengDescriptions.vue`
 
 - **双模驱动**：支持 `<AtengDescriptionsItem>` 模板声明式 或 `:items="DescriptionsItemConfig[]"`（若 `items` 非空数组则优先于默认插槽解析）；默认 `border: true`、`column: 3`、`direction: 'horizontal'`、`emptyText: '--'`、`copyable: false`。
 - **项级能力（`DescriptionsItemConfig`）**：
@@ -305,8 +305,8 @@
 - **一手源码**：
   - `node_modules\@atengk\element-plus\dist\components\excel-feedback\types.d.ts`
   - `node_modules\@atengk\element-plus\dist\components\excel-export\types.d.ts`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\excel-feedback\AtengExcelFeedback.vue`
-  - `d:\source\ateng-ui\packages\element-plus\src\components\excel-export\AtengExcelExport.vue`
+  - `ateng-ui/packages/element-plus/src/components/excel-feedback/AtengExcelFeedback.vue`
+  - `ateng-ui/packages/element-plus/src/components/excel-export/AtengExcelExport.vue`
 
 1. **`AtengExcelFeedback`（导入错误明细与标红批注下载弹窗）**：
    - **精准错误明细数据结构（`ExcelFeedbackItem`）**：
@@ -338,7 +338,7 @@
 
 ### 3.1 `AuthManager` 与 `TenantManager`
 
-- **一手源码**：`node_modules\@atengk\core\dist\index.d.ts`、`d:\source\ateng-ui\packages\core\src\auth\auth-manager.ts`、`d:\source\ateng-ui\packages\core\src\tenant\tenant-manager.ts`
+- **一手源码**：`node_modules/@atengk/core/dist/index.d.ts`、`ateng-ui/packages/core/src/auth/auth-manager.ts`、`ateng-ui/packages/core/src/tenant/tenant-manager.ts`
 
 1. **`AuthManager`（`createAuthManager(options?: AuthManagerOptions)` / 全局单例 `authManager`）**：
    - 配置项：`tokenKey`（默认 `'token'`）、`headerName`（默认 `'token'`）、`bearerHeaderName`（默认 `'Authorization'`）、`tokenPrefix`（默认 `'Bearer '`）、`storage?: AuthStorage`（默认浏览器 `LocalStorageAuthStorage`，Node/SSR/无权限自动降级 `MemoryAuthStorage`）、`onUnauthorized?: () => void`；
@@ -352,7 +352,7 @@
 
 ### 3.2 `http`（`DefaultHttpClient` & 拦截器管道）
 
-- **一手源码**：`node_modules\@atengk\core\dist\index.d.ts:1646-1979`、`d:\source\ateng-ui\packages\core\src\http\interceptors.ts`、`d:\source\ateng-ui\packages\core\src\transform\snowflake.ts`、`d:\source\ateng-ui\packages\core\src\file\blob-error.ts`
+- **一手源码**：`node_modules/@atengk/core/dist/index.d.ts:1646-1979`、`ateng-ui/packages/core/src/http/interceptors.ts`、`ateng-ui/packages/core/src/transform/snowflake.ts`、`ateng-ui/packages/core/src/file/blob-error.ts`
 
 - **请求拦截器管道（`setupInterceptors`）**：
   1. **网关路由解析（`GatewayRouter`）**：按 `routes` 前缀或 `config.service` 分发 `baseURL` 与重写路径；
@@ -372,7 +372,7 @@
 
 ### 3.3 `usePagination`（`@atengk/vue`）
 
-- **一手源码**：`node_modules\@atengk\vue\dist\index.d.ts:333-517`、`d:\source\ateng-ui\packages\vue\src\pagination\usePagination.ts`
+- **一手源码**：`node_modules/@atengk/vue/dist/index.d.ts:333-517`、`ateng-ui/packages/vue/src/pagination/usePagination.ts`
 
 - **函数签名**：`usePagination<TItem, TParams extends PageQuery = PageQuery>(service: (params: TParams) => Promise<PageResult<TItem>>, options?: UsePaginationOptions<TItem, TParams>): UsePaginationResult<TItem, TParams>`
 - **入参配置 `UsePaginationOptions`**：
@@ -390,8 +390,8 @@
 ### 3.4 `useIdempotent` 与 `v-idempotent`
 
 - **一手源码**：
-  - `node_modules\@atengk\vue\dist\index.d.ts:820-898`、`d:\source\ateng-ui\packages\vue\src\idempotent\useIdempotent.ts`
-  - `node_modules\@atengk\element-plus\dist\directives\idempotent\types.d.ts`、`vIdempotent.d.ts`、`d:\source\ateng-ui\packages\element-plus\src\directives\idempotent\vIdempotent.ts`
+  - `node_modules/@atengk/vue/dist/index.d.ts:820-898`、`ateng-ui/packages/vue/src/idempotent/useIdempotent.ts`
+  - `node_modules/@atengk/element-plus/dist/directives/idempotent/types.d.ts`、`vIdempotent.d.ts`、`ateng-ui/packages/element-plus/src/directives/idempotent/vIdempotent.ts`
 
 1. **`useIdempotent(actionFn, options?)`**：
    - 配置项：`timeout?: MaybeRefOrGetter<number | undefined>`（防死锁超时）、`onSuccess`/`onError`/`onFinally`/`onBlocked`；
@@ -406,8 +406,8 @@
 ### 3.5 `useAuth`、`v-permission` 与 `v-role`
 
 - **一手源码**：
-  - `node_modules\@atengk\vue\dist\index.d.ts:624-753`、`d:\source\ateng-ui\packages\vue\src\context\context.ts`、`packages\vue\src\auth\useAuth.ts`
-  - `node_modules\@atengk\element-plus\dist\directives\shared\createAuthDirective.d.ts`、`d:\source\ateng-ui\packages\element-plus\src\directives\shared\createAuthDirective.ts`
+  - `node_modules/@atengk/vue/dist/index.d.ts:624-753`、`ateng-ui/packages/vue/src/context/context.ts`、`packages/vue/src/auth/useAuth.ts`
+  - `node_modules/@atengk/element-plus/dist/directives/shared/createAuthDirective.d.ts`、`ateng-ui/packages/element-plus/src/directives/shared/createAuthDirective.ts`
 
 1. **`createAtengVue` 全局上下文与超管角色基线**：
    - `DEFAULT_OPTIONS.superAdminRoles` 在 `@atengk/vue` 中仍默认 `['admin', 'super_admin']`（`context.ts:31`）；
@@ -425,7 +425,7 @@
 
 ### 3.6 内存真明文脱敏工具集（`@atengk/core`）
 
-- **一手源码**：`node_modules\@atengk\core\dist\index.d.ts:391-431`、`d:\source\ateng-ui\packages\core\src\mask\mask.ts`
+- **一手源码**：`node_modules/@atengk/core/dist/index.d.ts:391-431`、`ateng-ui/packages/core/src/mask/mask.ts`
 
 全部为渲染层纯函数，`null`/`undefined`/空串安全返回 `''`（不修改原模型）：
 - `formatMask(value, startKeep = 0, endKeep = 0, maskChar = '*')`：通用区间掩码（`start + end >= len` 返回原文）；
@@ -505,6 +505,6 @@
 | **D8** | `views-and-routes-spec.md` §1.2 `/system/menu` & `/system/dept`（树形 `AtengTable`） | 称“树形 `AtengTable`” | `AtengTableProps` 未显式声明 `treeProps`/`defaultExpandAll`，而是通过 `inheritAttrs: false` + `v-bind="$attrs"` 透传给 `<el-table>` | **用法确认**：可用！直接传 `:tree-props="{ children: 'children', hasChildren: 'hasChildren' }"`、`default-expand-all` 与 `:show-pagination="false"` 即可 |
 | **D9** | `views-and-routes-spec.md` §1.2 `/system/tenant-package`（`AtengDrawer`） | 使用 `AtengDrawer` 做菜单树选择抽屉 | `AtengDrawer` 默认 `size: 'default'`（`500px`），且其 `#footer` 插槽**不透传** `{ confirm, cancel, loading }`（不同于 `AtengDialog`） | **写法提醒**：若自定义抽屉页脚按钮，需用 `ref` 调用 `drawerRef.confirm()` / `cancel()`，或直接复用内置页脚 + `:before-confirm` |
 | **D10** | `views-and-routes-spec.md` §1.1 `/login`（`<AtengCaptcha type="image" />`） | 写使用 `<AtengCaptcha type="image" />` | `type="image"` 的点击刷新绑定属性名为 **Prop `:refresh="fn"`**（而非 `@refresh` 事件），`imageSrc` 传 URL 或 Base64 | **接口防坑**：模板绑定务必写 `:refresh="loadCaptcha"`，而非 `@refresh` |
-| **D11** | `styling-and-ateng-ui.md` §2.4（`DictManager` & `AtengDict*`） | 描述注册 `provider`/`batchProvider` 对接动态字典与静态枚举 | `install(app, { dictProvider })` 仅注册 `setProvider`；`setBatchProvider` 须单独调用 `DictManager.setBatchProvider(...)`；`AtengDictTag` `tagType` 仅接受 `'success' | 'warning' | 'info' | 'primary' | 'danger' | '' | undefined` | **映射防坑**：后端 `listClass` 若返回 `'default'` 时，需在 `provider` 转换层归一化为 `''` 或 `undefined` |
+| **D11** | `styling-and-ateng-ui.md` §2.4（`DictManager` & `AtengDict*`） | 描述注册 `provider`/`batchProvider` 对接动态字典与静态枚举 | `install(app, { dictProvider })` 仅注册 `setProvider`；`setBatchProvider` 须单独调用 `DictManager.setBatchProvider(...)`；`AtengDictTag` `tagType` 仅接受 `'success' \| 'warning' \| 'info' \| 'primary' \| 'danger' \| '' \| undefined` | **映射防坑**：后端 `listClass` 若返回 `'default'` 时，需在 `provider` 转换层归一化为 `''` 或 `undefined` |
 | **D12** | `styling-and-ateng-ui.md` §1.3 & `src/styles/main.css` | 提及 Tailwind `@theme` 映射 `--color-page` / `--color-card` / `--color-main` / `--color-subtle` | `src/styles/main.css` 已映射 7 个语义色彩别名，但尚未映射 `theme-pro` 的 `--at-radius-card`/`--at-radius-dialog`、`--at-font-mono`、`--color-success`/`warning`/`danger` 及 `initTheme` 初始化接入 | **按需扩充**：后续业务样式若需直接使用 Tailwind 圆角/等宽字体/状态色工具类，可在 `src/styles/main.css` `@theme` 补充映射；暗黑/预设切换按需集成 `initTheme` 与 `[data-theme]` |
 | **D13** | 补充：`AtengProLayout` `mix` 模式插槽差异 | 若未来切换 `'top'` 或 `'mix'` 布局 | `mix` 模式顶部 `headerRight` **无 `headerActions`/`user` 默认兜底**，且无 `headerLeft`/`breadcrumb`/`headerCenter`/`asideFooter` | **布局壳防御**：`AdminLayout.vue` 若要兼容动态切换 `side`/`top`/`mix` 三模式，顶栏右侧动作与用户头像应统一放入 `#headerRight` 插槽内，勿依赖 `headerActions`/`user` 兜底 |

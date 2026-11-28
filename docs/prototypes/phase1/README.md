@@ -13,8 +13,8 @@
 | **[index.html](./index.html)** | **全站一体化总装原型（主入口）** | `#9` | 串联 `/login`、`/dashboard`、`/profile`、12 个 `/system/*` 模块与 `/403`、`/404` 共 **17 条第一阶段路由**，内置跨模块实时联动（新建用户同步写操作日志、登录后写登录日志）、底部悬浮总控台、17 路由覆盖矩阵弹窗、多页签 6 指令右键菜单与工作区最大化 |
 | **[shell-variants.html](./shell-variants.html)** | 布局方案 A/B/C 多方案比选原型 | `#4` | 用于对比经典左侧栏（A）、双栏折叠组（B）与紧凑顶栏混排（C）的视觉结构 |
 | **[shell-accepted.html](./shell-accepted.html)** | **定稿基础壳原型（方案 A）** | `#4` | 锁定 `Precision Slate & Cobalt` Light/Dark 令牌与方案 A（`228px`/`60px` 左侧栏 + `48px` 单行顶栏 + `36px` 独立页签栏），作为全站基础壳与组件对齐参考基线 |
-| **[logo-variants.html](./logo-variants.html)** | **品牌图形主标三方案比选原型（已定稿方案 B）** | - | 对比方案 A（互锁基石）、方案 B（三阶精密基座 · 已定稿）与方案 C（倒角内核框），支持 `?variant=A|B|C`、`16px–48px` 锐利度矩阵、实时标签页 Favicon 预览、Light/Dark 与跨租户观察态模拟 |
-| **[login-variants.html](./login-variants.html)** | **登录页构图三方案比选原型（已定稿方案 C）** | - | 对比方案 A（全屏双分屏）、方案 B（极简居中舞台）与方案 C（建筑感大双栏卡 · 已定稿），支持 `?variant=A|B|C`、Light/Dark、多租户与验证码四象限及 `101004` 锁定态模拟 |
+| **[logo-variants.html](./logo-variants.html)** | **品牌图形主标三方案比选原型（已定稿方案 B）** | - | 对比方案 A（互锁基石）、方案 B（三阶精密基座 · 已定稿）与方案 C（倒角内核框），支持 `?variant=A\|B\|C`、`16px–48px` 锐利度矩阵、实时标签页 Favicon 预览、Light/Dark 与跨租户观察态模拟 |
+| **[login-variants.html](./login-variants.html)** | **登录页构图三方案比选原型（已定稿方案 C）** | - | 对比方案 A（全屏双分屏）、方案 B（极简居中舞台）与方案 C（建筑感大双栏卡 · 已定稿），支持 `?variant=A\|B\|C`、Light/Dark、多租户与验证码四象限及 `101004` 锁定态模拟 |
 | **[auth-and-workspace.html](./auth-and-workspace.html)** | 认证、工作台、个人中心与会话切片 | `#5` | 深挖 `/login` SVG 验证码与防爆破倒计时、`redirect` 安全白名单测试、`/profile` 头像预览及 `/system/online` 多标签在线会话细节 |
 | **[org-and-rbac.html](./org-and-rbac.html)** | 组织架构与 RBAC 专题切片 | `#6` | 深挖部门 `ancestors` 级联与 `user/options`、菜单 `M`/`C`/`F` 与外链校验、角色树父子联动与 `@DataScope` `CUSTOM` 自定部门树、Fesod Excel 500 行原子校验及标红批注下载全流程 |
 | **[tenant-and-package.html](./tenant-and-package.html)** | SaaS 多租户与租户套餐专题切片 | `#7` | 深挖套餐自动剔除 `platform_only` 菜单与 `shrink-preview` 缩减裁剪预览、新建租户 4 步原子初始化凭据回显、`0` 号保护及停用/过期会话踢出联动 |
@@ -36,7 +36,7 @@
 | `Light` / `Dark` | 一键在 `html` 与 `html.dark` 间切换 `Precision Slate & Cobalt` 全站令牌 | `design-system.md` §1~§2 |
 | `多租户: 关/开` | 切换 `state.tenantEnabled`，同步隐藏/显现登录页租户输入、顶栏切换器与租户/套餐菜单 | `ateng.solid.tenant.enabled`（默认 `false`） |
 | `超管 (0)` / `租户管理员` / `无菜单专员` | 循环切换 3 类典型操作者身份（含超级管理员切工作租户后隐藏 `platform_only=1` 菜单、无菜单用户自动导向 `/403` 兜底退出口） | `X-Tenant-Id` · `platform_only` |
-| `覆盖矩阵 & 异常模拟` | 打开 720px 覆盖矩阵弹窗，支持点击直达全部 **17 条第一阶段路由** | `AtengProLayout` 完整路由表 |
+| `覆盖矩阵 & 异常模拟` | 打开 720px 覆盖矩阵弹窗，支持点击直达全部 **17 条第一阶段路由** | `AdminLayout`（基于 `AtengProLayout`）完整路由表 |
 
 ---
 
@@ -101,16 +101,16 @@
 
 ## 6. 自动化与本地脚本验证记录
 
-在 `#9` 总装收口验证阶段，通过 Node.js VM 对 `docs/prototypes/phase1/` 目录下全部 **7 份 `.html` 原型**执行解析与 DOM 事件审计：
+在 `#9` 总装收口验证阶段，通过 Node.js VM 对 `docs/prototypes/phase1/` 目录下全部 **9 份 `.html` 原型**执行解析与 DOM 事件审计：
 - **脚本语法校验**：7 份原型文件内联 `<script>` 全部通过 `vm.Script` 语法解析。
 - **一体化交互与事件属性全量审计 (`index.html`)**：遍历验证全部 **17 条第一阶段路由**、Login（`101001` / `101005` / `101004` / 正常登录）、Profile（基础资料回写与操作日志写入、改密态）、Popovers 与 Tabs 6 指令右键菜单、筛选空态、`500` 模拟、`user_create` / `excel_feedback` / `datascope` / `oper_detail` 弹窗抽屉、超管跨租户隐藏 `platform_only`、无菜单用户 `/403` 退出兜底、Light/Dark 与 `tenantEnabled` 开关切换，累计审计通过 **1,046 个内联 DOM 事件处理器**（无引号断串或语法错误）。
 - **外部依赖审计**：`rg` 核对无任何外部 CDN `<link>` 或 `<script src>` 引用，保证 100% 离线打开。
 
 ---
 
-## 7. 人机联调走查核对表（HITL Sign-Off）
+## 7. 人机联调走查核对表（HITL Sign-Off · 历史归档）
 
-请评审确认以下各项后，即可签收关闭 `#9` 并推进 `#10` 终审归档：
+> `#9` 与 `#10` 已在首期编码启动前完成签收归档，下表保留作原型定稿基线追溯：
 
 1. **全链路交互贯通**：`index.html` 中 `/login` → `/dashboard` → `/profile` → 12 个 `/system/*` 模块 → `/403` / `/404` 跳转与覆盖矩阵入口是否顺畅？
 2. **视觉与布局还原**：`Precision Slate & Cobalt` Light/Dark 色彩、方案 A 侧栏（`228px`/`60px`）/顶栏（`48px`）/页签栏（`36px`）高度与留白、弹窗与抽屉尺度（`index.html` 采用 `520px`/`720px` 面板演示，`00-overview-and-ux-standards.md` 规定正式编码档位为 `480/640px` Dialog 与 `360/500/720px` Drawer）是否符合预期？

@@ -17,10 +17,11 @@
 
 ---
 
-## 2. 工作区命令 (`scripts/workspace.sh`)
+## 2. 工作区命令 (`scripts/workspace.sh` / `scripts/solid.sh`)
 
 ```bash
 bash scripts/workspace.sh <sync | init | status | sync-rules | check-rules | checkout dev>
+bash scripts/solid.sh <start | stop | restart | status | logs | build | check> [all|server|admin-web]
 ```
 
 ---

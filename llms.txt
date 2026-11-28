@@ -1,11 +1,11 @@
 # ateng-solid
 
-> 全端开源企业级上层应用框架聚合工作区（Polyrepo Workspace），以完全独立通用的 `ateng-boot`、`ateng-cloud`、`ateng-ui` 为基础设施底座，覆盖 5 模块同源双装配后端服务（单体先行、与微服务长期并存）与 Vue 3.5 + TailwindCSS 无 Preflight 管理后台前端。
+> 全端开源企业级上层应用框架聚合工作区（Polyrepo Workspace），以完全独立通用的 `ateng-boot`、`ateng-cloud`、`ateng-ui` 为基础设施底座，覆盖 5 模块同源双装配后端服务（单体先行、与微服务长期并存）与 Vue + TailwindCSS 无 Preflight 管理后台前端。
 
 ## AI 编程助手必读约定 (Instructions for AI Agents)
 
 - **基线版本真源**：严禁在此写死依赖版本号；后端基线与底座版本查阅 [ateng-solid-server/pom.xml](./ateng-solid-server/pom.xml)，前端基线与包版本查阅 [ateng-solid-admin-web/package.json](./ateng-solid-admin-web/package.json)。
-- **底座零补丁与主干锁版门禁**：遇 `ateng-boot` / `ateng-cloud` / `ateng-ui` 能力不足或缺陷时，严禁在上层打临时补丁，应向底座提通用 Issue 并在底座本地改造；刷新 `-SNAPSHOT` / `yalc` 后可在 `dev` 继续编码、提交与关单，合入 `main` 与发版前必须锁回正式版本，详见 [底层零补丁与跨仓联调 SOP](./docs/agents/foundation-first-gate.md) 与 [底层基础设施待增强清单](./docs/specs/foundation-enhancements-checklist.md)。
+- **底座零补丁与主干锁版门禁**：遇 `ateng-boot` / `ateng-cloud` / `ateng-ui` 能力不足或缺陷时，严禁在上层打临时补丁，应先向底座提通用 Issue 并登记增强清单，**未经用户明确确认严禁直接修改外部底座仓库源码**；获准并在底座本地改造后，刷新 `-SNAPSHOT` / `yalc` 可在 `dev` 继续编码、提交与关单，合入 `main` 与发版前必须锁回正式版本，详见 [底层零补丁与跨仓联调门禁 SOP](./docs/agents/foundation-first-gate.md) 与 [底层基础设施待增强清单](./docs/specs/foundation-enhancements-checklist.md)。
 - **1:1 文档保真沉淀**：遵循 [文档 1:1 保真与模块规范](./docs/agents/documentation-specification.md)；所有开发功能须先通过离线测试，再 1:1 逆向沉淀至对应模块 `README.md`、Specs、`CONTEXT.md` 与 `llms.txt`。
 
 ## 根工作区治理与全端规约 (Single Source of Truth)
@@ -20,14 +20,15 @@
 
 ## 系统级架构蓝图与决策 (Specs & ADRs)
 
+- [设计规范总索引](./docs/specs/README.md): 全端架构蓝图、PRD（00~04）、底座清单与后端/前端详规总入口
 - [首期 MVP 架构与领域蓝图](./docs/specs/mvp-architecture-and-domain-blueprint.md): 首期精简技术栈、核心表归属与 Spec 0~5 演进路线
 - [底层基础设施待增强清单](./docs/specs/foundation-enhancements-checklist.md): `ateng-boot` / `ateng-cloud` / `ateng-ui` 底座 Issue 状态与解锁门禁
 - [第一阶段编码开工准入检查表](./docs/specs/phase1-coding-readiness-checklist.md): 跨端 1:1 终审结论、第一阶段种子数据核对表与 `Spec 1~4` 准入门禁
 - [第一阶段 PRD 与设计系统](./docs/specs/prd/00-overview-and-ux-standards.md): `Precision Slate & Cobalt` 设计令牌（[design-system.md](./docs/specs/prd/design-system.md)）、品牌图形真源（[ateng-solid-mark.svg](./docs/assets/brand/ateng-solid-mark.svg)）及 01~04 分域产品需求文档
 - [第一阶段高保真交互原型套件](./docs/prototypes/phase1/README.md): 全站 17 路由与品牌选型离线可交互 HTML 原型与 10 维边界覆盖矩阵
-- [工作区 ADR 看板](./docs/adr/README.md): Polyrepo 同步、`tenant_id BIGINT`、多租户开关、底座共进、可插拔扩展与首期栈/映射策略
+- [工作区 ADR 看板](./docs/adr/README.md): Polyrepo 同步、`tenant_id BIGINT`、多租户开关、底座共进、可插拔扩展、首期栈映射及观测治理（含子仓 `ADR-0007` 演进）
 
 ## 已启用独立子仓库 (Active Sub-Repos)
 
-- [ateng-solid-server AI 索引](./ateng-solid-server/llms.txt) | [后端门面](./ateng-solid-server/README.md) | [后端规范](./ateng-solid-server/AGENTS.md): Java 21 虚拟线程 + Spring Boot 3.3 + `ateng-boot` 5 模块同源双装配后端核心
-- [ateng-solid-admin-web AI 索引](./ateng-solid-admin-web/llms.txt) | [前端门面](./ateng-solid-admin-web/README.md) | [前端规范](./ateng-solid-admin-web/AGENTS.md): Vue 3.5 + Vite + TypeScript Strict + `ateng-ui` + TailwindCSS v4（无 Preflight）PC 管理后台
+- [ateng-solid-server AI 索引](./ateng-solid-server/llms.txt) | [后端门面](./ateng-solid-server/README.md) | [后端规范](./ateng-solid-server/AGENTS.md): Java 21 虚拟线程 + Spring Boot + `ateng-boot` 5 模块同源双装配后端核心
+- [ateng-solid-admin-web AI 索引](./ateng-solid-admin-web/llms.txt) | [前端门面](./ateng-solid-admin-web/README.md) | [前端规范](./ateng-solid-admin-web/AGENTS.md): Vue + Vite + TypeScript Strict + `ateng-ui` + TailwindCSS v4（无 Preflight）PC 管理后台

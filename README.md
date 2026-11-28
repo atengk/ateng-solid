@@ -12,12 +12,12 @@
 
 | 子工程目录 | 仓库链接 | 职责描述 | 技术基线 | 状态 |
 | :--- | :--- | :--- | :--- | :--- |
-| [`ateng-solid-server`](./ateng-solid-server) | [atengk/ateng-solid-server](https://github.com/atengk/ateng-solid-server) | 后端统一核心服务（5 模块 Cloud-Ready 单体） | Java 21 / Spring Boot 3.3 / `ateng-boot` / Maven（精确版本见 [pom.xml](./ateng-solid-server/pom.xml)） | 首期落地 |
-| [`ateng-solid-admin-web`](./ateng-solid-admin-web) | [atengk/ateng-solid-admin-web](https://github.com/atengk/ateng-solid-admin-web) | 管理后台 Web 前端工程 | Node 22+ / pnpm 11+ / Vue 3.5 / Vite / TS / `ateng-ui` / TailwindCSS | 首期落地 |
-| [`ateng-solid-mp`](./ateng-solid-mp) | - | 移动端小程序工程 | 规划中 | 待初始化 |
-| [`ateng-solid-app`](./ateng-solid-app) | - | 移动端跨平台 App (iOS / Android) | 规划中 | 待初始化 |
-| [`ateng-solid-desktop`](./ateng-solid-desktop) | - | PC 桌面客户端工程 | 规划中 | 待初始化 |
-| [`ateng-solid-portal-web`](./ateng-solid-portal-web) | - | 门户与官网 Web 前端工程 | 规划中 | 待初始化 |
+| [`ateng-solid-server`](./ateng-solid-server) | [atengk/ateng-solid-server](https://github.com/atengk/ateng-solid-server) | 后端统一核心服务（5 模块 Cloud-Ready 单体，含双端口可观测管理面与 15 条 ArchUnit 守卫；第一阶段单体稳固后即将同仓演进 `ateng-cloud` 微服务） | Java 21 / Spring Boot 3.3 / `ateng-boot` / Maven（精确版本见 [pom.xml](./ateng-solid-server/pom.xml)） | 首期落地 |
+| [`ateng-solid-admin-web`](./ateng-solid-admin-web) | [atengk/ateng-solid-admin-web](https://github.com/atengk/ateng-solid-admin-web) | 管理后台 Web 前端工程 | Node 22+ / pnpm 11+ / Vue 3.5 / Vite / TS / `ateng-ui` + TailwindCSS | 首期落地 |
+| `ateng-solid-mp` | - | 移动端小程序工程 | 规划中 | 待初始化 |
+| `ateng-solid-app` | - | 移动端跨平台 App (iOS / Android) | 规划中 | 待初始化 |
+| `ateng-solid-desktop` | - | PC 桌面客户端工程 | 规划中 | 待初始化 |
+| `ateng-solid-portal-web` | - | 门户与官网 Web 前端工程 | 规划中 | 待初始化 |
 
 ---
 
@@ -62,7 +62,7 @@ bash scripts/workspace.sh checkout dev
 ```
 
 ### 3.3 全栈运行时管理脚本（`scripts/solid.sh`）
-全工作区提供 [`scripts/solid.sh`](./scripts/solid.sh) 统一编排前后端启动、优雅关闭、状态查看、日志追踪与产物构建（无子命令时默认输出 `--help` 帮助；后端核心复用 [`ateng-solid-server/scripts/server.sh`](./ateng-solid-server/scripts/server.sh)，运行时 PID 与日志隔离归集至 `tmp/run/` 与 `logs/`）：
+全工作区提供 [`scripts/solid.sh`](./scripts/solid.sh) 统一编排前后端启动、优雅关闭、状态查看、日志追踪与产物构建（无子命令时默认输出 `--help` 帮助，支持 `web`/`admin` 作为 `admin-web` 别名；检测到 `.yalc/@atengk` 目录时自动追加 `--force` 启动 Vite；后端核心复用 [`ateng-solid-server/scripts/server.sh`](./ateng-solid-server/scripts/server.sh)，支持 `--mgmt-port` 管理面端口与 `/actuator/health/readiness` 就绪探针，运行时 PID 与日志隔离归集至 `tmp/run/` 与 `logs/`）：
 
 ```bash
 # 0. 查看全部支持选项（无参默认行为等同于 --help）
@@ -76,14 +76,15 @@ bash scripts/solid.sh start
 bash scripts/solid.sh start server --build
 bash scripts/solid.sh start admin-web --preview
 
-# 3. 四层运行参数透传（脚本选项支持 --opt=val；单端可用 -- 尾随透传，全栈用 --server-args / --web-args）
-bash scripts/solid.sh start server --port=8081 --jvm-opts="-Xms512m -Xmx1g" -- --logging.level.root=DEBUG
+# 3. 四层运行参数透传（脚本选项支持 --opt=val；单端可用 -- 尾随透传，全栈用 --server-args / --web-args；支持 --fg 前台阻塞运行）
+bash scripts/solid.sh start server --port=8082 --jvm-opts="-Xms512m -Xmx1g" -- --logging.level.root=DEBUG
 bash scripts/solid.sh start admin-web -- --open --mode staging
 bash scripts/solid.sh start --server-args "--spring.main.lazy-initialization=true" --web-args "--open"
 
-# 4. 查看全栈状态与实时聚合日志
+# 4. 产物构建、全栈状态与实时聚合日志（build 支持 --clean 与 --with-tests；logs 支持 --error 仅看错误日志）
+bash scripts/solid.sh build all --with-tests
 bash scripts/solid.sh status
-bash scripts/solid.sh logs -f
+bash scripts/solid.sh logs -f --error
 bash scripts/solid.sh logs server -n 200
 
 # 5. 重启与优雅停止（仅清理脚本纳管进程，按需追加 --force 清理外部端口占用）

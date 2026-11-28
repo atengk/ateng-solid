@@ -5,7 +5,7 @@
   - 工程架构与工单拆解阶段：[第一阶段（Spec 1 ~ Spec 4）工程架构设计与编码工单拆解路线图](https://github.com/atengk/ateng-solid/issues/11)（收口工单：[整合 Spec 1 ~ Spec 4 工程终稿、同步 issue-tracker 规范并在根仓拆解 ready-for-agent 编码工单](https://github.com/atengk/ateng-solid/issues/19)）
 - **终审范围**：
   - 根仓真源：`docs/agents/{contracts,foundation-first-gate,coding-standards,documentation-specification,issue-tracker}.md`、`docs/specs/mvp-architecture-and-domain-blueprint.md`、`docs/specs/foundation-enhancements-checklist.md`、`docs/specs/prd/{design-system,00..04}.md`、`docs/specs/_research/*`、`docs/prototypes/phase1/*`、`docs/adr/0001~0006`
-  - 后端仓：`ateng-solid-server/AGENTS.md`、`ateng-solid-server/docs/specs/*`（含 `system-engines-and-testing-spec.md`）、`ateng-solid-server/docs/adr/0001~0004`、`ateng-solid-server/*/CONTEXT.md`、`ateng-solid-server/docs/agents/issue-tracker.md`
+  - 后端仓：`ateng-solid-server/AGENTS.md`、`ateng-solid-server/docs/specs/*`（含 `system-engines-and-testing-spec.md`）、`ateng-solid-server/docs/adr/0001~0007`、`ateng-solid-server/*/CONTEXT.md`、`ateng-solid-server/docs/agents/{cloud-readiness,issue-tracker}.md`
   - 前端仓：`ateng-solid-admin-web/AGENTS.md`、`ateng-solid-admin-web/docs/specs/*`、`ateng-solid-admin-web/docs/adr/0001~0003`、`ateng-solid-admin-web/CONTEXT.md`、`ateng-solid-admin-web/docs/agents/{styling-and-ateng-ui,issue-tracker}.md`
 
 ---
@@ -87,13 +87,13 @@
 
 ## 4. `Spec 1 ~ Spec 4` 编码开工与交付状态检查表
 
-> **进展说明**：`Wave 1 ~ Wave 5`（`#20` ~ `#36`）全部编码、离线单元测试/集成测试与 1:1 逆向文档已完成；上游底座正式发版锁版（`B14~B17`、`U5~U12`）及第 5 节双模云端实机全链路冒烟测试按计划保留 `- [ ]`（工单 `#37` 维持 `OPEN` 待执行）。
+> **进展说明**：`Wave 1 ~ Wave 5`（`#20` ~ `#36`）全部编码、离线单元测试/集成测试与 1:1 逆向文档已完成；按阶段收口决策，上游底座正式发版锁版（`B14~B26`、`U5~U20`）、第 5 节双模云端实机全链路冒烟测试及推入 `main` 均延后至 **`Spec 5` 微服务改造完成后统一封版执行**（工单 `#37` 维持 `OPEN` 待执行）。
 
 ### Spec 1：工程骨架、公共原语、配置基线与前端设计令牌
 - [x] **高危配置前置收敛（必改）**：在 `ateng-solid-bootstrap/src/main/resources/application.yml` 显式配置 `ateng.boot.satoken.super-admin-roles: ["super_admin"]`（覆盖底座默认 `["admin", "super_admin"]`）与 `spring.servlet.multipart.max-file-size: 5MB` / `max-request-size: 10MB`（防默认 `1MB` 提前 413 截断 `2MB` 上传）；
 - [x] 在 `application.yml` 补全 `permission-cache.tenant-scoped: true`、`tenant.{allow-super-admin-switch, platform-tenant-ids}`、`data-permission.failure-strategy: DENY_ALL`（`#1173`）、`async.pools.password-hash`（`mode: platform`）、默认 S3 兼容对象存储（`storage.type: s3` + `s3.path-style: true` + `guard` 与 `local` 回退安全配置）及 3 个按域内聚的 `@ConfigurationProperties`（`SolidTenantProperties`/`SolidAuthProperties`/`SolidSystemProperties`），并在 `bootstrap/pom.xml` 补齐 `flyway-mysql` 与 `software.amazon.awssdk:{s3,apache-client}`（`runtime`）；
 - [x] 模块原语归属落地：`ateng-solid-common` 落地 `CommonBizResultCode`、`CommonStatusEnum`、`LogStatusEnum`、`PasswordPolicyValidator`、`DomainEventPublisher`/`SpringDomainEventPublisher`/`LoginAuditEvent` 与 `AuthGrantHandler` SPI；`ateng-solid-system-api` 落地 `SystemResultCode`、`DataScopeType`、`MenuTypeEnum`、`ConfigTypeEnum`、`VisibleStatusEnum` 及 4 个 `Remote*Service`（15 方法）；`ateng-solid-auth` 落地 `AuthResultCode`；`SuperAdminBootstrapper` 归属 `ateng-solid-system`；
-- [x] `ateng-solid-bootstrap` 将 `ArchitectureGuardTest` 升级为 9 条 ArchUnit 硬守卫（离线 `mvn clean test` 通过）；
+- [x] `ateng-solid-bootstrap` 建立 `ArchitectureGuardTest`（Wave 1 起步 9 条硬守卫，Wave 5 收口扩容至 15 条架构规则 + 1 项正负样本守卫自检，离线 `mvn clean test` 通过）；
 - [x] `ateng-solid-admin-web` 彻底移除 `theme-pro.css`，按 6 段导入序落地 `src/styles/tokens.css`（Light `#1D4ED8` / Dark `#3B82F6` 静态色阶映射至 `--el-*` 与 Tailwind v4 `@theme`，禁用 Preflight，`initTheme` 不传 `themeColor` + `index.html` 防 FOUC）；落地 `src/utils/{http,dict,icon}.ts`（三单例 + 全错误码分流 + `lowerCamelCase`/`snake_case` 双轨 `DictManager`）与 `tests/setup.ts` 离线隔离基线，且 `main.ts` 在 `app.use(router)` 前完成 `createAtengVue` 全量挂载。
 
 ### Spec 2：认证会话、工作台、个人中心、在线会话与布局壳
@@ -106,8 +106,8 @@
 - [x] `/login`（`AtengCaptcha` `:refresh` Prop、`101004` `err.cause.data` `IP`/`ACCOUNT` 倒计时、CapsLock 提示、`redirect` 白名单）、`/dashboard`、`/profile`（`AtengUpload` `:http-request` 桥接）、`/403`（零菜单退出兜底）、`/404` 通过 `pnpm 四合一` 与 Vitest 三层离线单测。
 
 ### Spec 3：组织架构、RBAC、`@DataScope` 与可开关 SaaS 多租户
-- [ ] **增量底座正式合入 `main` 锁版检查**：
-  - `B14`（`#1171`）、`B16`（`#1173`）、`B17`（`#1174`）与 `U6~U8`（`#370~#372`）、`U9~U12`（`#373~#376`）均已在底座 `dev` 关单，本地已分别通过 `1.2.1-SNAPSHOT` 与 `yalc` 接入并在 `dev` 放行提交与关单；**合入 `main` 与发版前**须待底座发布递进正式版并还原锁版；
+- [ ] **增量底座正式合入 `main` 锁版检查（延后至 `Spec 5` 完成后统一封版）**：
+  - `B14~B26`（`#1171` 等）与 `U5~U20`（`#369~#376` 等）均已在底座 `dev` 关单，本地已分别通过 `1.2.1-SNAPSHOT` 与 `yalc` 接入并在 `dev` 放行提交与关单；**待 `Spec 5` 微服务阶段同步验证/补充底座能力后**，统一发布底座递进正式版、还原锁版再合入 `main`；
 - [x] Flyway `V1.0.0__system_init_schema.sql`（17 表全量 `utf8mb4_0900_ai_ci` + 表简名前缀索引 + 显式 `NOT NULL DEFAULT 0` + 加密列宽 `phone 128`/`email 255`）与 `V1.0.1__system_init_seed.sql`（`< 100,000` 确定性 ID 号段、58 条菜单含 42 `F` 按钮）通过 MySQL 8.4 LTS 与 H2 (`MODE=MySQL`) 双模校验；`SysUser`/`SysDept` 联系字段经 `ContactFieldCrypto` 收口确定性加密与归一化；
 - [x] 实现 `SolidDataPermissionHandler` SPI（内部查询包 `runWithoutPermission`、`DEPT_AND_CHILD` 预解析 `sys_dept.ancestors` 禁写 `FIND_IN_SET` + `1000` 部门上限抛 `100003`、无部门兜底 `1 = 0`、`sys_user` `userColumn = "id"`）与 `TenantHeaderSwitchValidator` SPI；
 - [x] 角色/用户/菜单/租户权限缓存与会话强退副作用一律经 `TransactionUtil.executeAfterCommit` 后置触发（3 参 `PermissionCacheService.clearUserCache`/`clearRoleCache` 与 `clearAll`）；角色菜单回显遵循“联动态仅传叶子 ID”；
@@ -115,7 +115,7 @@
 - [x] 用户导入实现 9 列模板下载（`import/template`）、单次 `byte[]` 双读 + `#1174` 按次 `maxSyncRows=500` 重载、三段式解耦流水线（无事务校验 ➔ `Semaphore(2)` + 平台池 `password-hash` 并行哈希 ➔ 短事务批插，前端超时 `120s`）、剥离 `ExcelErrorRow.rowData` 及 Redis 双 Key 15 分钟归属隔离批注下载（`import/feedback/{feedbackToken}`）。
 
 ### Spec 4：静态枚举、动态字典、系统参数、头像直链与只读审计日志
-- [ ] **增量底座正式合入 `main` 锁版检查**：默认走 `storage.type=s3`（RustFS/MinIO，需 `software.amazon.awssdk:{s3,apache-client}`）+ `guard.enabled=true` + `strict-magic-check=true`；本地磁盘回退模式保留 `B15`（`#1172`）`local.whitelist-presigned-download=true` + `upload-endpoint-enabled=false` + 固定 `secret-key`；**合入 `main` 与发版前**须待 `ateng-boot` 发布正式版并还原锁版；
+- [ ] **增量底座正式合入 `main` 锁版检查（延后至 `Spec 5` 完成后统一封版）**：默认走 `storage.type=s3`（RustFS/MinIO，需 `software.amazon.awssdk:{s3,apache-client}`）+ `guard.enabled=true` + `strict-magic-check=true`；本地磁盘回退模式保留 `B15`（`#1172`）`local.whitelist-presigned-download=true` + `upload-endpoint-enabled=false` + 固定 `secret-key`；**待 `Spec 5` 完成后统一发布 `ateng-boot` 正式版并还原锁版合入 `main`**；
 - [x] `SysEnumController` 接管 `/admin/system/enums/**` 并配置 `@SaCheckLogin`；前端枚举适配层将 `OptionItem` 映射为 `DictItem` 并把 `'default'` 归一化为 `''`；
 - [x] `/system/dict` 平台专属双面板管理支持 `dictType` 编辑锁定与 `isDefault` 同类型事务互斥（`30m` 缓存写后驱逐）；`sys_config` 对内置 `Y` 禁止删改键名、`sys.user.initPassword` 强制强口令校验，并支持多租户读取自动回退平台租户 `0` 全局默认值；
 - [x] `@OperateLog` 统一使用 `type = OperateTypeEnum.XXX`；`SolidOperateLogStorageProvider` 在异步线程中基于 `model.tenantId` + `model.userId` 主键查库补全真实 `userName`（禁调 `LoginHelper.getLoginUser()`）并落库 `description`/`browser`/`os`；登录日志消费领域事件并复用 `UserAgentUtil.parse`；两日志模块保持严格只读。

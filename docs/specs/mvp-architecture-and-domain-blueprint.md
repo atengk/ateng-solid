@@ -2,7 +2,7 @@
 
 - **规划版本**：v1.1.0
 - **创建时间**：2026-11-18
-- **最新修订**：2026-11-23（完成 `ateng-boot:1.2.0`、`ateng-cloud:1.1.0`、`ateng-ui:1.1.0` 双轴验收与锁版，`Spec 0` 解封）
+- **最新修订**：2026-11-28（`Spec 1 ~ Spec 4` 单体前后端在 `dev` 分支编码与离线/联调验收完结；按用户决策暂不在 `Spec 4` 节点封版推 `main`，待 `Spec 5` 微服务双态并存阶段统一完成后与底座一并锁版发布）
 - **关联规范**：[跨端契约](../agents/contracts.md) | [底层零补丁与跨仓联调 SOP](../agents/foundation-first-gate.md) | [底层增强清单](./foundation-enhancements-checklist.md)
 
 ---
@@ -22,12 +22,12 @@
 
 | 端工程 | 复用的底层核心模块 | 除底座外的外部/框架核心技术栈 |
 | :--- | :--- | :--- |
-| **`ateng-solid-server`** | `ateng-boot-core`、`ateng-boot-web`、`ateng-boot-mybatis-plus`、`ateng-boot-redis`、`ateng-boot-satoken`、`ateng-boot-excel`、`ateng-boot-storage`、`ateng-boot-flyway`（7+1 核心） | Java 21 LTS（虚拟线程）、Spring Boot `3.3.13`、Maven 3.9+、MySQL 8.x（`mysql-connector-j`）、Lombok、`jakarta.validation`；离线测试期 H2 + Spring Boot Test + ArchUnit `1.3.0`（对象映射复用 `ateng-boot-core` `BeanUtil` + 显式转换，**不引入** `MapStruct`/`hutool-all`/`guava`/`ateng-boot-observability`） |
+| **`ateng-solid-server`** | `ateng-boot-core`、`ateng-boot-web`、`ateng-boot-mybatis-plus`、`ateng-boot-redis`、`ateng-boot-satoken`、`ateng-boot-excel`、`ateng-boot-storage`、`ateng-boot-flyway`（7+1 核心）+ 宿主独占 `ateng-boot-observability` | Java 21 LTS（虚拟线程）、Spring Boot `3.3.13`、Maven 3.9+、MySQL 8.x（`mysql-connector-j`）、Lombok、`jakarta.validation`、Caffeine（`TwoLevel` 本地缓存加速）；`ateng-solid-bootstrap` 按 [`ADR-0007`](../../ateng-solid-server/docs/adr/0007-observability-and-actuator-governance.md) 独占引入 `ateng-boot-observability` 落地双端口 Actuator/Prometheus 可观测管理面（业务模块严禁引入可观测依赖）；离线测试期 H2 + Spring Boot Test + ArchUnit `1.3.0`（对象映射复用 `ateng-boot-core` `BeanUtil` + 显式转换，**不引入** `MapStruct`/`hutool-all`/`guava`） |
 | **`ateng-solid-admin-web`** | `@atengk/core`、`@atengk/vue`、`@atengk/element-plus`（3 大核心包） | Node.js `22+`、pnpm `11+`、Vue `3.5+`、Vue Router `4.5+`、Pinia `3.0+`、TypeScript `5.6+`（Strict）、Vite `6+`、Element Plus + `@element-plus/icons-vue`、TailwindCSS v4（禁用 Preflight）+ Sass；质检期 Vitest + `@vue/test-utils` + `happy-dom` + ESLint 9 + Prettier + `vue-tsc`（**不引入** `@atengk/monitor`/`lodash`/`moment`/`vue-i18n`） |
 
 ### 1.3 明确延后至二期 — 装配期可插拔扩展模块 (Pluggable Extensions · Out of Scope for MVP)
 遵循 [ADR-0005](../adr/0005-kernel-plus-pluggable-extensions.md) 与 [ADR-0006](../adr/0006-stage1-minimal-stack-and-object-mapping.md)，二期特性与辅助增强不混写进首期内核，按独立扩展模块装配插拔，**首期不提前建空壳或预装重依赖**：
-- 监控与可观测增强（后端 `ateng-boot-observability` 与前端 `@atengk/monitor`）
+- 前端监控与链路扩展（`@atengk/monitor` 等可观测前端套件与 `@ObservedMetric` 细粒度业务埋点；注：服务端管理面健康探针与 Prometheus 指标端口已按 [`ADR-0007`](../../ateng-solid-server/docs/adr/0007-observability-and-actuator-governance.md) 由 `ateng-solid-bootstrap` 引入 `ateng-boot-observability` 率先落地）
 - 第三方 OAuth2 / 社会化登录（`ext-social`，消费 `ateng-boot-social` + `AuthGrantHandler` SPI）
 - 站内信与 WebSocket/SSE 实时推送（`ext-realtime`，消费 `ateng-boot-realtime`）
 - 分布式定时任务调度控制台（`ext-job`，消费 `ateng-boot-job-local`/`xxl`/`snail`）
@@ -46,7 +46,7 @@ flowchart TD
     SysApi["ateng-solid-system-api<br/>纯接口 + 跨模块 DTO/VO + 枚举/错误码"]
     Common["ateng-solid-common<br/>全局常量 · 上下文原语 · 通用异常码"]
     DB[("MySQL 8.x / H2(TEST)<br/>Flyway 版本化迁移(归属 system) · 零物理外键")]
-    Redis[("Redis 7.x / 内存降级<br/>Sa-Token 会话 · 权限缓存 · 验证码 · 防爆破")]
+    Redis[("Redis 7.x / 自适应内存降级<br/>Sa-Token 会话 · 两级权限缓存 · 验证码 · 防爆破")]
 
     Web -->|"satoken-admin · X-Tenant-Id · X-Trace-Id"| AuthCtrl
     Web -->|"satoken-admin · X-Tenant-Id · X-Trace-Id"| SysCtrl
@@ -75,7 +75,7 @@ flowchart TD
 
 ## 3. 演进拆分路线（Spec 规划）
 
-正式开始编码前，将按以下顺序分步推进并落实测试先行闭环（首期单体 MVP 统一收敛为 **`Spec 0 ~ Spec 4`**，后续 `ateng-cloud` 同源双态并存挂壳独立归口为 **`Spec 5`**）：
+第一阶段单体 MVP 统一收敛为 **`Spec 0 ~ Spec 4`**（当前已在 `dev` 完成编码、离线/联调验收与 1:1 文档对齐），下一步将基于 [`ateng-solid-server/docs/agents/cloud-readiness.md`](../../ateng-solid-server/docs/agents/cloud-readiness.md) 与 [`ADR-0003`](../../ateng-solid-server/docs/adr/0003-monolith-and-cloud-coexistence-architecture.md) §2.4 正式开启 **`Spec 5`**（`ateng-cloud` 同源双态并存挂壳与微服务改造），全部完成后统一锁版封版合入 `main`：
 1. **Spec 0（底层硬门禁前置 · ✅ 已完成双轴验收并锁版解锁）**：已于 [底层基础设施待增强清单](./foundation-enhancements-checklist.md) 核验并锁定 `ateng-boot:1.2.0`（含 `#1076~#1080`、`#1093`、`#1094`、`#1134~#1137`、`#1163~#1167` 与 `ateng-boot-flyway`）、`ateng-cloud:1.1.0`（含 `#198~#206`）及 `ateng-ui:1.1.0`（`@atengk/{core,vue,element-plus}` 含 `#362~#367`），正式开启 `Spec 1 ~ Spec 4` 编码。
 2. **Spec 1（工程骨架、公共原语与扩展 SPI 定义）**：完善 `ateng-solid-server` 5 模块 POM/ArchUnit/Flyway 双模配置、公共常量/错误码/`DomainEventPublisher` 与内核 SPI 端口（如 `AuthGrantHandler` 接口定义），与 `ateng-solid-admin-web` Vite/Tailwind/ateng-ui 基座。
 3. **Spec 2（认证会话闭环）**：图形验证码与多租户开关透传、账密 PBKDF2 登录、防爆破、超管启动引导初始化、`getInfo`/动态路由与在线会话管理。
