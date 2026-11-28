@@ -11,10 +11,14 @@
 > - **全功能走查后继增强（2026-11-27 · `B20`/`B21`/`U13~U17` 上游 Issue 均已闭环，本地快照/yalc 联调就绪）**：
 >   - `ateng-boot`：**`B20`**（[`#1177`](https://github.com/atengk/ateng-boot/issues/1177)，提交 `fc329ec2`，已安装本地 `1.2.1-SNAPSHOT`，关联 [`atengk/ateng-solid#47`](https://github.com/atengk/ateng-solid/issues/47)）；**`B21`**（[`#1178`](https://github.com/atengk/ateng-boot/issues/1178) 已关闭，提交 `a8e656c2`，`dev` `Java CI` 全绿且已刷新本地 `1.2.1-SNAPSHOT` 完成 `ateng-solid-server` 联调，合入 `main` 前待发版锁版）；
 >   - `ateng-ui`：**`U13`**（[`#377`](https://github.com/atengk/ateng-ui/issues/377)）、**`U14`**（[`#378`](https://github.com/atengk/ateng-ui/issues/378)），均于上游 `dev` 提交 `a9616d0` 闭环并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`（分别关联 [`atengk/ateng-solid#53`](https://github.com/atengk/ateng-solid/issues/53) 与 [`atengk/ateng-solid#50`](https://github.com/atengk/ateng-solid/issues/50)）；**`U15`**（[`#379`](https://github.com/atengk/ateng-ui/issues/379)，上游提交 `ee55b3b` / `d255cd8` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0004](../../ateng-solid-admin-web/docs/adr/0004-dual-card-table-and-adaptive-pagination.md)）；**`U16`**（[`#380`](https://github.com/atengk/ateng-ui/issues/380)，上游提交 `19f79a7` / `1365732` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 `admin-web` [ADR-0005](../../ateng-solid-admin-web/docs/adr/0005-tiered-query-collapse-and-max-auto-height-table.md)）；**`U17`**（[`#381`](https://github.com/atengk/ateng-ui/issues/381)，上游提交 `934135a` 已关单并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus`，关联 [`atengk/ateng-solid#57`](https://github.com/atengk/ateng-solid/issues/57)）；**`U18`**（[`#388`](https://github.com/atengk/ateng-ui/issues/388)，上游已关闭，提交 `8d4c1d1`，`dev` `Frontend CI` 全绿并经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 联调就绪，待 npm 发版后还原锁版）。
-> - **API 传输层安全与分页边界后继增强（2026-11-27 · `B22`/`B23`/`C7`/`C8`/`U19` 已建单待排期，未阻塞当前单体加固）**：
->   - `ateng-boot`：**`B22`**（[`#1179`](https://github.com/atengk/ateng-boot/issues/1179)，API 传输层混合加解密与 `@ApiSign` 协同）、**`B23`**（[`#1180`](https://github.com/atengk/ateng-boot/issues/1180)，`LoginHelper.searchOnlineUserPage` 页码偏移 `int` 溢出修复）；
->   - `ateng-cloud`：**`C7`**（[`#207`](https://github.com/atengk/ateng-cloud/issues/207)，网关响应式边缘 API 加解密过滤器）、**`C8`**（[`#208`](https://github.com/atengk/ateng-cloud/issues/208)，`GatewaySignGuardFilter` 对齐统一规范签协议、多算法与响应式 Redis Nonce）；
->   - `ateng-ui`：**`U19`**（[`#389`](https://github.com/atengk/ateng-ui/issues/389)，`@atengk/core` `DefaultRequestSigner` 对齐标准 HMAC-SHA256 统一规范签协议并新增 `RequestCipher`）。
+> - **API 传输层安全与分页边界后继增强（2026-11-27 · `B22`/`B23`/`U19` 上游 `dev` 已闭环、本地 `1.2.1-SNAPSHOT` / `yalc` 已刷新并通过全量回归，业务暂不启用；`C7`/`C8` 待排期）**：
+>   - `ateng-boot`：**`B22`**（[`#1179`](https://github.com/atengk/ateng-boot/issues/1179) 已关闭，提交 `fbbe6de6` + 关联 [`#1181`](https://github.com/atengk/ateng-boot/issues/1181) `cf9434d3` / [`#1182`](https://github.com/atengk/ateng-boot/issues/1182) `2ed346f2`，API 传输层混合加解密与 `@ApiSign` 协同及 SPA 会话密钥回包模式，默认关闭）；**`B23`**（[`#1180`](https://github.com/atengk/ateng-boot/issues/1180) 已关闭，提交 `df84ad72`，`LoginHelper.searchOnlineUserPage` 页码偏移 `int` 溢出修复）；均已随 `b8e9ec70` 安装本地 `1.2.1-SNAPSHOT` 并通过 `ateng-solid-server` 全量离线回归，待发版锁回正式版；
+>   - `ateng-cloud`：**`C7`**（[`#207`](https://github.com/atengk/ateng-cloud/issues/207)，网关响应式边缘 API 加解密过滤器，仍为 `OPEN`）、**`C8`**（[`#208`](https://github.com/atengk/ateng-cloud/issues/208)，`GatewaySignGuardFilter` 对齐统一规范签协议、多算法与响应式 Redis Nonce，仍为 `OPEN`）；
+>   - `ateng-ui`：**`U19`**（[`#389`](https://github.com/atengk/ateng-ui/issues/389) 已关闭，提交 `53b1aa50`，`@atengk/core` `DefaultRequestSigner` 对齐标准 HMAC-SHA256 统一规范签协议并新增 `RequestCipher`，默认向后兼容；已随 `53b1aa5` 经 `pnpm pack + yalc` 接入 `ateng-solid-admin-web` 并通过四合一门禁，待发版锁回正式版）。
+> - **E2E 全功能复核后继增强（2026-11-28 · `U20` 上游 `dev` 已闭环、本地 `yalc` 已刷新并接入 `#70`，⏳ 合入 `main` 前待发版锁版）**：
+>   - `ateng-ui`：**`U20`**（[`#390`](https://github.com/atengk/ateng-ui/issues/390) 已关闭，提交 `603d884`，`AtengTable` 插槽模式支持强类型 `defaultHiddenColumns` 默认隐藏列契约，经 `pnpm pack + yalc` 更新本地 `@atengk/element-plus` 并落地 [`atengk/ateng-solid#70`](https://github.com/atengk/ateng-solid/issues/70)）。
+> - **Actuator 可观测接入与双端口治理后继增强（2026-11-28 · `B24`/`B25`/`B26` 上游 `dev` 均已闭环关单 · 🔵 本地 `1.2.1-SNAPSHOT` 已刷新 · ⏳ 合入 `main` 前待发版锁版）**：
+>   - `ateng-boot`：**`B24`**（[`#1185`](https://github.com/atengk/ateng-boot/issues/1185) 已关闭，提交 `e8ad545f`，`dev` `Java CI` Run `46083186239` 全绿，修复 `AtengHealthAutoConfiguration` 与 `AtengStorageAutoConfiguration` 同名 `storageHealthIndicator` 自动装配顺序竞态）；**`B25`**（[`#1186`](https://github.com/atengk/ateng-boot/issues/1186) 已关闭，提交 `dbb4b194`，`dev` `Java CI` Run `46091977598` 全绿，新增 `AtengManagementContextSecurityConfiguration` 支持独立管理端口子上下文自动挂载 `ActuatorEndpointSecurityFilter` 及 `base-path=/` 兼容）；**`B26`**（[`#1187`](https://github.com/atengk/ateng-boot/issues/1187) 已关闭，提交 `7b2b45cb`，`dev` `Java CI` Run `46098642859` 全绿，为 `PreStopEndpoint` 注册默认 `PathMapper` 映射至 `/actuator/pre-stop` 并兼容 `TraceFilter` 双向控制面豁免）。
 
 ---
 
@@ -225,21 +229,69 @@
 
 ---
 
-### [B22] 中优先级（待排期 · 未阻塞当前单体加固）：`ateng-boot-web` 新增 API 传输层混合加解密能力（`@ApiEncrypt`/`@ApiDecrypt`）并与 `@ApiSign` 协同
+### [B22] 中优先级（上游 `dev` 已闭环 · 本地 `1.2.1-SNAPSHOT` 已验证，默认关闭 Opt-in）：`ateng-boot-web` 新增 API 传输层混合加解密能力（`@ApiEncrypt`/`@ApiDecrypt`）并与 `@ApiSign` 协同
 
-- **现状与源码锚点**：`ateng-boot-encrypt` 仅面向配置文件提供 `ENC(...)` 解密；`ateng-boot-web` 已提供 `@ApiSign`（`ApiSignAspect` / `SignCanonicalUtil`），但缺少 HTTP 请求体与响应体传输级加解密注解能力。
-- **目标通用改造（默认关闭 Opt-in，100% 向后兼容）**：新增 `@ApiDecrypt` / `@ApiEncrypt` 与 `ateng.boot.web.crypto.*`（默认 `enabled: false`），采用混合加密协议（`RSA-OAEP-SHA256` / 可选国密 `SM2` 封装一次性密钥 + `AES-256-GCM` / 可选国密 `SM4-GCM` 加密 JSON 载荷，支持密钥轮换 `X-Key-Id`），明确与 `@ApiSign` 按 **Encrypt-then-Sign** 协同，并与 `CachedBodyHttpServletRequest` 及二进制/流式透传共存。
+- **现状与源码锚点**：`ateng-boot-encrypt` 仅面向配置文件提供 `ENC(...)` 解密；`ateng-boot-web` 原有 `@ApiSign`（`ApiSignAspect` / `SignCanonicalUtil`）已补齐传输层混合加解密，且配置总开关 `ateng.boot.web.crypto.enabled` 默认 `false`（100% 向后兼容）。
+- **上游实际落地**：
+  1. [`atengk/ateng-boot#1179`](https://github.com/atengk/ateng-boot/issues/1179)（`dev` 提交 `fbbe6de6`，远端 `Java CI` Run `45946922865` Java 17/21 全通过）：补齐纯 JDK 17 原生 `SM4-GCM`、新增 `@ApiDecrypt`/`@ApiEncrypt` 与按需拦截的 `ApiCryptoFilter`（零 `ResponseBodyAdvice`，流式请求/响应与二进制零缓冲透传，支持 `RSA_AES_GCM` 与 `SM2_SM4_GCM`、密钥轮换 `X-Key-Id`、`bind-aad` 与 `@ApiSign` 按 **Encrypt-then-Sign** 物理级协同）；
+  2. 关联 [`atengk/ateng-boot#1181`](https://github.com/atengk/ateng-boot/issues/1181)（`dev` 提交 `cf9434d3`）：新增 `CryptoResponseKeyMode.REQUEST_SESSION_KEY`，支持纯 Web SPA 场景无客户端静态私钥时复用入站会话密钥执行响应加密及无体 `GET` 密钥握手（Fail-Closed 拦截缺失 `X-Encrypt-Key`）；
+  3. 关联 [`atengk/ateng-boot#1182`](https://github.com/atengk/ateng-boot/issues/1182)（`dev` 提交 `2ed346f2`，远端 `Java CI` Run `45953469035` Java 17/21 全通过）：`WebProperties.XssProperties.excludeHeaders` 默认白名单补充 `X-Encrypt-Key`、`X-Encrypt-Iv`、`X-Key-Id`、`X-Encrypt-Alg`。
+- **上层兼容性实测**：已基于 `ateng-boot` `dev`（提交 `b8e9ec70`）干净归档编译安装最新 `1.2.1-SNAPSHOT`，`ateng-solid-server` 保持默认关闭状态执行全 6 模块离线回归（271 项共执行 258 项、0 失败 / 0 错误，13 项 `@Tag("local")` 自动跳过）。
 - **准入纪律**：**严禁在 `ateng-solid-server` 自写全局 `RequestBodyAdvice` / `ResponseBodyAdvice` 临时补丁实现传输层加解密**。
-- **核实状态**：- [ ] 待底座实施并合入发版（[`atengk/ateng-boot#1179`](https://github.com/atengk/ateng-boot/issues/1179)）
+- **核实状态**：- [ ] 上游 Issue 均已修复关闭（`#1179` / `#1181` / `#1182`）且本地 `1.2.1-SNAPSHOT` 全量离线回归通过；当前保持默认关闭，待上游合入正式版并在 `ateng-solid-server` 锁版后勾选
 
 ---
 
-### [B23] 中优先级（待底座修复 · 已于应用层前置边界防护）：`LoginHelper.searchOnlineUserPage` 页码偏移 `int` 乘法溢出引发 `IndexOutOfBoundsException`
+### [B23] 中优先级（上游 `dev` 已闭环 · 本地 `1.2.1-SNAPSHOT` 已验证，保留前置剪枝形成双保险）：`LoginHelper.searchOnlineUserPage` 页码偏移 `int` 乘法溢出引发 `IndexOutOfBoundsException`
 
-- **现状与源码锚点**：`ateng-boot-satoken` 的 `LoginHelper#searchOnlineUserPage` 使用 `int start = (page - 1) * actualSize;` 计算分页偏移。传入超大页码（如 `page = 21474838`、`size = 100`）时会溢出为负数绕过 `start >= total` 判断，进而触发 `subList`/`get` 抛出 `IndexOutOfBoundsException`（HTTP 500）。
-- **目标通用改造（100% 向后兼容）**：将全部分页切片分支改为 `long startOffset = (long) (actualPage - 1) * actualSize;`，若 `startOffset < 0L || startOffset >= total` 直接安全返回空记录分页。
-- **准入纪律**：**严禁在上层重写完整在线会话检索逻辑替换 `LoginHelper`**（上层仅允许对入参页码做合法区间快速剪枝保护，待底座修复合版后保持对齐）。
-- **核实状态**：- [ ] 待底座修复并合入发版（[`atengk/ateng-boot#1180`](https://github.com/atengk/ateng-boot/issues/1180)）
+- **现状与源码锚点**：`ateng-boot-satoken` 的 `LoginHelper#searchOnlineUserPage` 原使用 `int start = (page - 1) * actualSize;` 计算分页偏移，传入超大页码（如 `page = 21474838`、`size = 100`）时会溢出为负数绕过 `start >= total` 判断。上游已通过 `long startOffset = (long) (actualPage - 1) * actualSize;` 修复该缺陷。
+- **应用层保留策略**：`ateng-solid-auth` `OnlineSessionService` 中的快速剪枝守卫继续保留（可提前拦截越界分页、减少无意义的底座扫描，与底座修复形成双重防线，零兼容冲突）。
+- **准入纪律**：**严禁在上层重写完整在线会话检索逻辑替换 `LoginHelper`**。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1180`](https://github.com/atengk/ateng-boot/issues/1180)，`dev` 提交 `df84ad72`，远端 `Java CI` Run `45946922865` Java 17/21 全通过），本地 `1.2.1-SNAPSHOT` 回归已通过；待合入正式版锁版后勾选
+
+---
+
+### [B24] 中优先级（🟢 上游 `dev` 已闭环 · 🔵 本地 `1.2.1-SNAPSHOT` 已验证 · ⏳ 合入 `main` 前待发版锁版）：`AtengHealthAutoConfiguration` 与 `AtengStorageAutoConfiguration` 同名 `StorageHealthIndicator` 自动装配顺序竞态
+
+- **现状与源码锚点**：
+  - `ateng-boot-storage` 的 `AtengStorageAutoConfiguration`（L48–51）标注了 `@AutoConfigureBefore(value = AtengAsyncAutoConfiguration.class, name = "...AtengSaTokenAutoConfiguration")`，并在内嵌 `StorageHealthIndicatorConfiguration`（L278–284）中以 `@ConditionalOnMissingBean(name = "storageHealthIndicator")` 注册同步阻塞版 `io.github.atengk.boot.storage.health.StorageHealthIndicator`；
+  - `ateng-boot-observability` 的 `AtengHealthAutoConfiguration`（L66–71）`@AutoConfigureBefore` 清单包含 Redis/Rabbit/Mail 与 `AtengSearchAutoConfiguration`，遗漏了 `io.github.atengk.boot.storage.autoconfigure.AtengStorageAutoConfiguration`；当两者与 `ateng-boot-core`/`ateng-boot-satoken` 共存时，`AtengStorageAutoConfiguration` 会被排序至 `AtengHealthAutoConfiguration` 之前抢先占位，导致异步防假死超时版 `StorageHealthIndicator` 失效。
+- **实际落地通用改造（100% 向后兼容，对标 `#1128` Search 探针让位模式）**：
+  1. `AtengHealthAutoConfiguration` 的 `@AutoConfigureBefore(name = { ... })` 补充 `"io.github.atengk.boot.storage.autoconfigure.AtengStorageAutoConfiguration"`；
+  2. `AtengStorageAutoConfiguration` 补充 `@AutoConfigureAfter(name = "io.github.atengk.boot.observability.autoconfigure.AtengHealthAutoConfiguration")`，并将 `storageHealthIndicator` 的条件强化为 `@ConditionalOnMissingBean(value = StorageHealthIndicator.class, type = "io.github.atengk.boot.observability.health.StorageHealthIndicator", name = "storageHealthIndicator")`（确保独立使用 `ateng-boot-storage` 时零类加载异常，共存或存在自定义 Bean 名防假死探针时均可靠让位）；
+  3. 补齐 `AtengHealthAutoConfigurationTest` 与 `AtengStorageAutoConfigurationTest` 对抗性单测并完成 `ateng-boot` 阶梯二回归（21 模块全部通过，含 `ateng-boot-storage` 258 项、`ateng-boot-observability` 138 项、`ateng-boot-sample-storage` 35 项、`ateng-boot-sample-observability` 14 项），已通过隔离副本刷新本地 `1.2.1-SNAPSHOT`（未修改底座 `pom.xml` 正式版号）。
+- **准入纪律**：**严禁在 `ateng-solid-server` 通过上层 Bean 覆写或关闭组件探针补丁绕过顺序竞态**。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1185`](https://github.com/atengk/ateng-boot/issues/1185)，`dev` 提交 `e8ad545f`，远端 `Java CI` Run `46083186239` Java 17/21 全通过），本地阶梯二 21 模块与 `1.2.1-SNAPSHOT` 刷新已验证且 `ateng-solid-server` 全 6 模块离线回归通过（272 项共执行 259 项、0 失败 / 0 错误，13 项 `@Tag("local")` 自动跳过）；待底座合入正式版、上层锁版后勾选
+
+---
+
+### [B25] 中优先级（🟢 上游 `dev` 已闭环 · 🔵 本地 `1.2.1-SNAPSHOT` 已验证 · ⏳ 合入 `main` 前待发版锁版）：独立管理端口子上下文自动挂载 `ActuatorEndpointSecurityFilter` 及 `base-path=/` 兼容
+
+- **现状与源码锚点**：
+  - Spring Boot 3.3 在 `management.server.port != server.port`（双端口物理隔离部署）下会创建独立的子 `ServletWebServerApplicationContext`（`ManagementContextType.CHILD`）；原有 `AtengSecurityAutoConfiguration` 仅将 `ActuatorEndpointSecurityFilter` 挂载至主上下文，独立管理端口缺少应用层纵深防御（Token / Basic Auth / CIDR 白名单 / 404 隐身 / `ActuatorAccessDeniedEvent` 审计）支撑；
+  - `ActuatorEndpointSecurityFilter.normalizeBasePath("/")` 原会将根路径 `"/"` 还原为 `"/actuator"`，无法适配 `management.endpoints.web.base-path=/`。
+- **实际落地通用改造（100% 向后兼容）**：
+  1. `ObservabilityProperties.SecurityProperties` 新增 `managementContextEnabled` 开关（默认 `true`，配置键 `ateng.boot.observability.security.management-context-enabled`）；
+  2. 新增 `@ManagementContextConfiguration(value = ManagementContextType.CHILD, proxyBeanMethods = false)` 配置类 `AtengManagementContextSecurityConfiguration` 并注册至 `META-INF/spring/org.springframework.boot.actuate.autoconfigure.web.ManagementContextConfiguration.imports`，在独立管理端口子上下文通过轻量委托 `FilterRegistrationBean<Filter>` 复用父上下文中的 `ActuatorEndpointSecurityFilter`（保留原顺序与 `REQUEST/ASYNC/ERROR` 分发类型，不干扰父 Filter 生命周期；单端口同口模式零触发）；
+  3. 增强 `ActuatorEndpointSecurityFilter.normalizeBasePath` 兼容根路径 `"/"`（归一化为空串 `""`，使 `base-path=/` 下白名单放行且 `/` 根索引及高危端点受保护）；
+  4. 补齐 `ObservabilityPropertiesTest`、`ActuatorEndpointSecurityFilterTest` 与 `AtengManagementContextSecurityConfigurationTest`（真实随机双端口端到端集成测试）并更新 `ateng-boot-observability/README.md`。
+- **准入纪律**：**严禁在 `ateng-solid-server` 通过自建管理上下文 `FilterRegistrationBean` 补丁绕过底座安全桥接**。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1186`](https://github.com/atengk/ateng-boot/issues/1186)，`dev` 提交 `dbb4b194`，远端 `Java CI` Run `46091977598` Java 17/21 全通过），本地阶梯二 20 模块回归（`ateng-boot-observability` 158/158、`ateng-boot-sample-observability` 14/14，0 失败 / 0 错误）与 `1.2.1-SNAPSHOT` 刷新已验证且 `ateng-solid-server` 全 6 模块离线回归通过；待底座合入正式版、上层锁版后勾选
+
+---
+
+### [B26] 中优先级（🟢 上游 `dev` 已闭环 · 🔵 本地 `1.2.1-SNAPSHOT` 已验证 · ⏳ 合入 `main` 前待发版锁版）：为 `PreStopEndpoint` 注册默认 `PathMapper` 映射至 `/actuator/pre-stop` 并兼容 `TraceFilter` 双向豁免
+
+- **现状与源码锚点**：
+  - `ateng-boot-web` `PreStopEndpoint`（L18）标注 `@Endpoint(id = "preStop")`，Spring Boot 3.3 `PathMapper.getRootPath` 默认直接返回 `EndpointId.toString()`，导致实际挂载路径为 `/actuator/preStop`；
+  - 底座多处已约定短横线路径 `/actuator/pre-stop`（`PreStopEndpoint`/`AtengGracefulShutdownAutoConfiguration` 文档、`TraceFilter` `ACTUATOR_PRE_STOP_PATH` 控制面排除逻辑以及 `ObservabilityProperties` 默认白名单 `"pre-stop"`），导致未配显式映射时请求 `/actuator/pre-stop` 无法命中端点、请求 `/actuator/preStop` 又会被 `TraceFilter` 计入活跃在途请求数。
+- **实际落地通用改造（100% 向后兼容）**：
+  1. `AtengGracefulShutdownAutoConfiguration` 将类级 `@AutoConfigureAfter` 扩展至 `org.springframework.boot.actuate.autoconfigure.endpoint.web.WebEndpointAutoConfiguration`，确保不覆盖 Spring Boot 默认 `MappingWebEndpointPathMapper`；
+  2. 在 `ActuatorShutdownConfiguration` 内新增受 `@ConditionalOnClass({PathMapper.class, EndpointId.class})` 守卫的 `PreStopPathMapperConfiguration`，注册 `atengPreStopEndpointPathMapper` Bean：默认将 `EndpointId.of("preStop")` 映射为 `"pre-stop"`（实际暴露 `/actuator/pre-stop`），且检测到用户显式配置 `management.endpoints.web.path-mapping`（含 `preStop`/`pre-stop`）时自动让位；
+  3. `TraceFilter` 同步新增 `/actuator/preStop` 控制面路径豁免，双向兼容两种路径形态；
+  4. 在 `AtengGracefulShutdownAutoConfigurationTest` 与 `TraceFilterTest` 补齐正反顺序装配、原生 `path-mapping` 保留、用户覆盖让位与双向豁免单测。
+- **准入纪律**：**严禁在 `ateng-solid-server` YAML 中硬编码 `path-mapping` 补丁绕过底座端点路径失配缺陷**。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-boot#1187`](https://github.com/atengk/ateng-boot/issues/1187)，`dev` 提交 `7b2b45cb`，远端 `Java CI` Run `46098642859` Java 17/21 全通过），本地阶梯二 21 模块回归（0 失败 / 0 错误）与隔离副本刷新 `ateng-boot-web:1.2.1-SNAPSHOT` 已验证并打通 `ObservabilityDualPortIntegrationTest`；待底座合入正式版、上层锁版后勾选
 
 ---
 
@@ -436,12 +488,31 @@
 
 ---
 
-### [U19] 中优先级（待排期 · 未阻塞当前单体加固）：`@atengk/core` 升级 `DefaultRequestSigner` 对齐标准 HMAC-SHA256 统一规范签协议并新增 `RequestCipher`
+### [U19] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已接入验证通过，当前管理端暂不启用）：`@atengk/core` 升级 `DefaultRequestSigner` 对齐标准 HMAC-SHA256 统一规范签协议并新增 `RequestCipher`
 
-- **现状与源码锚点**：`@atengk/core` 的 `DefaultRequestSigner` 默认使用裸 `sha256Hex(canonical + "&secret=" + secret)` 且缺 `X-App-Id` 头，待签串与 `ateng-boot-web` / `ateng-cloud-gateway` 规范不一致；同时缺少传输层报文级加解密插件。
-- **目标通用改造（默认向后兼容，Opt-in 启用）**：升级 `DefaultRequestSigner` 支持 WebCrypto 标准 `HMAC-SHA256`、`X-App-Id` 与 `canonicalPreset: 'standard' | 'legacy'`；新增基于原生 WebCrypto（`AES-256-GCM + RSA-OAEP-SHA256`）且支持 `CipherAdapter` 国密扩展的 `RequestCipher`；在 `createHttpClient` 中确立与加签器按 **Encrypt-then-Sign** 协同的拦截器流水线并跳过 `FormData`/`Blob` 二进制请求。
+- **上游实际落地**：[`atengk/ateng-ui#389`](https://github.com/atengk/ateng-ui/issues/389) 已于 `dev` 提交 `53b1aa50` 闭环关闭（远端 CI Run `45953618302` Node 20/22 全通过）：
+  1. `DefaultRequestSigner` 默认保持 `canonicalPreset: 'legacy'` 兼容，显式启用 `'standard'` 时使用 WebCrypto `HMAC-SHA256`、`X-App-Id` 与 6 行入站 / 3 行出站标准规范签协议；
+  2. 新增基于原生 WebCrypto（`AES-256-GCM + RSA-OAEP-SHA256`）且支持 `CipherAdapter` 国密扩展的 `RequestCipher`，并在 `createHttpClient` 中确立按明文去重、`FormData`/`Blob` 等二进制自动跳过及 **Encrypt-then-Sign** 的拦截流水线。
+- **上层兼容性实测**：已通过 `pnpm pack + yalc` 将新版 `@atengk/core` 与 `@atengk/element-plus`（`53b1aa5`）接入 `ateng-solid-admin-web`，四合一门禁 `typecheck` / `lint` / `test`（22 个测试文件 115 条用例）/ `build` 全部通过。
+- **后续接入技术边界（当前暂不接入）**：
+  1. 当前仅单向请求加密（前端持 `serverPublicKey` 对接服务端 `@ApiDecrypt`）完全就绪；`RequestCipherOptions`（`cipher-types.ts`）目前仍面向静态 `clientPrivateKey` 响应解密，尚无纯 SPA 会话密钥回包模式（对应 `ateng-boot#1181` `REQUEST_SESSION_KEY`）与无体 `GET` 密钥握手，若后续需要纯 SPA 双向加解密须先向 `ateng-ui` 建单补齐；
+  2. 未来在 `ateng-solid-admin-web/src/utils/http.ts` 开启 `signer`/`cipher` 时，需同步复核 `transformResponse` 元数据绑定钩子与 `@atengk/core` 安全管道未解析原始响应文本校验顺序的协同。
 - **准入纪律**：**严禁在 `ateng-solid-admin-web` 自写 Axios 加密/签名魔改拦截器替代底座插件**。
-- **核实状态**：- [ ] 待底座实施并合入发版（[`atengk/ateng-ui#389`](https://github.com/atengk/ateng-ui/issues/389)）
+- **核实状态**：- [ ] 上游 Issue 已关闭（[`atengk/ateng-ui#389`](https://github.com/atengk/ateng-ui/issues/389)，`dev` 提交 `53b1aa50`）且本地 `yalc` 联调门禁全绿；当前管理端保持默认配置暂不启用，待 npm 发版锁回正式版后再按排期勾选推进
+
+---
+
+### [U20] 中优先级（上游 `dev` 已闭环 · 本地 `yalc` 已更新 · 合入 `main` 前待发版锁版）：`AtengTable` 支持插槽模式强类型 `defaultHiddenColumns` 默认隐藏列契约
+
+- **现状与源码锚点**：
+  - `AtengTable`（`packages/element-plus/src/components/table/AtengTable.vue` `parseColumnVNodes`）在 `<el-table-column>` 默认插槽模式下已支持解析列并在「列设置」与 `localStorage`（`storageKey`）中持久化列显隐及排序；
+  - 但 Element Plus 原生 `TableColumnProps` TypeScript 类型中不含 `visible` 属性，导致 `vue-tsc` 严格模式下无法直接在插槽列声明 `:visible="false"`；同时 `AtengTableProps`（`table/types.ts`）缺少插槽模式可用的默认隐藏列强类型配置项，多列宽表难以在保持列配置一键恢复能力的前提下默认隐藏低频列。
+- **实际落地通用改造（100% 向后兼容）**：上游提交 `603d884` 已合入 `dev` 并关单：
+  1. `AtengTableProps` 新增可选属性 `defaultHiddenColumns?: readonly TableColumnKey<T>[]`（默认 `undefined`，键名沿用既有 `prop || label || String(type)` 规则），与 `:columns` 配置模式及 `<el-table-column>` 插槽模式共同兼容；
+  2. 统一列默认显隐判定（`col.visible === false || defaultHiddenSet.has(key)`），保持 `localStorage[storageKey]` 已保存偏好 > 列默认显隐 > `true` 的优先级，并在点击「重置」时按 `defaultHiddenColumns` 还原默认显隐状态；
+  3. 存在默认隐藏列时列设置顶部全选框正确呈现半选（`indeterminate`）并响应 `defaultHiddenColumns` 变更；上层 `admin-web` 已通过 `pnpm pack + yalc` 刷新本地 `@atengk/element-plus` 并落地 `atengk/ateng-solid#70` 6 页列宽收口。
+- **准入纪律**：**严禁在 `ateng-solid-admin-web` 通过 `as any`、`@ts-expect-error` 或强塞无类型 `visible` 属性绕过**。
+- **核实状态**：- [ ] 上游 Issue 已修复关闭（[`atengk/ateng-ui#390`](https://github.com/atengk/ateng-ui/issues/390)，`dev` 提交 `603d884`），已通过 `pnpm pack + yalc` 刷新本地 `@atengk/element-plus` 并完成上层 `#70` 联调与离线四合一校验，待 npm 发版锁版后勾选
 
 ---
 

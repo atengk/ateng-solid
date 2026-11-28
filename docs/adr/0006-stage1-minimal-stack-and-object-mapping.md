@@ -22,6 +22,7 @@
 
 ### 2.1 首期最小核心技术栈裁剪（砍除辅助增强包）
 - **后端首期核心保留**（7+1 模块）：`ateng-boot-{core,web,mybatis-plus,redis,satoken,excel,storage,flyway}`；外部堆栈严格限定 `Java 21` + `Spring Boot 3.3.13` + `MySQL 8.x` + `Lombok` + `jakarta.validation`（测试期 `H2` + `Spring Boot Test` + `ArchUnit`）。**首期移除 `ateng-boot-observability`**，留待二期按运维诉求按需引入。
+  > **后续演进注记（2026-11-28）**：后端启动宿主 `ateng-solid-bootstrap` 已按 [服务端 ADR-0007](../../ateng-solid-server/docs/adr/0007-observability-and-actuator-governance.md) 仅在宿主层引入 `ateng-boot-observability` 落地双端口可观测管理面与 K8s 黄金探针，`common` / `system-api` / `system` / `auth` 四个业务与契约模块依然保持零观测依赖；前端 `@atengk/monitor` 维持按需延后策略不变。
 - **前端首期核心保留**（3 个包）：`@atengk/core`、`@atengk/vue`、`@atengk/element-plus`；外部堆栈严格限定 `Node 22+` + `pnpm 11+` + `Vue 3.5` + `Vue Router` + `Pinia` + `TypeScript 5.6 Strict` + `Vite 6` + `Element Plus` + `@element-plus/icons-vue` + `TailwindCSS v4（禁 Preflight）` + `Sass`。**首期移除 `@atengk/monitor`**（同步清理 `.env.example` 中的监控配置项），与 L2 重型图表/流程/富文本包一同留待后续扩展按需接入。
 
 ### 2.2 对象映射方案评估与首期结论
